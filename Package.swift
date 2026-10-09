@@ -6,6 +6,8 @@ let package = Package(
     platforms: [.macOS(.v15)],
     products: [
         .library(name: "MitosisCore", targets: ["MitosisCore"]),
+        .library(name: "MitosisUI", targets: ["MitosisUI"]),
+        .executable(name: "MitosisApp", targets: ["MitosisApp"]),
         .executable(name: "mitosis", targets: ["mitosis"]),
         .executable(name: "LaunchStub", targets: ["LaunchStub"]),
     ],
@@ -25,9 +27,22 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
+        // The Mac app: all UI lives in MitosisUI; MitosisApp is the tiny executable that runs it.
+        .target(
+            name: "MitosisUI",
+            dependencies: ["MitosisCore"],
+            resources: [.copy("Resources/Mascot")]
+        ),
+        .executableTarget(name: "MitosisApp", dependencies: ["MitosisUI"]),
+        // Developer tool: renders every screen to PNG for visual review. Not shipped.
+        .executableTarget(name: "MitosisSnapshot", dependencies: ["MitosisUI"]),
         .testTarget(
             name: "MitosisCoreTests",
             dependencies: ["MitosisCore", "LaunchStub", "mitosis"]
+        ),
+        .testTarget(
+            name: "MitosisUITests",
+            dependencies: ["MitosisUI"]
         ),
     ]
 )

@@ -1,1 +1,25 @@
-{ "schema": 1, "profiles": [] }
+{
+  "schema": 1,
+  "profiles": [
+    { "id": "slack", "bundleIDs": ["com.tinyspeck.slackmacgap"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Each clone keeps its own workspaces and login." },
+    { "id": "discord", "bundleIDs": ["com.hnc.Discord"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Each clone keeps its own account." },
+    { "id": "claude", "bundleIDs": ["com.anthropic.claudefordesktop"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Each clone signs in separately." },
+    { "id": "codex", "bundleIDs": ["com.openai.codex"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Chromium-based app. Each clone signs in separately." },
+    { "id": "cursor", "bundleIDs": ["com.todesktop.230313mzl4w4u92"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Each clone has its own settings and login." },
+    { "id": "vscode", "bundleIDs": ["com.microsoft.VSCode"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Each clone has its own settings and login. Extensions are shared with the original." },
+    { "id": "chrome", "bundleIDs": ["com.google.Chrome"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Chromium browser. Each clone is a separate browser profile." },
+    { "id": "signal", "bundleIDs": ["org.whispersystems.signal-desktop"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Link each clone as a separate device." },
+    { "id": "notion", "bundleIDs": ["notion.id"], "version": 1, "mode": "identity", "support": "full",
+      "launch": { "args": ["--user-data-dir={dataPath}"], "env": {} }, "notes": "Electron app. Each clone signs in separately." },
+    { "id": "whatsapp", "bundleIDs": ["net.whatsapp.WhatsApp"], "version": 1, "mode": "identity", "support": "unsupported",
+      "launch": { "args": [], "env": {} }, "notes": "Needs iCloud and shared app data that only work for the original app. Light mode (coming soon) will support it." }
+  ]
+}

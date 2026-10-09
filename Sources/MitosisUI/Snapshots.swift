@@ -15,7 +15,8 @@ public enum SnapshotRunner {
     @MainActor public static func run(output: URL, filter: String?) {
         NSApplication.shared.setActivationPolicy(.accessory)
         try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-        let samples = SampleData.make(in: output.deletingLastPathComponent().appendingPathComponent("snapshot-fixtures"))
+        // Sample clones live on the startup disk (like real ones), so disk captions read as they do for users.
+        let samples = SampleData.make(in: FileManager.default.temporaryDirectory.appendingPathComponent("mitosis-snapshot-fixtures"))
         for shot in shots(samples) where filter.map({ shot.name.contains($0) }) ?? true {
             for dark in [false, true] {
                 let url = output.appendingPathComponent("\(shot.name)-\(dark ? "dark" : "light").png")
@@ -103,7 +104,11 @@ public enum SnapshotRunner {
         window.orderFront(nil)
         spin(0.8)
         let view = window.contentView?.superview ?? controller.view
-        guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { return }
+        // Always 2x, so screenshots stay sharp on Retina displays whatever screen this runs on.
+        guard let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(view.bounds.width * 2), pixelsHigh: Int(view.bounds.height * 2),
+                                         bitsPerSample: 8, samplesPerPixel: 4, hasAlpha: true, isPlanar: false,
+                                         colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return }
+        rep.size = view.bounds.size
         view.cacheDisplay(in: view.bounds, to: rep)
         try? rep.representation(using: .png, properties: [:])?.write(to: url)
         window.orderOut(nil)

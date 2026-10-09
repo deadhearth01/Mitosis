@@ -1,7 +1,7 @@
 import Foundation
 
 public enum Mitosis {
-    public static let version = "0.1.0-alpha.1"
+    public static let version = "0.1.0"
     public static let bundleID = "com.mitosis-mac.Mitosis"
 }
 

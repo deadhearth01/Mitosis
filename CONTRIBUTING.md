@@ -11,11 +11,13 @@ Thanks for helping make Mitosis better. This guide keeps contributions smooth fo
 
 ## Development setup
 
-Requirements: macOS 15 or later on Apple silicon, Xcode 16 or later (Swift 6).
+Requirements: macOS 15 or later on Apple silicon, Xcode 26 or later (Swift 6).
 
 ```bash
-swift build          # builds the engine, the launch stub, and the CLI
-swift test           # runs the test suite (builds small fixture apps; takes ~30 s)
+swift build                      # builds everything: engine, app, CLI, launch stub
+swift test                       # runs the test suite (builds small fixture apps; takes ~30 s)
+scripts/build-app.sh             # assembles and signs dist/Mitosis.app
+swift run MitosisSnapshot        # renders every screen, light and dark, to .build/snapshots for review
 ```
 
 Project layout:
@@ -25,11 +27,15 @@ Project layout:
 | `Sources/MitosisCore/` | The clone engine (no UI): inspect apps, decide the clone mode, build, sign, register, refresh, delete, stats |
 | `Sources/LaunchStub/` | Tiny launcher copied into each clone; starts the real app with the clone's own data folder |
 | `Sources/mitosis/` | The `mitosis` command-line tool |
-| `Tests/MitosisCoreTests/` | Swift Testing suite with real fixture apps |
+| `Sources/MitosisUI/` | The Mac app's views and model (SwiftUI) |
+| `Sources/MitosisApp/` | The app's tiny entry point |
+| `Sources/MitosisSnapshot/` | Developer tool that renders screens to PNG |
+| `Tests/MitosisCoreTests/` | Swift Testing suite for the engine, with real fixture apps |
+| `Tests/MitosisUITests/` | Tests for the app's logic (filtering, forms, update checks) |
 | `Assets/Brand/` | App icon and Mito mascot artwork (not covered by the license; see below) |
 | `docs/` | Design spec, implementation plans, and brand guide |
 | `website/` | The one-page website |
-| `scripts/` | The install script |
+| `scripts/` | App build, release packaging, install script, icon and social-image tools |
 
 ## Rules that keep Mitosis safe
 

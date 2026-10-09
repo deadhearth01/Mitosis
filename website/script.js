@@ -3,9 +3,12 @@ const REPO_URL = `https://github.com/${GITHUB_OWNER}/Mitosis`;
 
 const commands = {
   curl: `curl -fsSL https://raw.githubusercontent.com/${GITHUB_OWNER}/Mitosis/main/scripts/install.sh | bash`,
+  brew: `brew install --cask ${GITHUB_OWNER}/tap/mitosis`,
 };
 
 document.querySelector('#curl-command').textContent = commands.curl;
+document.querySelector('#brew-command').textContent = commands.brew;
+document.querySelector('[data-releases]').href = `${REPO_URL}/releases/latest`;
 document.querySelector('[data-repo]').href = REPO_URL;
 document.querySelector('[data-license]').href = `${REPO_URL}/blob/main/LICENSE`;
 document.querySelector('[data-repo-readme]').href = `${REPO_URL}#which-apps-work`;

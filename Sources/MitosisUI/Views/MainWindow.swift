@@ -5,6 +5,8 @@ import SwiftUI
 struct MainWindow: View {
     @Bindable var model: AppModel
     @State private var columns: NavigationSplitViewVisibility = .all
+    @AppStorage(Settings.onboardedKey) private var onboarded = false
+    @State private var showOnboarding = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columns) {
@@ -57,7 +59,21 @@ struct MainWindow: View {
         .sheet(item: $model.failure) { failure in
             FailureView(title: failure.title, report: failure.report) { model.failure = nil }
         }
-        .onAppear { columns = model.entries.isEmpty ? .detailOnly : .all }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView { startFirstClone in
+                onboarded = true
+                showOnboarding = false
+                if startFirstClone {
+                    Task { try? await Task.sleep(for: .milliseconds(400)); model.startNewClone() }
+                }
+            }
+            .tint(Brand.accent)
+            .interactiveDismissDisabled()
+        }
+        .onAppear {
+            columns = model.entries.isEmpty ? .detailOnly : .all
+            if !onboarded && model.services != nil { showOnboarding = true }
+        }
         .onChange(of: model.entries.isEmpty) { _, empty in columns = empty ? .detailOnly : .all }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refreshStatuses()

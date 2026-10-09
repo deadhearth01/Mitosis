@@ -16,13 +16,29 @@ public struct MitosisRootApp: App {
         }
         .defaultSize(width: 1000, height: 660)
         .commands { MitosisCommands(model: model) }
+
+        Window("Mitosis Help", id: "help") {
+            HelpView()
+                .tint(Brand.accent)
+        }
+        .defaultSize(width: 820, height: 580)
+        .keyboardShortcut("?", modifiers: .command)
     }
 }
 
 struct MitosisCommands: Commands {
     let model: AppModel
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.openURL) private var openURL
 
     var body: some Commands {
+        CommandGroup(replacing: .help) {
+            Button("Mitosis Help") { openWindow(id: "help") }
+                .keyboardShortcut("?", modifiers: .command)
+            Divider()
+            Button("Report a Problem…") { openURL(SystemLinks.newIssue) }
+            Button("Mitosis on GitHub") { openURL(SystemLinks.repository) }
+        }
         CommandGroup(replacing: .newItem) {
             Button("New Clone…") { model.startNewClone() }
                 .keyboardShortcut("n")

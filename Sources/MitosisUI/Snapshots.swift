@@ -61,6 +61,13 @@ public enum SnapshotRunner {
             Shot(name: "new-done", size: CGSize(width: 640, height: 440), titled: false) {
                 sheet(NewCloneSheet(model: s.newClone(step: .done(s.entries[0])), close: {}))
             },
+            Shot(name: "onboard-1", size: CGSize(width: 580, height: 460), titled: false) { sheet(OnboardingView { _ in }) },
+            Shot(name: "help-apps", size: CGSize(width: 820, height: 580)) {
+                AnyView(HelpTopicPreview(topic: .apps).tint(Brand.accent))
+            },
+            Shot(name: "help-trouble", size: CGSize(width: 820, height: 580)) {
+                AnyView(HelpTopicPreview(topic: .trouble).tint(Brand.accent))
+            },
             Shot(name: "main-empty", size: CGSize(width: 1000, height: 640)) {
                 AnyView(MainWindow(model: AppModel(preview: [])).tint(Brand.accent))
             },
@@ -124,6 +131,18 @@ public enum LiveCheck {
         do { try CloneMaintenance(builder: services.builder).delete(entry, deleteData: true) } catch { print("FAIL: delete \(error)"); return false }
         print(FileManager.default.fileExists(atPath: entry.bundlePath) ? "FAIL: still there" : "deleted")
         return running && !FileManager.default.fileExists(atPath: entry.bundlePath)
+    }
+}
+
+struct HelpTopicPreview: View {
+    let topic: HelpTopic
+    @State private var selection: HelpTopic?
+    var body: some View {
+        NavigationSplitView {
+            List(HelpTopic.allCases, selection: $selection) { t in Label(t.title, systemImage: t.symbol).tag(t) }
+                .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
+        } detail: { HelpPage(topic: topic) }
+        .onAppear { selection = topic }
     }
 }
 

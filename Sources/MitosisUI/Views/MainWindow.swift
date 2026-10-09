@@ -48,6 +48,9 @@ struct MainWindow: View {
         } message: { prompt in
             Text(promptMessage(prompt))
         }
+        .sheet(item: $model.newClone) { session in
+            NewCloneSheet(model: session) { model.newClone = nil }
+        }
         .sheet(item: $model.restyling) { entry in
             RestyleSheet(model: model, entry: entry)
         }

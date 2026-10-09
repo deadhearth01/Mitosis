@@ -65,7 +65,7 @@ public struct AppInspector: Sendable {
         )
     }
 
-    static func readInfoPlist(_ app: URL) throws -> [String: Any] {
+    public static func readInfoPlist(_ app: URL) throws -> [String: Any] {
         guard app.pathExtension == "app",
               let data = try? Data(contentsOf: app.appendingPathComponent("Contents/Info.plist")),
               let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]

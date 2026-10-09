@@ -25,8 +25,9 @@ public struct CloneWorkflow: Sendable {
         }
         guard alive else {
             try removeFailed(entry)
+            let hint = entry.manifest.mode == .identity ? " Try compatibility (fallback) mode." : ""
             throw CloneError.failed(step: "launch check",
-                                    message: "\"\(entry.manifest.name)\" didn't stay open, so it was removed. Try compatibility (fallback) mode.")
+                                    message: "\"\(entry.manifest.name)\" didn't stay open, so it was removed.\(hint)")
         }
         return entry
     }

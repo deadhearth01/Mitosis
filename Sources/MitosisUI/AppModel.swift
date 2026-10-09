@@ -235,12 +235,23 @@ final class AppModel {
 
     // MARK: New clones
 
-    var showingNewClone = false
-    var newCloneSource: URL?
+    var newClone: NewCloneModel?
 
     func startNewClone(source: URL? = nil) {
-        newCloneSource = source
-        showingNewClone = true
+        guard newClone == nil else {
+            if let source { Task { await newClone?.choose(url: source) } }
+            return
+        }
+        var colors: [String: Set<String>] = [:]
+        for e in entries { colors[e.manifest.source.bundleID, default: []].insert(e.manifest.badge.color) }
+        let session = NewCloneModel(services: services, existingNames: existingNames, usedColors: colors)
+        session.onCreated = { [weak self] entry in
+            self?.reload()
+            self?.sidebar = .all
+            self?.selection = entry.id
+        }
+        newClone = session
+        if let source { Task { await session.choose(url: source) } }
     }
 
     /// Apps dropped on the window or the Dock icon start a new clone; anything else gets a short explanation.

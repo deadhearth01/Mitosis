@@ -48,10 +48,27 @@ public enum SnapshotRunner {
                 return AnyView(FailureView(title: "Couldn't create Signal (Work)", report: report, retryTitle: "Try Compatibility Mode", retry: {}, close: {})
                     .tint(Brand.accent).background(.windowBackground))
             },
+            Shot(name: "new-pick", size: CGSize(width: 640, height: 540), titled: false) {
+                let m = s.newClone(step: .pick); m.selectedID = m.apps[5].id
+                return sheet(NewCloneSheet(model: m, close: {}))
+            },
+            Shot(name: "new-details", size: CGSize(width: 640, height: 440), titled: false) {
+                sheet(NewCloneSheet(model: s.newClone(step: .details), close: {}))
+            },
+            Shot(name: "new-working", size: CGSize(width: 640, height: 440), titled: false) {
+                sheet(NewCloneSheet(model: s.newClone(step: .working(NewCloneModel.label(for: "launch check"))), close: {}))
+            },
+            Shot(name: "new-done", size: CGSize(width: 640, height: 440), titled: false) {
+                sheet(NewCloneSheet(model: s.newClone(step: .done(s.entries[0])), close: {}))
+            },
             Shot(name: "main-empty", size: CGSize(width: 1000, height: 640)) {
                 AnyView(MainWindow(model: AppModel(preview: [])).tint(Brand.accent))
             },
         ]
+    }
+
+    @MainActor static func sheet<V: View>(_ view: V) -> AnyView {
+        AnyView(view.tint(Brand.accent).background(.windowBackground))
     }
 
     /// Hosts the view in a real (invisible) window so toolbars, titles and sidebars render, then draws the frame.
@@ -80,6 +97,36 @@ public enum SnapshotRunner {
     }
 }
 
+/// `MitosisSnapshot --live-create <app>`: runs the real New Clone flow (MITOSIS_HOME should point at a scratch folder),
+/// checks the clone exists and started, then deletes it.
+public enum LiveCheck {
+    @MainActor public static func run(app: URL) async -> Bool {
+        guard let services = try? AppServices.live() else { print("FAIL: services"); return false }
+        let model = NewCloneModel(services: services, existingNames: [], usedColors: [:])
+        await model.choose(url: app)
+        guard model.step == .details, model.form != nil else { print("FAIL: choose → \(model.step) \(model.dropError ?? "")"); return false }
+        model.form?.setLabel("Live Check")
+        var steps: [String] = []
+        let watcher = Task { @MainActor in
+            while !Task.isCancelled {
+                if case .working(let label) = model.step, steps.last != label { steps.append(label) }
+                try? await Task.sleep(for: .milliseconds(20))
+            }
+        }
+        await model.create(confirmedFullCopy: true)
+        watcher.cancel()
+        print("steps: \(steps.joined(separator: " → "))")
+        guard case .done(let entry) = model.step else { print("FAIL: create → \(model.step)"); return false }
+        let running = RunningMonitor.isRunning(clone: entry.manifest)
+        print("created \(entry.manifest.name) at \(entry.bundlePath), running: \(running)")
+        RunningTracker.quit(entry)
+        try? await Task.sleep(for: .seconds(1))
+        do { try CloneMaintenance(builder: services.builder).delete(entry, deleteData: true) } catch { print("FAIL: delete \(error)"); return false }
+        print(FileManager.default.fileExists(atPath: entry.bundlePath) ? "FAIL: still there" : "deleted")
+        return running && !FileManager.default.fileExists(atPath: entry.bundlePath)
+    }
+}
+
 final class SnapshotWindow: NSWindow {
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
     // Render controls the way they look in the active window (accent-colored default buttons).
@@ -96,6 +143,31 @@ struct SampleData {
     var busy: [UUID: String]
 
     func model() -> AppModel { AppModel(preview: entries, statuses: statuses, running: running, busy: busy) }
+
+    func newClone(step: NewCloneModel.Step) -> NewCloneModel {
+        let names = ["Arc", "Claude", "Cursor", "Figma", "Google Chrome", "Notion", "Obsidian", "Pages", "Postman", "Proton Pass", "Signal", "Safari"]
+        let apps = names.map { name in
+            CatalogApp(url: URL(fileURLWithPath: name == "Safari" ? "/Applications/Safari.app" : "/Applications/\(name).app"), name: name,
+                       bundleID: "com.example.\(name.lowercased())", version: name == "Signal" ? "8.2.1" : "1.4.2", lastUsed: Date())
+        }
+        var support: [String: ModeDecision] = [:]
+        for app in apps {
+            switch app.name {
+            case "Safari", "Pages":
+                support[app.id] = ModeDecision(mode: nil, support: .unsupported, reasons: ["Apple's own apps are protected by macOS and can't be cloned."])
+            case "Proton Pass":
+                support[app.id] = ModeDecision(mode: .identity, support: .limited, reasons: ["Mac App Store app: the clone may ask you to sign in again or refuse to start."])
+            case "Postman":
+                break   // still checking
+            default:
+                support[app.id] = ModeDecision(mode: .identity, support: .full, reasons: ["Electron app. Link each clone as a separate device."])
+            }
+        }
+        let signal = apps.first { $0.name == "Signal" }!
+        var form = NewCloneForm(appName: "Signal", existingNames: ["Signal (Work)"], usedColors: ["#0A84FF"])
+        form.setLabel("Family")
+        return NewCloneModel(preview: apps, support: support, step: step, chosen: signal, form: form)
+    }
 
     static func make(in dir: URL) -> SampleData {
         let specs: [(app: String, label: String, badge: String, color: String)] = [

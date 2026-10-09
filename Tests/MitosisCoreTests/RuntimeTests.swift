@@ -123,6 +123,20 @@ struct LaunchTests {
         #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().isEmpty)
     }
 
+    // A compatibility-mode clone that doesn't start must not suggest compatibility mode again.
+    @Test func failedFallbackCloneDoesNotSuggestFallback() async throws {
+        var o = FixtureOptions(); o.behavior = .exit(code: 1)
+        let (source, builder) = try Self.setUpSource(o)
+        let err = await #expect(throws: CloneError.self) {
+            _ = try await CloneWorkflow(builder: builder).createVerified(
+                CloneRequest(source: source, name: "Broken (Safe)", badge: Badge(text: "B", color: "#FF453A"), modeOverride: .fallback),
+                window: .seconds(2))
+        }
+        let text = err.map { String(describing: $0) } ?? ""
+        #expect(text.contains("didn't stay open"))
+        #expect(!text.contains("compatibility"))
+    }
+
     // Final review I1: refresh keeps the previous version if the new one doesn't start.
     @Test func refreshVerifiedRestoresPreviousVersionWhenNewOneFails() async throws {
         var o = FixtureOptions(); o.behavior = .stayOpen(seconds: 20)

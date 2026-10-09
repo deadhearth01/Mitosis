@@ -35,7 +35,8 @@ public enum InspectionError: Error, Equatable, CustomStringConvertible, Sendable
 public struct AppInspector: Sendable {
     public init() {}
 
-    public func inspect(_ url: URL) throws -> AppInfo {
+    /// `includeCDHash: false` skips one `codesign` call (pickers that only need the mode decision).
+    public func inspect(_ url: URL, includeCDHash: Bool = true) throws -> AppInfo {
         let info = try Self.readInfoPlist(url)
         guard let bundleID = info["CFBundleIdentifier"] as? String else {
             throw InspectionError.missingInfo(key: "CFBundleIdentifier", app: url.lastPathComponent)
@@ -60,7 +61,7 @@ public struct AppInspector: Sendable {
             isMitosisClone: fm.fileExists(atPath: url.appendingPathComponent("Contents/Resources/mitosis.json").path),
             frameworks: Self.detectFrameworks(app: url, info: info),
             restrictedEntitlements: Entitlements.restricted(in: entitlements),
-            cdhash: Self.cdhash(of: url)
+            cdhash: includeCDHash ? Self.cdhash(of: url) : nil
         )
     }
 

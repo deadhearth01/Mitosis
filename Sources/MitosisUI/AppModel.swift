@@ -53,10 +53,10 @@ final class AppModel {
     private(set) var busy: [UUID: String] = [:]
     private(set) var loadError: String?
 
-    var sidebar: SidebarItem = .all
     var search = ""
     var selection: UUID?
-    var showInspector = false
+    /// Fixed stats for previews and snapshots.
+    var previewStats: [UUID: CloneStats] = [:]
     var prompt: AppPrompt?
     var failure: Failure?
     var restyling: RegistryEntry?
@@ -79,13 +79,14 @@ final class AppModel {
         self.statuses = statuses
         self.running = running
         self.busy = busy
+        self.selection = CloneLibrary.filter(entries, sidebar: .all, running: running, search: "").first?.id
     }
 
     func loadFailed(_ message: String) { loadError = message }
 
     // MARK: Derived
 
-    var visibleEntries: [RegistryEntry] { CloneLibrary.filter(entries, sidebar: sidebar, running: running, search: search) }
+    var visibleEntries: [RegistryEntry] { CloneLibrary.filter(entries, sidebar: .all, running: running, search: search) }
     var groups: [AppGroup] { CloneLibrary.groups(entries) }
     var selectedEntry: RegistryEntry? { selection.flatMap(entry) }
     var existingNames: Set<String> { Set(entries.map(\.manifest.name)) }
@@ -107,7 +108,6 @@ final class AppModel {
         }
         if let selection, entry(selection) == nil { self.selection = nil }
         if selection == nil { selection = visibleEntries.first?.id }
-        if case .app(let id) = sidebar, !entries.contains(where: { $0.manifest.source.bundleID == id }) { sidebar = .all }
         updateRunning(autoUpdate: false)
         refreshStatuses(autoUpdate: autoUpdate)
         syncAutoRefreshAgent()
@@ -292,8 +292,8 @@ final class AppModel {
         for e in entries { colors[e.manifest.source.bundleID, default: []].insert(e.manifest.badge.color) }
         let session = NewCloneModel(services: services, existingNames: existingNames, usedColors: colors)
         session.onCreated = { [weak self] entry in
+            self?.search = ""
             self?.reload()
-            self?.sidebar = .all
             self?.selection = entry.id
         }
         newClone = session

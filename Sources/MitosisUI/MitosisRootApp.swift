@@ -14,14 +14,14 @@ public struct MitosisRootApp: App {
     public var body: some Scene {
         Window("Mitosis", id: "main") {
             MainWindow(model: model, updates: updates)
-                .frame(minWidth: 720, minHeight: 460)
+                .frame(minWidth: 820, minHeight: 520)
                 .tint(Brand.accent)
                 .onAppear {
                     AppDelegate.openApps = { urls in model.handleDrop(urls) }
                     updates.checkIfDue()
                 }
         }
-        .defaultSize(width: 1000, height: 660)
+        .defaultSize(width: 1060, height: 720)
         .commands { MitosisCommands(model: model) }
 
         Window("Mitosis Help", id: "help") {
@@ -56,10 +56,6 @@ struct MitosisCommands: Commands {
         CommandGroup(replacing: .newItem) {
             Button("New Clone…") { model.startNewClone() }
                 .keyboardShortcut("n")
-        }
-        CommandGroup(after: .sidebar) {
-            Button(model.showInspector ? "Hide Inspector" : "Show Inspector") { model.showInspector.toggle() }
-                .keyboardShortcut("i")
         }
     }
 }

@@ -22,6 +22,14 @@ enum CloneLibrary {
         URL(fileURLWithPath: entry.manifest.source.path).deletingPathExtension().lastPathComponent
     }
 
+    /// The label part of "<App> (<Label>)", or the whole name for clones named some other way.
+    static func label(for entry: RegistryEntry) -> String {
+        let name = entry.manifest.name, app = appName(for: entry)
+        guard name.hasPrefix(app + " ("), name.hasSuffix(")") else { return name }
+        let label = name.dropFirst(app.count + 2).dropLast()
+        return label.isEmpty ? name : String(label)
+    }
+
     static func groups(_ entries: [RegistryEntry]) -> [AppGroup] {
         var byID: [String: AppGroup] = [:]
         for e in entries {

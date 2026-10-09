@@ -4,6 +4,12 @@ public struct CloneUsage: Equatable, Sendable {
     public var processCount: Int
     public var cpuPercent: Double
     public var memoryBytes: Int64
+
+    public init(processCount: Int, cpuPercent: Double, memoryBytes: Int64) {
+        self.processCount = processCount
+        self.cpuPercent = cpuPercent
+        self.memoryBytes = memoryBytes
+    }
 }
 
 public struct CloneStats: Equatable, Sendable {
@@ -15,6 +21,13 @@ public struct CloneStats: Equatable, Sendable {
     public var dataBytes: Int64
     /// Live usage while running; nil when not running.
     public var usage: CloneUsage?
+
+    public init(extraDiskBytes: Int64, appBytes: Int64, dataBytes: Int64, usage: CloneUsage?) {
+        self.extraDiskBytes = extraDiskBytes
+        self.appBytes = appBytes
+        self.dataBytes = dataBytes
+        self.usage = usage
+    }
 }
 
 public enum StatsCollector {

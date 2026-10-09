@@ -11,19 +11,14 @@ struct MainWindow: View {
 
     var body: some View {
         NavigationSplitView(columnVisibility: $columns) {
-            SidebarView(model: model)
-                .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 300)
+            CloneListView(model: model)
+                .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
         } detail: {
             detail
                 .safeAreaInset(edge: .top, spacing: 0) { updateBanner }
-                .inspector(isPresented: $model.showInspector) {
-                    InspectorView(model: model)
-                        .inspectorColumnWidth(min: 270, ideal: 300, max: 420)
-                }
         }
-        .navigationTitle(title)
+        .navigationTitle("Mitosis")
         .navigationSubtitle(subtitle)
-        .searchable(text: $model.search, placement: .toolbar, prompt: "Search clones")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -32,15 +27,6 @@ struct MainWindow: View {
                     Label("New Clone", systemImage: "plus")
                 }
                 .help("Create a clone (⌘N)")
-            }
-            ToolbarItem(placement: .primaryAction) {
-                Button {
-                    model.showInspector.toggle()
-                } label: {
-                    Label("Inspector", systemImage: "sidebar.trailing")
-                }
-                .help("Show or hide details (⌘I)")
-                .disabled(model.entries.isEmpty)
             }
         }
         .dropDestination(for: URL.self) { urls, _ in
@@ -87,15 +73,14 @@ struct MainWindow: View {
             ContentUnavailableView("Couldn't load your clones", systemImage: "exclamationmark.triangle", description: Text(error))
         } else if model.entries.isEmpty {
             EmptyStateView { model.startNewClone() }
+        } else if let e = model.selectedEntry {
+            CloneDetailView(model: model, entry: e)
+                .id(e.id)
         } else if model.visibleEntries.isEmpty {
-            if !model.search.trimmingCharacters(in: .whitespaces).isEmpty {
-                ContentUnavailableView.search(text: model.search)
-            } else {
-                ContentUnavailableView("Nothing running", systemImage: "play.circle",
-                                       description: Text("Clones you open show up here."))
-            }
+            ContentUnavailableView.search(text: model.search)
         } else {
-            CloneGridView(model: model)
+            ContentUnavailableView("Select a clone", systemImage: "square.on.square",
+                                   description: Text("Choose a clone in the sidebar to see its details and stats."))
         }
     }
 
@@ -127,17 +112,9 @@ struct MainWindow: View {
         }
     }
 
-    private var title: String {
-        switch model.sidebar {
-        case .all: return "All Clones"
-        case .running: return "Running"
-        case .app(let id): return model.groups.first { $0.bundleID == id }?.name ?? "Mitosis"
-        }
-    }
-
     private var subtitle: String {
-        let n = model.visibleEntries.count
-        return model.entries.isEmpty ? "" : (n == 1 ? "1 clone" : "\(n) clones")
+        let n = model.entries.count
+        return n == 0 ? "" : (n == 1 ? "1 clone" : "\(n) clones")
     }
 
     // MARK: Prompts

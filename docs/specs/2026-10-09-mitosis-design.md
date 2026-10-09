@@ -162,7 +162,10 @@ Profiles can only use an allowlist of operations: mode, support level, args matc
 
 Initial profiles (verified during Phase 0 and 0.1 testing): Slack, Discord, Claude, Codex, Cursor, VS Code, Google Chrome, Signal, Telegram, WhatsApp, Notion.
 
-### 5.7 Refresh (0.1 manual, 0.2 automatic)
+### 5.7 Refresh (automatic since 0.1, revised 2026-10-09)
+
+_Revised:_ clones refresh automatically (setting on by default): the app rebuilds outdated clones that aren't running (no launch, atomic install), retries a running clone after it quits, and a per-user LaunchAgent (`com.mitosis-mac.autorefresh`, launchd `WatchPaths` on the originals plus a 6-hour fallback) runs `mitosis refresh --outdated --quiet` while Mitosis is closed. Originals that are mid-update (signature doesn't verify) are skipped until the next run.
+
 
 Registry compares the source app's current version/cdhash with the manifest. If different, the clone shows "Update available → Refresh". Refresh rebuilds the clone from the current source using the same name, badge, bundle ID, and data path, then atomically replaces it. Data and logins are kept because they live outside the bundle (preferences/containers keyed by the unchanged clone bundle ID, or the Mitosis data folder). Refuses to refresh while the clone is running (asks to quit it).
 
@@ -171,6 +174,8 @@ Registry compares the source app's current version/cdhash with the manifest. If 
 Asks: "Keep its data" (default) or "Delete data too". Deleted bundles and data are moved to the Trash, never removed permanently.
 
 ## 6. User interface (0.1)
+
+> _Revised 2026-10-09 after the owner tried the first build:_ the main window is a **sidebar list of clones (grouped by original app, with status) + a full page per clone** (header with actions, stat tiles for extra disk/data/memory/CPU, details, maintenance) instead of an icon grid with a hidden inspector. Clones also **update automatically** when their original app updates (pulled forward from 0.2; see §5.7). The grid/inspector text below is kept for history.
 
 **Main window — sidebar + icon grid (NavigationSplitView):**
 - Sidebar: *All Clones*, *Running*, *By App* (one entry per source app), *Workspaces* (hidden until 0.3).

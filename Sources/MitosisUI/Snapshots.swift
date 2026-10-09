@@ -27,16 +27,16 @@ public enum SnapshotRunner {
 
     @MainActor static func shots(_ s: SampleData) -> [Shot] {
         [
-            Shot(name: "main-grid", size: CGSize(width: 1000, height: 640)) {
-                let m = s.model(); m.selection = s.entries[1].id
+            Shot(name: "main-detail", size: CGSize(width: 1060, height: 720)) {
+                let m = s.model(); m.selection = s.entries.first { $0.manifest.name == "Signal (Work)" }?.id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
-            Shot(name: "main-inspector", size: CGSize(width: 1100, height: 680)) {
-                let m = s.model(); m.selection = s.entries[0].id; m.showInspector = true
+            Shot(name: "detail-update", size: CGSize(width: 1060, height: 720)) {
+                let m = s.model(); m.selection = s.entries[2].id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
-            Shot(name: "inspector-update", size: CGSize(width: 1100, height: 680)) {
-                let m = s.model(); m.selection = s.entries[2].id; m.showInspector = true
+            Shot(name: "detail-missing", size: CGSize(width: 1060, height: 720)) {
+                let m = s.model(); m.selection = s.entries[5].id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
             Shot(name: "sheet-restyle", size: CGSize(width: 460, height: 250), titled: false) {
@@ -75,11 +75,11 @@ public enum SnapshotRunner {
             Shot(name: "settings-advanced", size: CGSize(width: 540, height: 320)) {
                 AnyView(AdvancedSettings().tint(Brand.accent))
             },
-            Shot(name: "main-update", size: CGSize(width: 1000, height: 640)) {
+            Shot(name: "main-update", size: CGSize(width: 1060, height: 720)) {
                 let u = UpdateChecker(); u.state = .available(version: "0.1.1", url: SystemLinks.releases)
                 return AnyView(MainWindow(model: s.model(), updates: u).tint(Brand.accent))
             },
-            Shot(name: "main-empty", size: CGSize(width: 1000, height: 640)) {
+            Shot(name: "main-empty", size: CGSize(width: 1060, height: 720)) {
                 AnyView(MainWindow(model: AppModel(preview: [])).tint(Brand.accent))
             },
         ]
@@ -218,7 +218,15 @@ struct SampleData {
     var running: Set<UUID>
     var busy: [UUID: String]
 
-    func model() -> AppModel { AppModel(preview: entries, statuses: statuses, running: running, busy: busy) }
+    func model() -> AppModel {
+        let m = AppModel(preview: entries, statuses: statuses, running: running, busy: busy)
+        for (i, e) in entries.enumerated() {
+            m.previewStats[e.id] = CloneStats(extraDiskBytes: Int64(1_300_000 + i * 410_000), appBytes: 600_000_000,
+                                              dataBytes: Int64(48_000_000 + i * 91_000_000),
+                                              usage: running.contains(e.id) ? CloneUsage(processCount: 6, cpuPercent: 3.4, memoryBytes: 412_000_000) : nil)
+        }
+        return m
+    }
 
     func newClone(step: NewCloneModel.Step) -> NewCloneModel {
         let names = ["Arc", "Claude", "Cursor", "Figma", "Google Chrome", "Notion", "Obsidian", "Pages", "Postman", "Proton Pass", "Signal", "Safari"]

@@ -27,4 +27,10 @@ import Testing
         #expect(CloneLibrary.filter(all, sidebar: .all, running: [], search: "  ").count == 3)
         #expect(CloneLibrary.filter(all, sidebar: .all, running: [], search: "zzz").isEmpty)
     }
+
+    @Test func labelIsTheBracketedPartOfTheName() {
+        #expect(CloneLibrary.label(for: Samples.slackWork) == "Work")
+        #expect(CloneLibrary.label(for: Samples.entry("Custom Name", app: "Slack", bundleID: "com.tinyspeck.slackmacgap")) == "Custom Name")
+        #expect(CloneLibrary.label(for: Samples.entry("Slack ()", app: "Slack", bundleID: "com.tinyspeck.slackmacgap")) == "Slack ()")
+    }
 }

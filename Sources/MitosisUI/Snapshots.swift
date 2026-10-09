@@ -68,6 +68,17 @@ public enum SnapshotRunner {
             Shot(name: "help-trouble", size: CGSize(width: 820, height: 580)) {
                 AnyView(HelpTopicPreview(topic: .trouble).tint(Brand.accent))
             },
+            Shot(name: "settings-general", size: CGSize(width: 540, height: 460)) {
+                let u = UpdateChecker(); u.state = .available(version: "0.1.1", url: SystemLinks.releases)
+                return AnyView(SettingsView(model: s.model(), updates: u))
+            },
+            Shot(name: "settings-advanced", size: CGSize(width: 540, height: 320)) {
+                AnyView(AdvancedSettings().tint(Brand.accent))
+            },
+            Shot(name: "main-update", size: CGSize(width: 1000, height: 640)) {
+                let u = UpdateChecker(); u.state = .available(version: "0.1.1", url: SystemLinks.releases)
+                return AnyView(MainWindow(model: s.model(), updates: u).tint(Brand.accent))
+            },
             Shot(name: "main-empty", size: CGSize(width: 1000, height: 640)) {
                 AnyView(MainWindow(model: AppModel(preview: [])).tint(Brand.accent))
             },

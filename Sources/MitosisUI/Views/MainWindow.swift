@@ -4,8 +4,9 @@ import SwiftUI
 
 struct MainWindow: View {
     @Bindable var model: AppModel
+    var updates: UpdateChecker? = nil
     @State private var columns: NavigationSplitViewVisibility = .all
-    @AppStorage(Settings.onboardedKey) private var onboarded = false
+    @AppStorage(Prefs.onboardedKey) private var onboarded = false
     @State private var showOnboarding = false
 
     var body: some View {
@@ -14,6 +15,7 @@ struct MainWindow: View {
                 .navigationSplitViewColumnWidth(min: 180, ideal: 210, max: 300)
         } detail: {
             detail
+                .safeAreaInset(edge: .top, spacing: 0) { updateBanner }
                 .inspector(isPresented: $model.showInspector) {
                     InspectorView(model: model)
                         .inspectorColumnWidth(min: 270, ideal: 300, max: 420)
@@ -95,6 +97,34 @@ struct MainWindow: View {
             }
         } else {
             CloneGridView(model: model)
+        }
+    }
+
+    @ViewBuilder private var updateBanner: some View {
+        if let updates, !updates.dismissed, case .available(let version, let url) = updates.state {
+            HStack(spacing: Brand.Space.s) {
+                Image(systemName: "arrow.down.circle.fill").foregroundStyle(Brand.accent)
+                Text("Mitosis \(version) is available.")
+                Spacer()
+                Link("View Release", destination: url)
+                Button("Copy Update Command") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(UpdateChecker.updateCommand, forType: .string)
+                }
+                Button {
+                    updates.dismissed = true
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+                .help("Hide until next launch")
+                .accessibilityLabel("Hide update message")
+            }
+            .font(.callout)
+            .padding(.horizontal, Brand.Space.m)
+            .padding(.vertical, Brand.Space.s)
+            .background(.bar)
+            .overlay(alignment: .bottom) { Divider() }
         }
     }
 

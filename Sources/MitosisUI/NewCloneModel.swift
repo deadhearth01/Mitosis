@@ -156,7 +156,7 @@ final class NewCloneModel: Identifiable {
             chosen = app
             preflight = pre
             var form = NewCloneForm(appName: app.name, existingNames: existingNames, usedColors: usedColors[app.bundleID] ?? [])
-            form.mode = UserDefaults.standard.string(forKey: Settings.defaultModeKey).flatMap(CloneMode.init(rawValue:))
+            form.mode = UserDefaults.standard.string(forKey: Prefs.defaultModeKey).flatMap(CloneMode.init(rawValue:))
             self.form = form
             step = .details
         } catch {
@@ -194,7 +194,7 @@ final class NewCloneModel: Identifiable {
         do {
             let entry = try await CloneWorkflow(builder: builder).createVerified(request)
             if !form.openAfter { CloneLauncher.terminate(entry) }
-            UserDefaults.standard.set(false, forKey: Settings.showTipsKey)
+            UserDefaults.standard.set(false, forKey: Prefs.showTipsKey)
             step = .done(entry)
             onCreated?(entry)
         } catch {
@@ -223,7 +223,7 @@ final class NewCloneModel: Identifiable {
 }
 
 /// UserDefaults keys shared by Settings and the flows that read them.
-enum Settings {
+enum Prefs {
     static let showTipsKey = "showTips"
     static let defaultModeKey = "defaultMode"
     static let onboardedKey = "onboarded"

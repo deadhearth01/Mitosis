@@ -4,15 +4,22 @@ import SwiftUI
 public struct MitosisRootApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @State private var model = AppModel.live()
+    @State private var updates = UpdateChecker()
+    @AppStorage(Prefs.menuBarKey) private var showMenuBar = false
 
-    public init() {}
+    public init() {
+        UserDefaults.standard.register(defaults: [Prefs.checkUpdatesKey: true, Prefs.showTipsKey: true])
+    }
 
     public var body: some Scene {
         Window("Mitosis", id: "main") {
-            MainWindow(model: model)
+            MainWindow(model: model, updates: updates)
                 .frame(minWidth: 720, minHeight: 460)
                 .tint(Brand.accent)
-                .onAppear { AppDelegate.openApps = { urls in model.handleDrop(urls) } }
+                .onAppear {
+                    AppDelegate.openApps = { urls in model.handleDrop(urls) }
+                    updates.checkIfDue()
+                }
         }
         .defaultSize(width: 1000, height: 660)
         .commands { MitosisCommands(model: model) }
@@ -22,7 +29,14 @@ public struct MitosisRootApp: App {
                 .tint(Brand.accent)
         }
         .defaultSize(width: 820, height: 580)
-        .keyboardShortcut("?", modifiers: .command)
+
+        Settings {
+            SettingsView(model: model, updates: updates)
+        }
+
+        MenuBarExtra("Mitosis", systemImage: "square.split.2x1", isInserted: $showMenuBar) {
+            MenuBarContent(model: model)
+        }
     }
 }
 
@@ -56,6 +70,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func application(_ application: NSApplication, open urls: [URL]) {
         MainActor.assumeIsolated { Self.openApps?(urls) }
+    }
+
+    /// With the menu bar extra on, closing the window keeps Mitosis running in the menu bar.
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        !UserDefaults.standard.bool(forKey: Prefs.menuBarKey)
     }
 }
 

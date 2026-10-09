@@ -4,7 +4,7 @@ import SwiftUI
 struct QuickSheetView: View {
     @Bindable var model: NewCloneModel
     let close: () -> Void
-    @AppStorage(Settings.showTipsKey) private var showTips = true
+    @AppStorage(Prefs.showTipsKey) private var showTips = true
     @FocusState private var labelFocused: Bool
 
     var body: some View {

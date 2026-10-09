@@ -4,7 +4,7 @@ import SwiftUI
 struct AppPickerView: View {
     @Bindable var model: NewCloneModel
     let close: () -> Void
-    @AppStorage(Settings.showTipsKey) private var showTips = true
+    @AppStorage(Prefs.showTipsKey) private var showTips = true
     @FocusState private var searchFocused: Bool
     @State private var dropTargeted = false
 

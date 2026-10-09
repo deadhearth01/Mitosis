@@ -29,22 +29,31 @@ public struct CloneRegistry: Sendable {
     }
 
     public func rebuild(scanning clonesDir: URL) throws -> [RegistryEntry] {
-        let names = (try? FileManager.default.contentsOfDirectory(atPath: clonesDir.path)) ?? []
-        var entries: [RegistryEntry] = []
-        for name in names.sorted() where name.hasSuffix(".app") && !name.hasPrefix(".") {
-            let bundle = clonesDir.appendingPathComponent(name)
-            if let m = Self.embeddedManifest(in: bundle) {
-                entries.append(RegistryEntry(manifest: m, bundlePath: bundle.path))
-            }
-        }
+        let entries = Self.scan(clonesDir)
         try save(entries)
         return entries
     }
 
-    /// Loads the registry; if it is missing or corrupt, rebuilds it from the manifests embedded in the clones.
+    /// Clones found in the folder, read from the manifests embedded in them (hidden temp/backup bundles skipped).
+    static func scan(_ clonesDir: URL) -> [RegistryEntry] {
+        let names = (try? FileManager.default.contentsOfDirectory(atPath: clonesDir.path)) ?? []
+        return names.sorted().filter { $0.hasSuffix(".app") && !$0.hasPrefix(".") }.compactMap { name in
+            let bundle = clonesDir.appendingPathComponent(name)
+            return Self.embeddedManifest(in: bundle).map { RegistryEntry(manifest: $0, bundlePath: bundle.path) }
+        }
+    }
+
+    /// Loads the registry and keeps it in step with the clones folder: rebuilt if missing or corrupt, clones whose
+    /// bundle is gone (trashed in Finder) are dropped, and clones that reappear (put back from the Trash) are added.
     public func loadOrRebuild(clonesDir: URL) throws -> [RegistryEntry] {
         guard FileManager.default.fileExists(atPath: fileURL.path) else { return try rebuild(scanning: clonesDir) }
-        do { return try load() } catch { return try rebuild(scanning: clonesDir) }
+        let stored: [RegistryEntry]
+        do { stored = try load() } catch { return try rebuild(scanning: clonesDir) }
+        var entries = stored.filter { FileManager.default.fileExists(atPath: $0.bundlePath) }
+        let known = Set(entries.map(\.id))
+        entries += Self.scan(clonesDir).filter { !known.contains($0.id) }
+        if entries != stored { try save(entries) }
+        return entries
     }
 
     public static func embeddedManifest(in bundle: URL) -> CloneManifest? {

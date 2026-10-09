@@ -34,8 +34,11 @@ public struct MitosisRootApp: App {
             SettingsView(model: model, updates: updates)
         }
 
-        MenuBarExtra("Mitosis", systemImage: "square.split.2x1", isInserted: $showMenuBar) {
+        MenuBarExtra(isInserted: $showMenuBar) {
             MenuBarContent(model: model)
+        } label: {
+            Image(nsImage: MenuBarIcon.image)
+                .accessibilityLabel("Mitosis")
         }
     }
 }

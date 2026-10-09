@@ -15,6 +15,7 @@ public enum SnapshotRunner {
     @MainActor public static func run(output: URL, filter: String?) {
         NSApplication.shared.setActivationPolicy(.accessory)
         try? FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
+        writeMenuBarIcon(to: output.appendingPathComponent("menubar-icon.png"))
         // Sample clones live on the startup disk (like real ones), so disk captions read as they do for users.
         let samples = SampleData.make(in: FileManager.default.temporaryDirectory.appendingPathComponent("mitosis-snapshot-fixtures"))
         for shot in shots(samples) where filter.map({ shot.name.contains($0) }) ?? true {
@@ -112,6 +113,27 @@ public enum SnapshotRunner {
         view.cacheDisplay(in: view.bounds, to: rep)
         try? rep.representation(using: .png, properties: [:])?.write(to: url)
         window.orderOut(nil)
+    }
+
+    /// The menu bar glyph at 8x on light and dark strips, to check it reads at its real size.
+    @MainActor static func writeMenuBarIcon(to url: URL) {
+        let scale: CGFloat = 8, w: CGFloat = 18 * scale
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(w * 2 + 3 * scale), pixelsHigh: Int(w), bitsPerSample: 8,
+                                   samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0)!
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+        for (i, (bg, fg)) in [(NSColor(white: 0.93, alpha: 1), NSColor.black), (NSColor(white: 0.16, alpha: 1), NSColor.white)].enumerated() {
+            let r = NSRect(x: CGFloat(i) * (w + 3 * scale), y: 0, width: w, height: w)
+            bg.setFill(); r.fill()
+            let tinted = NSImage(size: MenuBarIcon.image.size, flipped: false) { rect in
+                MenuBarIcon.image.draw(in: rect)
+                fg.set(); rect.fill(using: .sourceAtop)
+                return true
+            }
+            tinted.draw(in: r)
+        }
+        NSGraphicsContext.restoreGraphicsState()
+        try? rep.representation(using: .png, properties: [:])?.write(to: url)
     }
 
     @MainActor static func spin(_ seconds: Double) {

@@ -67,4 +67,26 @@ import Testing
         let reg = CloneRegistry(fileURL: dir.appendingPathComponent("clones.json"))
         #expect(try reg.loadOrRebuild(clonesDir: clones).map(\.id) == [e.id])
     }
+
+    /// A clone put back from the Trash reappears; one trashed in Finder disappears from the list.
+    @Test func loadOrRebuildSyncsWithTheClonesFolder() throws {
+        let dir = try TestSupport.tempDir()
+        let clones = dir.appendingPathComponent("Clones")
+        func install(_ e: RegistryEntry) throws {
+            let resources = e.bundleURL.appendingPathComponent("Contents/Resources")
+            try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+            try CloneManifest.encoder().encode(e.manifest).write(to: resources.appendingPathComponent(CloneRegistry.manifestFileName))
+        }
+        let kept = Self.entry(name: "Kept", in: clones)
+        let trashed = Self.entry(name: "Trashed In Finder", in: clones)
+        let putBack = Self.entry(name: "Put Back", in: clones)
+        try install(kept)
+        try install(putBack)
+        let reg = CloneRegistry(fileURL: dir.appendingPathComponent("clones.json"))
+        try reg.save([kept, trashed])
+
+        let loaded = try reg.loadOrRebuild(clonesDir: clones)
+        #expect(Set(loaded.map(\.id)) == [kept.id, putBack.id])
+        #expect(Set(try reg.load().map(\.id)) == [kept.id, putBack.id])   // saved
+    }
 }

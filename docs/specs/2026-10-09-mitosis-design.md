@@ -304,3 +304,5 @@ Outcome: a short "Spike results" section appended to this spec with decisions (s
 10. **Clone updater caches:** show data-folder size and offer "Clean caches" (deletes `update-cache`, `Cache`, `Code Cache`, `GPUCache` inside the clone's data folder).
 
 **Naming (user request 2026-10-09):** clone display names follow "<App> (<Label>)", e.g. "Slack (Work)"; the UI asks for the label only and shows the composed name.
+
+**Brand (decided 2026-10-09):** app icon + mascot = "mascot-2" — a friendly blue rounded-tile creature with a split line down its middle and a wink (about to divide). Master: `Assets/Brand/mitosis-mascot-1024.png`. Use the same character in onboarding, help guide, website and social posts.

@@ -51,6 +51,7 @@
 - **Separate data.** Settings, chats, and caches stay with their own copy and never touch the original.
 - **Separate Dock icons.** Each copy gets a small badge (letters or an emoji), so you can tell them apart at a glance.
 - **Open in any order.** Start the original or any copy first; they all run at the same time.
+- **Sign in to each copy.** Browser sign-ins send their link back to the copy you signed in from, not the original app.
 - **Updates on its own.** When the original app updates, Mitosis rebuilds its copies in the background, even while Mitosis is closed. Logins and data stay.
 - **Light on your Mac.** Copies share the original's files on disk (APFS cloning), so a copy usually costs a couple of megabytes. Mitosis itself idles at about 45 MB of memory and no CPU.
 - **Stats for every copy.** See the extra disk space, data size, memory, and CPU each copy uses, and clean its caches without losing logins.
@@ -207,7 +208,7 @@ Yes. Mitosis is free for any use, including at work. What you can't do is sell i
 - [x] Automatic clone updates when the original app updates
 - [x] `mitosis` command, one-line installer, Homebrew tap
 - [ ] Workspaces: open a set of clones together
-- [ ] Login router: sign-in links open in the clone that asked for them
+- [x] Sign-in links go to the copy that started the sign-in
 - [ ] Light mode for sandboxed apps (WhatsApp and similar)
 - [ ] Notarized builds
 

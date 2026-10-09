@@ -4,6 +4,13 @@ All notable changes to Mitosis are documented here. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-09
+
+### Added
+- **Sign-in links go to the right copy.** Many apps sign you in through the browser and get a link back (`slack://…`), which macOS normally hands to the original app. Turn on "Send sign-in links to the right copy" on a clone's page and Mitosis delivers each link to the copy you signed in from, asking when several are open. Turning it off (or deleting the app's last clone) gives the links back to the original.
+- `mitosis links on|off|status` for the same from Terminal.
+- Help topic "Sign-in links".
+
 ## [0.1.1] - 2026-10-09
 
 ### Changed
@@ -48,7 +55,8 @@ First preview: the clone engine and the `mitosis` command-line tool.
 - Refresh after the original app updates; delete to the Trash (never permanently).
 - `mitosis` command-line tool: `doctor`, `clone`, `list`, `stats`, `clean`, `refresh`, `delete`, `open`.
 
-[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0-alpha.1...v0.1.0
 [0.1.0-alpha.1]: https://github.com/deadhearth01/Mitosis/releases/tag/v0.1.0-alpha.1

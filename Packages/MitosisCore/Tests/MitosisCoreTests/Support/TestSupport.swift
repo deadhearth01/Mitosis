@@ -18,8 +18,16 @@ enum TestSupport {
     static var stubBinary: URL { productsDirectory.appendingPathComponent("LaunchStub") }
     static var cliBinary: URL { productsDirectory.appendingPathComponent("mitosis") }
 
+    /// Test scratch space inside the package's .build folder (the test runner ignores TMPDIR, and the
+    /// system temp folder lives on the internal disk).
+    static let tempRoot: URL = {
+        let url = packageRoot.appendingPathComponent(".build/test-tmp", isDirectory: true)
+        try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+        return url
+    }()
+
     static func tempDir() throws -> URL {
-        let url = FileManager.default.temporaryDirectory
+        let url = tempRoot
             .appendingPathComponent("MitosisTests", isDirectory: true)
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)

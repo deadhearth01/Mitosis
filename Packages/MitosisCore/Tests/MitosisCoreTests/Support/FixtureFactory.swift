@@ -30,7 +30,7 @@ struct FixtureOptions {
 
 enum FixtureFactory {
     private static let buildDir: URL = {
-        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("MitosisFixtureBuild-\(getpid())")
+        let dir = TestSupport.tempRoot.appendingPathComponent("MitosisFixtureBuild-\(getpid())")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }()

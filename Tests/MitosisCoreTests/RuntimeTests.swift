@@ -68,7 +68,15 @@ struct LaunchTests {
     @Test func runningFallbackCloneIsDetectedAndProtected() async throws {
         // Fallback is forced explicitly: an ad-hoc fixture claiming a restricted entitlement would be killed by macOS.
         var o = FixtureOptions(); o.behavior = .stayOpen(seconds: 20)
-        let (source, builder) = try Self.setUpSource(o)
+        let (source, ssdBuilder) = try Self.setUpSource(o)
+        // Real clones keep data in ~/Library on the internal disk. A clone opened through LaunchServices is its own
+        // "responsible" app, so macOS privacy controls (Removable Volumes) block it from writing its instance file
+        // to the external drive the other tests use. Keep this clone's (tiny) data folder on the internal disk.
+        let internalData = FileManager.default.temporaryDirectory.appendingPathComponent("mitosis-fallback-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: internalData) }
+        var env = ssdBuilder.environment
+        env.dataRoot = internalData
+        let builder = CloneBuilder(environment: env, profiles: ssdBuilder.profiles)
         let entry = try builder.create(CloneRequest(source: source, name: "Fixture (Safe)", badge: Badge(text: "S", color: "#30D158"),
                                                     modeOverride: .fallback))
         defer { CloneLauncher.terminate(entry); LaunchServices.unregister(entry.bundleURL) }

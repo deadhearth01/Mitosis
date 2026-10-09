@@ -29,6 +29,7 @@ Project layout:
 | `Assets/Brand/` | App icon and Mito mascot artwork (not covered by the license; see below) |
 | `docs/` | Design spec, implementation plans, and brand guide |
 | `website/` | The one-page website |
+| `scripts/` | The install script |
 
 ## Rules that keep Mitosis safe
 

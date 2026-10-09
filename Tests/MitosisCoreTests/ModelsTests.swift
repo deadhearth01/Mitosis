@@ -25,7 +25,7 @@ import Testing
         #expect(back == m)
         let text = String(decoding: data, as: UTF8.self)
         #expect(text.contains("\"schema\" : 1"))
-        #expect(text.contains("\"mitosisVersion\" : \"0.1.0\""))
+        #expect(text.contains("\"mitosisVersion\" : \"\(Mitosis.version)\""))
         #expect(text.contains("2026-10-08T"))   // ISO-8601 dates
     }
 

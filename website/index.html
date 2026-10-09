@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Mitosis makes separate copies of your Mac apps, each with its own login, data, and Dock icon. Free and source-available.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Mitosis — run separate copies of your Mac apps">
+  <meta property="og:description" content="One app. Separate worlds. Give every part of your life its own Mac app login, data, and Dock icon.">
+  <meta property="og:url" content="https://theavni.studio/labs/mitosis/">
+  <meta property="og:image" content="https://theavni.studio/labs/mitosis/assets/hero.png">
+  <meta property="og:image:alt" content="Mito, the blue Mitosis mascot, winking">
+  <link rel="canonical" href="https://theavni.studio/labs/mitosis/">
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+  <title>Mitosis — run separate copies of your Mac apps</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="#top" aria-label="Mitosis, back to top">
+        <img src="assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <a class="header-link" href="#how-it-works">How it works <span aria-hidden="true">↗</span></a>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">One app. Separate worlds.</p>
+        <h1 id="hero-title">Run separate copies of your Mac apps, side by side.</h1>
+        <p class="hero-subline">Keep work, personal, and every other login in its own app.</p>
+        <a class="button primary" href="#install">Install Mitosis <span aria-hidden="true">↓</span></a>
+        <p class="hero-note">Free and source-available <span aria-hidden="true">·</span> Native macOS</p>
+      </div>
+      <div class="hero-art">
+        <img src="assets/hero.png" width="720" height="720" alt="Mito, the blue Mitosis mascot, winking" fetchpriority="high">
+      </div>
+    </section>
+
+    <section class="section install-section" id="install" aria-labelledby="install-title">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">Get started</p>
+          <h2 id="install-title">Install Mitosis</h2>
+          <p>Paste this in Terminal. It checks the download before installing and needs no admin password.</p>
+        </div>
+        <div class="install-grid">
+          <div class="command-card">
+            <div class="command-heading"><h3>Terminal</h3><button class="copy-button" type="button" data-copy="curl" aria-label="Copy install command">Copy</button></div>
+            <code id="curl-command" class="command">Loading command…</code>
+          </div>
+          <div class="command-card">
+            <div class="command-heading"><h3>Homebrew</h3></div>
+            <p class="command-soon">Coming with the Mac app in 0.1.</p>
+          </div>
+        </div>
+        <p class="release-note">Today this installs the <code>mitosis</code> command-line preview (0.1.0-alpha.1). The Mac app arrives in 0.1.</p>
+        <p id="copy-status" class="sr-only" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="section features-section" aria-labelledby="features-title">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">Made for more than one account</p>
+          <h2 id="features-title">Each clone has its own space.</h2>
+        </div>
+        <div class="features-grid">
+          <article class="feature-card">
+            <div class="feature-symbol login-symbol" aria-hidden="true"><span></span><span></span></div>
+            <h3>Separate logins</h3>
+            <p>Stay signed in to different accounts at the same time.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-symbol data-symbol" aria-hidden="true"><span></span><span></span></div>
+            <h3>Separate data</h3>
+            <p>Settings, chats, and caches stay with their own clone.</p>
+          </article>
+          <article class="feature-card">
+            <div class="feature-symbol dock-symbol" aria-hidden="true"><span></span><span></span></div>
+            <h3>Separate Dock icons</h3>
+            <p>A small badge helps you tell each app apart.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section how-section" id="how-it-works" aria-labelledby="how-title">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">How it works</p>
+          <h2 id="how-title">Three steps. Two apps.</h2>
+        </div>
+        <ol class="steps-grid">
+          <li class="step">
+            <img src="assets/pose-thinking.png" width="360" height="360" loading="lazy" alt="Mito thinking about which app to choose">
+            <div class="step-copy"><span class="step-number">01</span><h3>Choose an app</h3><p>Pick an installed app to clone.</p></div>
+          </li>
+          <li class="step">
+            <img src="assets/pose-split.png" width="360" height="360" loading="lazy" alt="Two Mito clones celebrating together">
+            <div class="step-copy"><span class="step-number">02</span><h3>Name your clone</h3><p>Give it a clear name, like <strong>Slack (Work)</strong>.</p></div>
+          </li>
+          <li class="step">
+            <img src="assets/pose-success.png" width="360" height="360" loading="lazy" alt="Mito celebrating a finished clone">
+            <div class="step-copy"><span class="step-number">03</span><h3>Open both</h3><p>Use the original and your clone side by side.</p></div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section faq-section" id="faq" aria-labelledby="faq-title">
+      <div class="wrap faq-layout">
+        <div class="section-heading">
+          <p class="eyebrow">Good to know</p>
+          <h2 id="faq-title">Frequently asked questions</h2>
+        </div>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Which apps work?</h3><p>Slack, Discord, Signal, VS Code, Claude, and many Electron or Chromium apps work well. Some apps have limits; Apple’s own apps aren’t supported. <a data-repo-readme href="#">See compatibility details</a>.</p></div>
+          <div class="faq-item"><h3>Where does clone data live?</h3><p>Clone data lives in <code>~/Library/Mitosis/Data/</code>. The clone apps live in <code>~/Applications/Mitosis/</code>.</p></div>
+          <div class="faq-item"><h3>What happens when the original app updates?</h3><p>Refresh the clone with one click. Your login and data stay in place.</p></div>
+          <div class="faq-item"><h3>Does Mitosis change the original app?</h3><p>No. The original app stays as it is.</p></div>
+          <div class="faq-item"><h3>How do I uninstall a clone?</h3><p>Move it to the Trash. Its data stays unless you choose to remove it.</p></div>
+          <div class="faq-item"><h3>Can I use it at work?</h3><p>Yes. Mitosis is free for any use, including work. Its source code can’t be used in commercial or paid products.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a data-repo href="#">GitHub</a><a data-license href="#">PolyForm Noncommercial license</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

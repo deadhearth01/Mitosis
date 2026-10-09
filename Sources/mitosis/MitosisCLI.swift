@@ -168,7 +168,12 @@ struct Stats: ParsableCommand {
             let s = StatsCollector.stats(for: entry)
             let original = URL(fileURLWithPath: entry.manifest.source.path).deletingPathExtension().lastPathComponent
             print(entry.manifest.name)
-            print("Extra disk: about \(Context.bytes(s.extraDiskBytes)) (the rest is shared with \(original))")
+            let source = URL(fileURLWithPath: entry.manifest.source.path)
+            if FileManager.default.fileExists(atPath: source.path) && !FileCloner.isSameVolume(entry.bundleURL, source) {
+                print("Extra disk: \(Context.bytes(s.extraDiskBytes)) (a full copy: \(original) is on a different drive)")
+            } else {
+                print("Extra disk: about \(Context.bytes(s.extraDiskBytes)) (the rest is shared with \(original))")
+            }
             print("App size: \(Context.bytes(s.appBytes))")
             print("Data: \(Context.bytes(s.dataBytes))")
             if let u = s.usage {

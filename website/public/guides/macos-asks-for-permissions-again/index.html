@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <title>Why macOS Asks a Cloned App for Permissions Again</title>
+  <meta name="description" content="macOS treats each clone as a new app, so it asks again for notifications, files, the camera, and microphone. Here&#x27;s why, and where to manage it.">
+  <meta name="keywords" content="cloned app permissions mac, mac asks permission again copied app, privacy permissions clone">
+  <link rel="canonical" href="https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="Why macOS Asks a Cloned App for Permissions Again">
+  <meta property="og:description" content="macOS treats each clone as a new app, so it asks again for notifications, files, the camera, and microphone. Here&#x27;s why, and where to manage it.">
+  <meta property="og:url" content="https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/">
+  <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Why macOS asks a clone for permissions again", "description": "macOS treats each clone as a new app, so it asks again for notifications, files, the camera, and microphone. Here's why, and where to manage it.", "url": "https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/", "datePublished": "2026-10-09", "dateModified": "2026-10-09", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "Why macOS asks a clone for permissions again", "item": "https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do I have to allow everything again after an update?", "acceptedAnswer": {"@type": "Answer", "text": "No. Updates keep the clone's identity, so its permissions stay."}}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article-page">
+    <article class="wrap article">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Mitosis</a> <span aria-hidden="true">›</span> <a href="/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">Why macOS asks a clone for permissions again</span></nav>
+      <h1>Why macOS asks a clone for permissions again</h1>
+        <p class="lede">The first time a clone wants to send notifications, open your Documents folder, or use the camera, macOS asks, even if you already allowed the original app.</p>
+        <div class="answer"><p class="answer-label">Quick answer</p><p>That's expected: each clone has its own app identity, so macOS keeps its permissions separate from the original's. Allow what the clone needs, and review it anytime in <strong>System Settings › Privacy & Security</strong>.</p></div>
+        <h2>Why it's a good thing</h2>
+        <p>Separate permissions mean you can let your work copy use the camera for meetings while your personal copy can't, or silence notifications from one copy only.</p>
+        <figure class="article-figure"><img src="/assets/screen-light.webp" width="1600" height="1165" loading="lazy" decoding="async" alt="The Mitosis window: clones listed by app, and a clone&#x27;s page with usage stats"></figure>
+        <h2>Good to know</h2>
+        <ul class="tips">
+          <li>Notifications for each copy are set in <strong>System Settings › Notifications</strong>, where each copy appears under its own name.</li>
+        </ul>
+        <h2>Questions</h2>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Do I have to allow everything again after an update?</h3><p>No. Updates keep the clone's identity, so its permissions stay.</p></div>
+        </div>
+      <aside class="install-box" aria-labelledby="install-box-title">
+        <h2 id="install-box-title">Get Mitosis</h2>
+        <p>Free for macOS 15 or later on Apple silicon. Paste in Terminal:</p>
+        <code class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
+        <p class="install-box-alt">Or with Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code></p>
+        <a class="button primary" href="/#install">All install options</a>
+      </aside>
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title">Related guides</h2>
+        <ul>
+          <li><a href="/guides/a-clone-wont-open/">A clone won&#x27;t open: what to try</a></li>
+          <li><a href="/guides/keep-work-and-personal-apps-separate-on-mac/">How to keep work and personal apps separate on one Mac</a></li>
+          <li><a href="/guides/clones-and-app-updates/">What happens to clones when the original app updates</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a><a href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">License</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

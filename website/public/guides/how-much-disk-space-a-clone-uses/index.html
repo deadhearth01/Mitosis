@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <title>How Much Disk Space Does an App Clone Use on Mac? (APFS Clones)</title>
+  <meta name="description" content="A Mitosis clone usually adds a couple of megabytes, because it shares the original app&#x27;s files on disk through APFS. Here&#x27;s how, and when it uses more.">
+  <meta name="keywords" content="app clone disk space mac, apfs clone size, duplicate app disk usage mac">
+  <link rel="canonical" href="https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="How Much Disk Space Does an App Clone Use on Mac? (APFS Clones)">
+  <meta property="og:description" content="A Mitosis clone usually adds a couple of megabytes, because it shares the original app&#x27;s files on disk through APFS. Here&#x27;s how, and when it uses more.">
+  <meta property="og:url" content="https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/">
+  <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "How much disk space does an app clone use?", "description": "A Mitosis clone usually adds a couple of megabytes, because it shares the original app's files on disk through APFS. Here's how, and when it uses more.", "url": "https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/", "datePublished": "2026-10-09", "dateModified": "2026-10-09", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "How much disk space does an app clone use?", "item": "https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does Finder show the real size?", "acceptedAnswer": {"@type": "Answer", "text": "Finder shows the full size of the app, because it can't tell which files are shared. The clone's page in Mitosis shows what it really adds."}}, {"@type": "Question", "name": "Does a clone use more memory?", "acceptedAnswer": {"@type": "Answer", "text": "A running clone uses about as much memory as the app normally does; a clone that isn't open uses none."}}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article-page">
+    <article class="wrap article">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Mitosis</a> <span aria-hidden="true">›</span> <a href="/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">How much disk space does an app clone use?</span></nav>
+      <h1>How much disk space does an app clone use?</h1>
+        <p class="lede">Copying a big app like Slack or VS Code normally doubles its size, often hundreds of megabytes.</p>
+        <p>Mitosis clones are much smaller.</p>
+        <div class="answer"><p class="answer-label">Quick answer</p><p>Usually a couple of megabytes. Mitosis makes an APFS clone, which shares the original app's files on disk; only the few files it changes (the name, badge icon, and launcher) take new space. The clone's data, like logins and caches, grows as you use it.</p></div>
+        <h2>When a clone uses more</h2>
+        <p><strong>The original is on another drive.</strong> APFS can only share files on the same drive, so a clone of an app on an external disk is a full copy. Mitosis tells you the size before it copies.</p>
+        <p><strong>Data grows with use.</strong> Messages, caches, and downloaded updates live in the clone's data folder. <strong>Clean Caches</strong> on the clone's page frees space without signing you out.</p>
+        <h2>Seeing the numbers</h2>
+        <p>Each clone's page shows <em>Extra disk</em> (what the clone adds), <em>Data</em>, and, while it runs, memory and CPU. In Terminal, <code>mitosis stats "Slack (Work)"</code> shows the same.</p>
+        <figure class="article-figure"><img src="/assets/screen-light.webp" width="1600" height="1165" loading="lazy" decoding="async" alt="The Mitosis window: clones listed by app, and a clone&#x27;s page with usage stats"></figure>
+        <h2>Questions</h2>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Does Finder show the real size?</h3><p>Finder shows the full size of the app, because it can't tell which files are shared. The clone's page in Mitosis shows what it really adds.</p></div>
+          <div class="faq-item"><h3>Does a clone use more memory?</h3><p>A running clone uses about as much memory as the app normally does; a clone that isn't open uses none.</p></div>
+        </div>
+      <aside class="install-box" aria-labelledby="install-box-title">
+        <h2 id="install-box-title">Get Mitosis</h2>
+        <p>Free for macOS 15 or later on Apple silicon. Paste in Terminal:</p>
+        <code class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
+        <p class="install-box-alt">Or with Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code></p>
+        <a class="button primary" href="/#install">All install options</a>
+      </aside>
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title">Related guides</h2>
+        <ul>
+          <li><a href="/guides/clones-and-app-updates/">What happens to clones when the original app updates</a></li>
+          <li><a href="/guides/open-the-same-app-twice-on-mac/">How to open two copies of the same app on a Mac</a></li>
+          <li><a href="/guides/uninstall-mitosis/">How to remove clones and uninstall Mitosis</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a><a href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">License</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

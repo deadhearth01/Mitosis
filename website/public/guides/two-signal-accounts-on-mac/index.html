@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <title>Two Signal Accounts on One Mac (Signal Desktop for Two Numbers)</title>
+  <meta name="description" content="Signal Desktop links to one phone number. Here&#x27;s how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.">
+  <meta name="keywords" content="two signal accounts mac, signal desktop multiple accounts, signal desktop two phone numbers, second signal mac">
+  <link rel="canonical" href="https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="Two Signal Accounts on One Mac (Signal Desktop for Two Numbers)">
+  <meta property="og:description" content="Signal Desktop links to one phone number. Here&#x27;s how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.">
+  <meta property="og:url" content="https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/">
+  <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "How to use two Signal accounts on one Mac", "description": "Signal Desktop links to one phone number. Here's how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.", "url": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/", "datePublished": "2026-10-09", "dateModified": "2026-10-09", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/new-clone-details.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "How to use two Signal accounts on one Mac", "item": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can Signal Desktop use two phone numbers?", "acceptedAnswer": {"@type": "Answer", "text": "Not in one app. A Mitosis clone is a second Signal app, so you can link it to a second phone number while the original stays linked to the first."}}, {"@type": "Question", "name": "Is this secure?", "acceptedAnswer": {"@type": "Answer", "text": "Each copy is the official Signal app with its own data folder. Mitosis doesn't touch your messages; it only gives the copy its own place to keep them."}}, {"@type": "Question", "name": "What happens if I delete the copy?", "acceptedAnswer": {"@type": "Answer", "text": "It moves to the Trash. You can keep or remove its data, and unlink the device from your phone afterwards."}}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article-page">
+    <article class="wrap article">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Mitosis</a> <span aria-hidden="true">›</span> <a href="/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">How to use two Signal accounts on one Mac</span></nav>
+      <h1>How to use two Signal accounts on one Mac</h1>
+        <p class="lede">Signal Desktop is linked to one phone number, and there's no switch for a second account. If you have a work phone and a personal phone, you'd normally have to unlink and relink every time.</p>
+        <p>With a second copy of Signal on your Mac, each copy links to its own phone, and both run side by side.</p>
+        <div class="answer"><p class="answer-label">Quick answer</p><p>Clone Signal with Mitosis (label it <em>Work</em>), open the clone, and link it from your second phone in Signal under <strong>Settings › Linked devices</strong>. Each copy keeps its own messages and account.</p></div>
+        <h2>Step by step</h2>
+        <ol class="howto">
+          <li><h3>Install Mitosis</h3><p>Paste this in Terminal:<code class="command-block">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>Or use Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code>. Free; macOS 15 or later on Apple silicon.</p></li>
+          <li><h3>Clone Signal</h3><p>Click <strong>New Clone</strong>, choose <strong>Signal</strong>, and add a label like <strong>Work</strong>.</p></li>
+          <li><h3>Link the second phone</h3><p>Open <em>Signal (Work)</em>. It shows a QR code. On your second phone, open Signal › Settings › Linked devices and scan it.</p></li>
+          <li><h3>Use both</h3><p>Your original Signal stays linked to your first phone. Each copy has its own messages, settings, and notifications.</p></li>
+        </ol>
+        <figure class="article-figure"><img src="/assets/guides/new-clone-details.webp" width="1200" height="825" loading="lazy" decoding="async" alt="Adding a label and badge for the copy, with a live preview of its Dock icon"></figure>
+        <figure class="article-figure"><img src="/assets/guides/new-clone-done.webp" width="1200" height="825" loading="lazy" decoding="async" alt="Mitosis confirms the copy is ready after checking that it starts"></figure>
+        <h2>Good to know</h2>
+        <ul class="tips">
+          <li>Messages stay on the copy they belong to; the copies never share data.</li>
+          <li>Signal updates itself; Mitosis rebuilds the clone after an update and keeps it linked.</li>
+          <li>Give each copy a different badge color so you can tell them apart in the Dock and in notifications.</li>
+        </ul>
+        <h2>Questions</h2>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Can Signal Desktop use two phone numbers?</h3><p>Not in one app. A Mitosis clone is a second Signal app, so you can link it to a second phone number while the original stays linked to the first.</p></div>
+          <div class="faq-item"><h3>Is this secure?</h3><p>Each copy is the official Signal app with its own data folder. Mitosis doesn't touch your messages; it only gives the copy its own place to keep them.</p></div>
+          <div class="faq-item"><h3>What happens if I delete the copy?</h3><p>It moves to the Trash. You can keep or remove its data, and unlink the device from your phone afterwards.</p></div>
+        </div>
+      <aside class="install-box" aria-labelledby="install-box-title">
+        <h2 id="install-box-title">Get Mitosis</h2>
+        <p>Free for macOS 15 or later on Apple silicon. Paste in Terminal:</p>
+        <code class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
+        <p class="install-box-alt">Or with Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code></p>
+        <a class="button primary" href="/#install">All install options</a>
+      </aside>
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title">Related guides</h2>
+        <ul>
+          <li><a href="/guides/open-the-same-app-twice-on-mac/">How to open two copies of the same app on a Mac</a></li>
+          <li><a href="/guides/two-slack-accounts-on-mac/">How to use two Slack accounts at the same time on a Mac</a></li>
+          <li><a href="/parall-alternative/">A free Parall alternative for running apps twice on a Mac</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a><a href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">License</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

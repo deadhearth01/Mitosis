@@ -34,7 +34,7 @@ public enum SnapshotRunner {
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
             Shot(name: "detail-links", size: CGSize(width: 1060, height: 1100)) {
-                let m = s.model(); m.selection = s.entries.first { $0.manifest.name == "Signal (Work)" }?.id
+                let m = s.model(); m.selection = s.entries.first { $0.manifest.name == "Claude (Research)" }?.id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
             Shot(name: "detail-update", size: CGSize(width: 1060, height: 720)) {
@@ -84,6 +84,12 @@ public enum SnapshotRunner {
             Shot(name: "main-update", size: CGSize(width: 1060, height: 720)) {
                 let u = UpdateChecker(); u.state = .available(version: "0.1.1", url: SystemLinks.releases)
                 return AnyView(MainWindow(model: s.model(), updates: u).tint(Brand.accent))
+            },
+            Shot(name: "guide-codex-details", size: CGSize(width: 640, height: 440), titled: false) {
+                sheet(NewCloneSheet(model: s.newClone(step: .details, app: "Codex", label: "Work"), close: {}))
+            },
+            Shot(name: "guide-claude-details", size: CGSize(width: 640, height: 440), titled: false) {
+                sheet(NewCloneSheet(model: s.newClone(step: .details, app: "Claude", label: "Personal"), close: {}))
             },
             Shot(name: "main-empty", size: CGSize(width: 1060, height: 720)) {
                 AnyView(MainWindow(model: AppModel(preview: [])).tint(Brand.accent))
@@ -259,7 +265,10 @@ struct SampleData {
         return m
     }
 
-    func newClone(step: NewCloneModel.Step) -> NewCloneModel {
+    func newClone(step: NewCloneModel.Step) -> NewCloneModel { newClone(step: step, app: "Signal", label: "Family") }
+
+    /// The New Clone sheet for any installed app (guide screenshots).
+    func newClone(step: NewCloneModel.Step, app appName: String, label: String) -> NewCloneModel {
         let names = ["Arc", "Claude", "Cursor", "Figma", "Google Chrome", "Notion", "Obsidian", "Pages", "Postman", "Proton Pass", "Signal", "Safari"]
         let apps = names.map { name in
             CatalogApp(url: URL(fileURLWithPath: name == "Safari" ? "/Applications/Safari.app" : "/Applications/\(name).app"), name: name,
@@ -278,10 +287,15 @@ struct SampleData {
                 support[app.id] = ModeDecision(mode: .identity, support: .full, reasons: ["Electron app. Link each clone as a separate device."])
             }
         }
-        let signal = apps.first { $0.name == "Signal" }!
-        var form = NewCloneForm(appName: "Signal", existingNames: ["Signal (Work)"], usedColors: ["#0A84FF"])
-        form.setLabel("Family")
-        return NewCloneModel(preview: apps, support: support, step: step, chosen: signal, form: form)
+        let chosen = apps.first { $0.name == appName }
+            ?? CatalogApp(url: URL(fileURLWithPath: "/Applications/\(appName).app"), name: appName, bundleID: "com.example.\(appName.lowercased())",
+                          version: "1.0", lastUsed: Date())
+        if support[chosen.id] == nil {
+            support[chosen.id] = ModeDecision(mode: .identity, support: .full, reasons: ["Electron app. Each clone signs in separately."])
+        }
+        var form = NewCloneForm(appName: appName, existingNames: ["\(appName) (Work)"], usedColors: ["#0A84FF"])
+        form.setLabel(label)
+        return NewCloneModel(preview: apps, support: support, step: step, chosen: chosen, form: form)
     }
 
     static func make(in dir: URL) -> SampleData {

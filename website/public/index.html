@@ -4,19 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="description" content="Mitosis makes separate copies of your Mac apps, each with its own login, data, and Dock icon. Free and source-available.">
+  <meta name="description" content="Run separate copies of your Mac apps side by side, like Slack (Work) next to Slack, each with its own login, data, and Dock icon. Free app cloner for macOS.">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Mitosis — run separate copies of your Mac apps">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="Mitosis — Free Mac App Cloner: Run Apps Twice, Separate Logins">
   <meta property="og:description" content="One app. Separate worlds. Give every part of your life its own Mac app login, data, and Dock icon.">
   <meta property="og:url" content="https://mitosis.theavni.studio/">
   <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
   <meta property="og:image:alt" content="Mitosis: run separate copies of your Mac apps, with Mito the mascot">
   <link rel="canonical" href="https://mitosis.theavni.studio/">
   <meta name="twitter:card" content="summary_large_image">
-  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
-  <title>Mitosis — run separate copies of your Mac apps</title>
+  <title>Mitosis — Free Mac App Cloner: Run Apps Twice, Separate Logins</title>
+  <!-- ld:start -->
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Mitosis", "description": "Free macOS app that runs separate copies of your Mac apps, each with its own login, data, and Dock icon.", "url": "https://mitosis.theavni.studio/", "applicationCategory": "UtilitiesApplication", "operatingSystem": "macOS 15 or later (Apple silicon)", "softwareVersion": "0.2.1", "downloadUrl": "https://github.com/deadhearth01/Mitosis/releases/latest", "installUrl": "https://mitosis.theavni.studio/#install", "image": "https://mitosis.theavni.studio/assets/icon-512.png", "screenshot": "https://mitosis.theavni.studio/assets/screen-light.webp", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "license": "https://github.com/deadhearth01/Mitosis/blob/main/LICENSE", "codeRepository": "https://github.com/deadhearth01/Mitosis"}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebSite", "name": "Mitosis", "url": "https://mitosis.theavni.studio/", "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Which apps work?", "acceptedAnswer": {"@type": "Answer", "text": "Slack, Discord, Signal, VS Code, Claude, Codex, Notion, and many Electron or Chromium apps work well. Some apps have limits; Apple's own apps aren't supported. See compatibility details."}}, {"@type": "Question", "name": "Where does clone data live?", "acceptedAnswer": {"@type": "Answer", "text": "Clone data lives in ~/Library/Mitosis/Data/. The clone apps live in ~/Applications/Mitosis/."}}, {"@type": "Question", "name": "What happens when the original app updates?", "acceptedAnswer": {"@type": "Answer", "text": "Mitosis updates its clones on its own, in the background. Your logins and data stay in place."}}, {"@type": "Question", "name": "Does Mitosis change the original app?", "acceptedAnswer": {"@type": "Answer", "text": "No. The original app stays as it is."}}, {"@type": "Question", "name": "How do I uninstall a clone?", "acceptedAnswer": {"@type": "Answer", "text": "Move it to the Trash. Its data stays unless you choose to remove it."}}, {"@type": "Question", "name": "Can I sign in to two accounts of the same app?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Each clone is a separate app with its own login. For apps that sign in through your browser, turn on “Send sign-in links to the right copy” so the link reaches the copy you signed in from."}}, {"@type": "Question", "name": "Is Mitosis a free alternative to Parall?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Mitosis is free and source-available, and runs separate copies of your Mac apps with their own logins, data, and Dock icons. See what it does."}}, {"@type": "Question", "name": "Can I use it at work?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Mitosis is free for any use, including work. Its source code can't be used in commercial or paid products."}}]}</script>
+  <!-- ld:end -->
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -26,7 +38,11 @@
         <img src="assets/favicon.png" width="36" height="36" alt="">
         <span>Mitosis</span>
       </a>
-      <a class="header-link" href="#how-it-works">How it works <span aria-hidden="true">↗</span></a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="guides/">Guides</a>
+        <a href="#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
     </div>
   </header>
 
@@ -40,7 +56,7 @@
         <p class="hero-note">Free and source-available <span aria-hidden="true">·</span> Native macOS</p>
       </div>
       <div class="hero-art">
-        <img src="assets/hero.png" width="720" height="720" alt="Mito, the blue Mitosis mascot, winking" fetchpriority="high">
+        <img src="assets/hero.webp" width="720" height="720" alt="Mito, the blue Mitosis mascot, winking" fetchpriority="high">
       </div>
     </section>
 
@@ -69,8 +85,8 @@
     <section class="section screenshot-section" aria-label="The Mitosis app">
       <div class="wrap">
         <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/screen-dark.png">
-          <img class="screenshot" src="assets/screen-light.png" width="1600" height="1165" loading="lazy" alt="The Mitosis window: clones listed by app in the sidebar, and a clone's page with its status, actions, and usage stats">
+          <source media="(prefers-color-scheme: dark)" srcset="assets/screen-dark.webp">
+          <img class="screenshot" src="assets/screen-light.webp" decoding="async" width="1600" height="1165" loading="lazy" alt="The Mitosis window: clones listed by app in the sidebar, and a clone's page with its status, actions, and usage stats">
         </picture>
       </div>
     </section>
@@ -109,18 +125,37 @@
         </div>
         <ol class="steps-grid">
           <li class="step">
-            <img src="assets/pose-thinking.png" width="360" height="360" loading="lazy" alt="Mito thinking about which app to choose">
+            <img src="assets/pose-thinking.webp" width="360" height="360" loading="lazy" alt="Mito thinking about which app to choose">
             <div class="step-copy"><span class="step-number">01</span><h3>Choose an app</h3><p>Pick an installed app to clone.</p></div>
           </li>
           <li class="step">
-            <img src="assets/pose-split.png" width="360" height="360" loading="lazy" alt="Two Mito clones celebrating together">
+            <img src="assets/pose-split.webp" width="360" height="360" loading="lazy" alt="Two Mito clones celebrating together">
             <div class="step-copy"><span class="step-number">02</span><h3>Name your clone</h3><p>Give it a clear name, like <strong>Slack (Work)</strong>.</p></div>
           </li>
           <li class="step">
-            <img src="assets/pose-success.png" width="360" height="360" loading="lazy" alt="Mito celebrating a finished clone">
+            <img src="assets/pose-success.webp" width="360" height="360" loading="lazy" alt="Mito celebrating a finished clone">
             <div class="step-copy"><span class="step-number">03</span><h3>Open both</h3><p>Use the original and your clone side by side.</p></div>
           </li>
         </ol>
+      </div>
+    </section>
+
+    <section class="section guides-section" aria-labelledby="guides-title">
+      <div class="wrap">
+        <div class="section-heading">
+          <p class="eyebrow">Guides</p>
+          <h2 id="guides-title">Two accounts, one Mac.</h2>
+          <p>Step-by-step guides for the apps people clone most.</p>
+        </div>
+        <ul class="guide-grid">
+          <li class="guide-card"><a href="guides/open-the-same-app-twice-on-mac/"><h3>Open two copies of the same app</h3><p>Why open -n isn't enough, and how to run a real second copy.</p></a></li>
+          <li class="guide-card"><a href="guides/two-slack-accounts-on-mac/"><h3>Two Slack accounts at once</h3><p>Work and personal Slack in separate windows, both signed in.</p></a></li>
+          <li class="guide-card"><a href="guides/two-signal-accounts-on-mac/"><h3>Two Signal accounts on one Mac</h3><p>Link a second copy of Signal Desktop to a second phone.</p></a></li>
+          <li class="guide-card"><a href="guides/two-discord-accounts-on-mac/"><h3>Two Discord accounts online</h3><p>Keep a community and a personal account online together.</p></a></li>
+          <li class="guide-card"><a href="guides/two-claude-accounts-on-mac/"><h3>Two Claude accounts</h3><p>A work and a personal Claude desktop app, side by side.</p></a></li>
+          <li class="guide-card"><a href="guides/two-codex-accounts-on-mac/"><h3>Two Codex accounts</h3><p>Each Codex copy gets its own account folder.</p></a></li>
+        </ul>
+        <p class="guides-more"><a href="guides/">All guides</a></p>
       </div>
     </section>
 
@@ -131,11 +166,13 @@
           <h2 id="faq-title">Frequently asked questions</h2>
         </div>
         <div class="faq-list">
-          <div class="faq-item"><h3>Which apps work?</h3><p>Slack, Discord, Signal, VS Code, Claude, and many Electron or Chromium apps work well. Some apps have limits; Apple’s own apps aren’t supported. <a data-repo-readme href="https://github.com/deadhearth01/Mitosis#which-apps-work">See compatibility details</a>.</p></div>
+          <div class="faq-item"><h3>Which apps work?</h3><p>Slack, Discord, Signal, VS Code, Claude, Codex, Notion, and many Electron or Chromium apps work well. Some apps have limits; Apple’s own apps aren’t supported. <a data-repo-readme href="https://github.com/deadhearth01/Mitosis#which-apps-work">See compatibility details</a>.</p></div>
           <div class="faq-item"><h3>Where does clone data live?</h3><p>Clone data lives in <code>~/Library/Mitosis/Data/</code>. The clone apps live in <code>~/Applications/Mitosis/</code>.</p></div>
           <div class="faq-item"><h3>What happens when the original app updates?</h3><p>Mitosis updates its clones on its own, in the background. Your logins and data stay in place.</p></div>
           <div class="faq-item"><h3>Does Mitosis change the original app?</h3><p>No. The original app stays as it is.</p></div>
           <div class="faq-item"><h3>How do I uninstall a clone?</h3><p>Move it to the Trash. Its data stays unless you choose to remove it.</p></div>
+          <div class="faq-item"><h3>Can I sign in to two accounts of the same app?</h3><p>Yes. Each clone is a separate app with its own login. For apps that sign in through your browser, turn on “Send sign-in links to the right copy” so the link reaches the copy you signed in from.</p></div>
+          <div class="faq-item"><h3>Is Mitosis a free alternative to Parall?</h3><p>Yes. Mitosis is free and source-available, and runs separate copies of your Mac apps with their own logins, data, and Dock icons. <a href="parall-alternative/">See what it does</a>.</p></div>
           <div class="faq-item"><h3>Can I use it at work?</h3><p>Yes. Mitosis is free for any use, including work. Its source code can’t be used in commercial or paid products.</p></div>
         </div>
       </div>
@@ -145,7 +182,7 @@
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
-      <nav aria-label="Footer"><a data-repo href="https://github.com/deadhearth01/Mitosis">GitHub</a><a data-license href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">PolyForm Noncommercial license</a></nav>
+      <nav aria-label="Footer"><a href="guides/">Guides</a><a href="parall-alternative/">Free Parall alternative</a><a data-repo href="https://github.com/deadhearth01/Mitosis">GitHub</a><a data-license href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">PolyForm Noncommercial license</a></nav>
     </div>
   </footer>
 </body>

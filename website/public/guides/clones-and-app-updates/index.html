@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <title>What Happens to App Clones When the Original Mac App Updates</title>
+  <meta name="description" content="Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here&#x27;s how it works, and what happens if a clone is open.">
+  <meta name="keywords" content="app clone update mac, clone app updates automatically, keep cloned app up to date mac">
+  <link rel="canonical" href="https://mitosis.theavni.studio/guides/clones-and-app-updates/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="What Happens to App Clones When the Original Mac App Updates">
+  <meta property="og:description" content="Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here&#x27;s how it works, and what happens if a clone is open.">
+  <meta property="og:url" content="https://mitosis.theavni.studio/guides/clones-and-app-updates/">
+  <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "What happens to clones when the original app updates", "description": "Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here's how it works, and what happens if a clone is open.", "url": "https://mitosis.theavni.studio/guides/clones-and-app-updates/", "datePublished": "2026-10-09", "dateModified": "2026-10-09", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/clones-and-app-updates/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "What happens to clones when the original app updates", "item": "https://mitosis.theavni.studio/guides/clones-and-app-updates/"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do clones update themselves?", "acceptedAnswer": {"@type": "Answer", "text": "No. The original app updates as usual; Mitosis then rebuilds its clones from it."}}, {"@type": "Question", "name": "Will I have to sign in again after an update?", "acceptedAnswer": {"@type": "Answer", "text": "No. Your login lives in the clone's data folder, which an update doesn't touch."}}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article-page">
+    <article class="wrap article">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Mitosis</a> <span aria-hidden="true">›</span> <a href="/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">What happens to clones when the original app updates</span></nav>
+      <h1>What happens to clones when the original app updates</h1>
+        <p class="lede">Apps update all the time. A copy made last month still contains last month's version, so it needs updating too.</p>
+        <p>Mitosis does that for you.</p>
+        <div class="answer"><p class="answer-label">Quick answer</p><p>When the original app updates, Mitosis rebuilds its clones from the new version in the background, keeping each clone's login and data. A clone that's open is rebuilt after you quit it.</p></div>
+        <h2>How it works</h2>
+        <p><strong>While Mitosis is open:</strong> it notices the new version and rebuilds outdated clones that aren't running.</p>
+        <p><strong>While Mitosis is closed:</strong> a small macOS background job watches the original apps (it uses no CPU while waiting) and runs the same update.</p>
+        <p><strong>Safely:</strong> the new clone is built next to the old one and swapped in only when it's complete. If an app is still installing its update, Mitosis waits and tries again later.</p>
+        <p><strong>Your data stays:</strong> logins, settings, and caches live outside the clone, so rebuilding it doesn't touch them.</p>
+        <h2>Prefer to update by hand?</h2>
+        <p>Turn off <strong>Settings › General › Update clones automatically</strong>. Clones then show <em>Update available</em>, and <strong>Refresh</strong> rebuilds one. A manual refresh opens the clone once to check that it starts, and puts the previous version back if it doesn't.</p>
+        <figure class="article-figure"><img src="/assets/screen-light.webp" width="1600" height="1165" loading="lazy" decoding="async" alt="The Mitosis window: clones listed by app, and a clone&#x27;s page with usage stats"></figure>
+        <h2>Questions</h2>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Do clones update themselves?</h3><p>No. The original app updates as usual; Mitosis then rebuilds its clones from it.</p></div>
+          <div class="faq-item"><h3>Will I have to sign in again after an update?</h3><p>No. Your login lives in the clone's data folder, which an update doesn't touch.</p></div>
+        </div>
+      <aside class="install-box" aria-labelledby="install-box-title">
+        <h2 id="install-box-title">Get Mitosis</h2>
+        <p>Free for macOS 15 or later on Apple silicon. Paste in Terminal:</p>
+        <code class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
+        <p class="install-box-alt">Or with Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code></p>
+        <a class="button primary" href="/#install">All install options</a>
+      </aside>
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title">Related guides</h2>
+        <ul>
+          <li><a href="/guides/how-much-disk-space-a-clone-uses/">How much disk space does an app clone use?</a></li>
+          <li><a href="/guides/a-clone-wont-open/">A clone won&#x27;t open: what to try</a></li>
+          <li><a href="/guides/open-the-same-app-twice-on-mac/">How to open two copies of the same app on a Mac</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a><a href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">License</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

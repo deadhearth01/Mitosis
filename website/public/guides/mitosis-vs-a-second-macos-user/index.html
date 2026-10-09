@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <title>App Copies vs a Second macOS User Account: Which to Use</title>
+  <meta name="description" content="A second macOS user keeps everything apart but means switching users. App copies run side by side. Here&#x27;s how to choose.">
+  <meta name="keywords" content="second user account mac vs app, fast user switching vs multiple app instances, separate accounts one mac">
+  <link rel="canonical" href="https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="App Copies vs a Second macOS User Account: Which to Use">
+  <meta property="og:description" content="A second macOS user keeps everything apart but means switching users. App copies run side by side. Here&#x27;s how to choose.">
+  <meta property="og:url" content="https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/">
+  <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "App copies vs a second macOS user account", "description": "A second macOS user keeps everything apart but means switching users. App copies run side by side. Here's how to choose.", "url": "https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/", "datePublished": "2026-10-09", "dateModified": "2026-10-09", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "App copies vs a second macOS user account", "item": "https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do app copies share my files?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Copies run in your normal session, so they can open the same files as the original. Only the app's own data (logins, settings, caches) is separate."}}, {"@type": "Question", "name": "Do copies share passwords in Keychain?", "acceptedAnswer": {"@type": "Answer", "text": "They share your Keychain like any app does, but each copy has its own app identity, so apps that store sign-ins per app keep them apart."}}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article-page">
+    <article class="wrap article">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Mitosis</a> <span aria-hidden="true">›</span> <a href="/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">App copies vs a second macOS user account</span></nav>
+      <h1>App copies vs a second macOS user account</h1>
+        <p class="lede">macOS has a built-in way to separate everything: a second user account. Each user has their own apps, files, and settings, and Fast User Switching moves between them.</p>
+        <p>That's thorough, but it's all or nothing: you can't see work Slack while you're in your personal session.</p>
+        <div class="answer"><p class="answer-label">Quick answer</p><p>Use a second macOS user when you want everything apart, including files and passwords. Use app copies (Mitosis) when you want specific apps apart but side by side in one session.</p></div>
+        <h2>Side by side</h2>
+        <p><strong>Second macOS user:</strong> separate files, Keychain, Dock, and settings; switch users to see the other side; apps from both sides can't share a screen.</p>
+        <p><strong>App copies:</strong> one session, one set of files; only the copied apps keep their own login and data; both copies on screen at once.</p>
+        <h2>Mixing both</h2>
+        <p>Nothing stops you from doing both: a separate macOS user for a strictly managed work setup, and app copies inside your own session for a second Slack or Discord.</p>
+        <figure class="article-figure"><img src="/assets/screen-light.webp" width="1600" height="1165" loading="lazy" decoding="async" alt="The Mitosis window: clones listed by app, and a clone&#x27;s page with usage stats"></figure>
+        <h2>Questions</h2>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Do app copies share my files?</h3><p>Yes. Copies run in your normal session, so they can open the same files as the original. Only the app's own data (logins, settings, caches) is separate.</p></div>
+          <div class="faq-item"><h3>Do copies share passwords in Keychain?</h3><p>They share your Keychain like any app does, but each copy has its own app identity, so apps that store sign-ins per app keep them apart.</p></div>
+        </div>
+      <aside class="install-box" aria-labelledby="install-box-title">
+        <h2 id="install-box-title">Get Mitosis</h2>
+        <p>Free for macOS 15 or later on Apple silicon. Paste in Terminal:</p>
+        <code class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
+        <p class="install-box-alt">Or with Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code></p>
+        <a class="button primary" href="/#install">All install options</a>
+      </aside>
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title">Related guides</h2>
+        <ul>
+          <li><a href="/guides/keep-work-and-personal-apps-separate-on-mac/">How to keep work and personal apps separate on one Mac</a></li>
+          <li><a href="/guides/open-the-same-app-twice-on-mac/">How to open two copies of the same app on a Mac</a></li>
+          <li><a href="/guides/how-much-disk-space-a-clone-uses/">How much disk space does an app clone use?</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a><a href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">License</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

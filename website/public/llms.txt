@@ -1,0 +1,44 @@
+# Mitosis
+
+> Free, source-available macOS app that runs separate copies of your Mac apps (for example Slack (Work) next to Slack), each with its own login, data, Dock icon, and notifications. macOS 15+ on Apple silicon.
+
+Current version: 0.2.1. Made by The Avni Studio (https://theavni.studio). Source: https://github.com/deadhearth01/Mitosis
+
+Key facts:
+- Clones share the original app's files on disk (APFS), so a clone usually adds a few megabytes.
+- Clones update automatically when the original app updates; logins and data are kept.
+- Sign-in links (custom URL schemes like slack://) can be routed to the copy that started the sign-in.
+- Codex clones get their own CODEX_HOME, so each signs in to its own account.
+- Works with most Electron/Chromium apps (Slack, Discord, Signal, VS Code, Notion, Claude, Codex). Not Apple's own apps; sandboxed iCloud apps like WhatsApp aren't supported yet.
+- Install: `curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash` or `brew install --cask deadhearth01/tap/mitosis`
+- Free for any use, including work (PolyForm Noncommercial 1.0.0 plus a permission to use unmodified releases for any purpose).
+
+## Pages
+- [Home](https://mitosis.theavni.studio/): what Mitosis does and how to install it
+- [Guides](https://mitosis.theavni.studio/guides/): step-by-step guides
+- [How to open two copies of the same app on a Mac](https://mitosis.theavni.studio/guides/open-the-same-app-twice-on-mac/): macOS runs one copy of each app. Here's how to run two copies side by side, each with its own login and data, and why open -n usually isn't enough.
+- [How to use two Slack accounts at the same time on a Mac](https://mitosis.theavni.studio/guides/two-slack-accounts-on-mac/): Keep a work and a personal (or client) Slack fully separate on your Mac: two windows, two Dock icons, two sets of notifications, both signed in at once.
+- [How to use two Signal accounts on one Mac](https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/): Signal Desktop links to one phone number. Here's how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.
+- [How to be online on two Discord accounts at once on a Mac](https://mitosis.theavni.studio/guides/two-discord-accounts-on-mac/): Discord's account switcher shows one account at a time. Run a second Discord on your Mac to keep two accounts online together, each with its own window and notifications.
+- [How to use two Claude accounts on a Mac](https://mitosis.theavni.studio/guides/two-claude-accounts-on-mac/): The Claude desktop app signs in to one account at a time. Run a second copy on your Mac for a work and a personal Claude, both open at once.
+- [How to use two Codex accounts on one Mac](https://mitosis.theavni.studio/guides/two-codex-accounts-on-mac/): The Codex app keeps one account in ~/.codex. Run a second copy on your Mac with its own Codex folder, so each copy signs in to a different account.
+- [How to use two Notion accounts on one Mac](https://mitosis.theavni.studio/guides/two-notion-accounts-on-mac/): Run a second copy of Notion on your Mac with its own login, settings, and Dock icon, so two Notion accounts stay open at once.
+- [How to use two Cursor accounts on one Mac](https://mitosis.theavni.studio/guides/two-cursor-accounts-on-mac/): Run a second copy of Cursor on your Mac with its own login, settings, and Dock icon, so two Cursor accounts stay open at once.
+- [How to use two VS Code accounts on one Mac](https://mitosis.theavni.studio/guides/two-vs-code-instances-on-mac/): Run a second copy of VS Code on your Mac with its own login, settings, and Dock icon, so two VS Code accounts stay open at once.
+- [How to use two Figma accounts on one Mac](https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/): Run a second copy of Figma on your Mac with its own login, settings, and Dock icon, so two Figma accounts stay open at once.
+- [How to use two Canva accounts on one Mac](https://mitosis.theavni.studio/guides/two-canva-accounts-on-mac/): Run a second copy of Canva on your Mac with its own login, settings, and Dock icon, so two Canva accounts stay open at once.
+- [How to use two Postman accounts on one Mac](https://mitosis.theavni.studio/guides/two-postman-accounts-on-mac/): Run a second copy of Postman on your Mac with its own login, settings, and Dock icon, so two Postman accounts stay open at once.
+- [Chrome profiles or a second Chrome app on a Mac?](https://mitosis.theavni.studio/guides/second-google-chrome-on-mac/): Chrome profiles already keep accounts apart. Here's when that's enough, and when a second Chrome app with its own Dock icon and windows is the better fit.
+- [How to keep work and personal apps separate on one Mac](https://mitosis.theavni.studio/guides/keep-work-and-personal-apps-separate-on-mac/): Use one Mac for work and personal life without mixing accounts: separate copies of Slack, Chrome, Notion, and more, each with its own login and Dock icon.
+- [How to test an app with two accounts at once on a Mac](https://mitosis.theavni.studio/guides/test-your-app-with-two-accounts-on-mac/): Developers: run two copies of your Electron or Chromium app (or a chat app you integrate with) side by side, each signed in as a different user.
+- [App copies vs a second macOS user account](https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/): A second macOS user keeps everything apart but means switching users. App copies run side by side. Here's how to choose.
+- [What happens to clones when the original app updates](https://mitosis.theavni.studio/guides/clones-and-app-updates/): Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here's how it works, and what happens if a clone is open.
+- [Why a clone gets signed in to the wrong copy, and the fix](https://mitosis.theavni.studio/guides/sign-in-links-and-clones/): Apps that sign in through the browser send a link back that macOS gives to the original app. Here's why that signs in the wrong copy, and how Mitosis routes it.
+- [How much disk space does an app clone use?](https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/): A Mitosis clone usually adds a couple of megabytes, because it shares the original app's files on disk through APFS. Here's how, and when it uses more.
+- [A clone won't open: what to try](https://mitosis.theavni.studio/guides/a-clone-wont-open/): If a Mitosis clone won't open, try Refresh, then compatibility mode. Here's what each step does and how to report a problem.
+- [Why macOS asks a clone for permissions again](https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/): macOS treats each clone as a new app, so it asks again for notifications, files, the camera, and microphone. Here's why, and where to manage it.
+- [How to remove clones and uninstall Mitosis](https://mitosis.theavni.studio/guides/uninstall-mitosis/): Delete clones (with or without their data), turn off the background updater, and remove Mitosis and its command completely.
+- [A free Parall alternative for running apps twice on a Mac](https://mitosis.theavni.studio/parall-alternative/): Looking for a free alternative to Parall? Mitosis runs separate copies of your Mac apps, each with its own login, data, and Dock icon, and it's free and source-available.
+
+## Optional
+- [README and changelog](https://github.com/deadhearth01/Mitosis)

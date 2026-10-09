@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <title>Mac App Clone Won&#x27;t Open? How to Fix It (Mitosis Help)</title>
+  <meta name="description" content="If a Mitosis clone won&#x27;t open, try Refresh, then compatibility mode. Here&#x27;s what each step does and how to report a problem.">
+  <meta name="keywords" content="app clone not opening mac, mitosis clone won&#x27;t open, cloned app crashes mac">
+  <link rel="canonical" href="https://mitosis.theavni.studio/guides/a-clone-wont-open/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Mitosis">
+  <meta property="og:title" content="Mac App Clone Won&#x27;t Open? How to Fix It (Mitosis Help)">
+  <meta property="og:description" content="If a Mitosis clone won&#x27;t open, try Refresh, then compatibility mode. Here&#x27;s what each step does and how to report a problem.">
+  <meta property="og:url" content="https://mitosis.theavni.studio/guides/a-clone-wont-open/">
+  <meta property="og:image" content="https://mitosis.theavni.studio/assets/social-preview.png">
+  <meta property="og:image:width" content="1280">
+  <meta property="og:image:height" content="640">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
+  <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/styles.css">
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "A clone won't open: what to try", "description": "If a Mitosis clone won't open, try Refresh, then compatibility mode. Here's what each step does and how to report a problem.", "url": "https://mitosis.theavni.studio/guides/a-clone-wont-open/", "datePublished": "2026-10-09", "dateModified": "2026-10-09", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/a-clone-wont-open/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "A clone won't open: what to try", "item": "https://mitosis.theavni.studio/guides/a-clone-wont-open/"}]}</script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is my data lost if I delete the clone?", "acceptedAnswer": {"@type": "Answer", "text": "No. Choose Move to Trash (not with Data) and the clone's data folder stays in ~/Library/Mitosis/Data."}}]}</script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main" class="article-page">
+    <article class="wrap article">
+      <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Mitosis</a> <span aria-hidden="true">›</span> <a href="/guides/">Guides</a> <span aria-hidden="true">›</span> <span aria-current="page">A clone won&#x27;t open: what to try</span></nav>
+      <h1>A clone won&#x27;t open: what to try</h1>
+        <p class="lede">Mitosis checks that every new clone starts before it says it's ready, so a clone that won't open usually means something changed since: the original app updated, moved, or macOS blocked something.</p>
+        <div class="answer"><p class="answer-label">Quick answer</p><p>Choose <strong>Refresh</strong> on the clone. If it still won't open, delete it and create it again with <strong>New Clone › Advanced › Mode › Compatibility mode</strong>. If that fails too, use <strong>Help › Report a Problem</strong>.</p></div>
+        <h2>Common causes</h2>
+        <p><strong>Original missing.</strong> The clone shows <em>Original missing</em> when the app moved. Choose <strong>Find App…</strong> and pick it in its new place.</p>
+        <p><strong>macOS blocked the clone.</strong> Clones are signed on your Mac. <strong>Refresh</strong> signs the clone again.</p>
+        <p><strong>The app refuses a new identity.</strong> A few apps check that they're the original. Compatibility mode runs the original app with the copy's own data instead.</p>
+        <h2>Step by step</h2>
+        <ol class="howto">
+          <li><h3>Refresh</h3><p>Select the clone and choose <strong>Refresh</strong> (or <strong>⋯ › Refresh</strong>). Logins and data stay.</p></li>
+          <li><h3>Try compatibility mode</h3><p>Delete the clone (keep its data if you like), then create it again with <strong>Advanced › Mode › Compatibility mode</strong>.</p></li>
+          <li><h3>Report it</h3><p>Choose <strong>Help › Report a Problem</strong>. Mitosis fills in the details without your name or files.</p></li>
+        </ol>
+        <figure class="article-figure"><img src="/assets/screen-light.webp" width="1600" height="1165" loading="lazy" decoding="async" alt="The Mitosis window: clones listed by app, and a clone&#x27;s page with usage stats"></figure>
+        <h2>Questions</h2>
+        <div class="faq-list">
+          <div class="faq-item"><h3>Is my data lost if I delete the clone?</h3><p>No. Choose Move to Trash (not with Data) and the clone's data folder stays in ~/Library/Mitosis/Data.</p></div>
+        </div>
+      <aside class="install-box" aria-labelledby="install-box-title">
+        <h2 id="install-box-title">Get Mitosis</h2>
+        <p>Free for macOS 15 or later on Apple silicon. Paste in Terminal:</p>
+        <code class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
+        <p class="install-box-alt">Or with Homebrew: <code>brew install --cask deadhearth01/tap/mitosis</code></p>
+        <a class="button primary" href="/#install">All install options</a>
+      </aside>
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title">Related guides</h2>
+        <ul>
+          <li><a href="/guides/clones-and-app-updates/">What happens to clones when the original app updates</a></li>
+          <li><a href="/guides/macos-asks-for-permissions-again/">Why macOS asks a clone for permissions again</a></li>
+          <li><a href="/guides/uninstall-mitosis/">How to remove clones and uninstall Mitosis</a></li>
+        </ul>
+      </section>
+    </article>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a><a href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">License</a></nav>
+    </div>
+  </footer>
+</body>
+</html>

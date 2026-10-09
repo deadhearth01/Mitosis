@@ -37,11 +37,12 @@ public enum IconRenderer {
         ctx.interpolationQuality = .high
         ctx.draw(base, in: CGRect(x: 0, y: 0, width: s, height: s))
 
-        // Badge circle in the bottom-right corner (Core Graphics origin is bottom-left).
-        let d = s * 0.42
-        let circle = CGRect(x: s - d - s * 0.04, y: s * 0.04, width: d, height: d)
+        // Badge circle in the bottom-right corner (Core Graphics origin is bottom-left), centered on the corner's curve
+        // so it stays inside the standard rounded-square outline. macOS 26+ shrinks icons whose outline sticks out.
+        let d = s * 0.31
+        let circle = CGRect(x: s - d - s * 0.125, y: s * 0.125, width: d, height: d)
         ctx.setFillColor(CGColor(gray: 1, alpha: 1))
-        ctx.fillEllipse(in: circle.insetBy(dx: -s * 0.02, dy: -s * 0.02))
+        ctx.fillEllipse(in: circle.insetBy(dx: -s * 0.015, dy: -s * 0.015))
         ctx.setFillColor(color(fromHex: badge.color))
         ctx.fillEllipse(in: circle)
 

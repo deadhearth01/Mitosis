@@ -22,16 +22,24 @@ cp "${BIN}/MitosisApp" "${APP}/Contents/MacOS/Mitosis"
 cp "${BIN}/mitosis" "${BIN}/LaunchStub" "${APP}/Contents/Helpers/"
 cp -R "${BIN}/MitosisCore_MitosisCore.bundle" "${BIN}/MitosisCore_MitosisUI.bundle" "${APP}/Contents/Resources/"
 
-# App icon from the approved 1024 px master.
+# App icon. Preferred: the Icon Composer source compiled by actool (Xcode 26+), which macOS 26+ shows full size.
+# Fallback for older Xcode: a classic .icns from the approved 1024 px master.
 WORK="$(pwd)/.build/app-icon"
 rm -rf "${WORK}" && mkdir -p "${WORK}/AppIcon.iconset"
-MASTER="Assets/Brand/mitosis-mascot-1024.png"
-for size in 16 32 128 256 512; do
-  sips -z "${size}" "${size}" "${MASTER}" --out "${WORK}/AppIcon.iconset/icon_${size}x${size}.png" >/dev/null
-  double=$((size * 2))
-  sips -z "${double}" "${double}" "${MASTER}" --out "${WORK}/AppIcon.iconset/icon_${size}x${size}@2x.png" >/dev/null
-done
-iconutil -c icns "${WORK}/AppIcon.iconset" -o "${APP}/Contents/Resources/AppIcon.icns"
+if xcrun actool Assets/Brand/AppIcon.icon --compile "${APP}/Contents/Resources" --platform macosx \
+     --minimum-deployment-target 15.0 --app-icon AppIcon --output-partial-info-plist "${WORK}/partial.plist" >"${WORK}/actool.log" 2>&1 \
+   && [ -f "${APP}/Contents/Resources/Assets.car" ]; then
+  echo "App icon: compiled with actool"
+else
+  echo "App icon: actool unavailable, using classic icns"
+  MASTER="Assets/Brand/mitosis-mascot-1024.png"
+  for size in 16 32 128 256 512; do
+    sips -z "${size}" "${size}" "${MASTER}" --out "${WORK}/AppIcon.iconset/icon_${size}x${size}.png" >/dev/null
+    double=$((size * 2))
+    sips -z "${double}" "${double}" "${MASTER}" --out "${WORK}/AppIcon.iconset/icon_${size}x${size}@2x.png" >/dev/null
+  done
+  iconutil -c icns "${WORK}/AppIcon.iconset" -o "${APP}/Contents/Resources/AppIcon.icns"
+fi
 
 cat > "${APP}/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -43,6 +51,7 @@ cat > "${APP}/Contents/Info.plist" <<PLIST
   <key>CFBundleDisplayName</key><string>Mitosis</string>
   <key>CFBundleExecutable</key><string>Mitosis</string>
   <key>CFBundleIconFile</key><string>AppIcon</string>
+  <key>CFBundleIconName</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
   <key>CFBundleShortVersionString</key><string>${VERSION}</string>

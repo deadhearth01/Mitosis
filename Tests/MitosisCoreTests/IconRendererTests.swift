@@ -28,6 +28,37 @@ import Testing
         #expect(widths.contains(16))
     }
 
+    /// macOS 26+ shrinks icons whose outline isn't the standard rounded square onto a gray plate, so the badge must
+    /// stay inside the shape: within the content square and inside the bottom-right corner's curve.
+    @Test func badgeStaysInsideTheStandardIconShape() throws {
+        let size = 512
+        let s = CGFloat(size)
+        let clear = try #require(CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
+                                           space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                           bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)?.makeImage())
+        let img = try #require(IconRenderer.render(base: clear, badge: Badge(text: "W", color: "#0A84FF"), size: size))
+        let ctx = try #require(CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: size * 4,
+                                         space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue))
+        ctx.draw(img, in: CGRect(x: 0, y: 0, width: s, height: s))
+        let pixels = try #require(ctx.data).bindMemory(to: UInt8.self, capacity: size * size * 4)
+        var opaque = 0
+        // Corner curve of the 824/1024 rounded square: radius ≈ 0.18 of the canvas, centered 0.28 in from the corner.
+        let corner = CGPoint(x: s * 0.72, y: s * 0.72)
+        for y in 0..<size {
+            for x in 0..<size where pixels[(y * size + x) * 4 + 3] > 8 {
+                opaque += 1
+                let p = CGPoint(x: CGFloat(x) + 0.5, y: CGFloat(y) + 0.5)   // memory rows run top to bottom here
+                #expect(p.x >= s * 0.10 && p.x <= s * 0.90 && p.y >= s * 0.10 && p.y <= s * 0.90, "outside at \(x),\(y)")
+                if p.x > corner.x && p.y > corner.y {
+                    #expect(hypot(p.x - corner.x, p.y - corner.y) <= s * 0.181, "past the corner curve at \(x),\(y)")
+                }
+                if opaque > 0 && (p.x < s * 0.10 || p.x > s * 0.90) { return }
+            }
+        }
+        #expect(opaque > 0)
+    }
+
     @Test func hexColorParsing() {
         let c = IconRenderer.color(fromHex: "#30D158").components!
         #expect(abs(c[0] - 0x30 / 255.0) < 0.01 && abs(c[1] - 0xD1 / 255.0) < 0.01 && abs(c[2] - 0x58 / 255.0) < 0.01)

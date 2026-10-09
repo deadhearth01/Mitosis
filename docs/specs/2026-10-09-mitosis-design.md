@@ -276,3 +276,29 @@ Outcome: a short "Spike results" section appended to this spec with decisions (s
 | Homebrew tightens third-party tap rules | Source-building formula as backup; curl installer primary |
 | Parall or others copy the identity approach | Speed of shipping, open source community, CLI + workspaces roadmap |
 | App ToS concerns about multiple accounts | Mitosis only separates local data; README notes users are responsible for each app's terms |
+
+## 14. Spike results (2026-10-09)
+
+| # | Result | Evidence |
+|---|---|---|
+| S1 any-order launch | **PASS** | NotifyProbe clone + original run side by side, distinct bundle IDs/pids, both launch orders |
+| S2 Electron data separation | **args `--user-data-dir={dataPath}`** | VS Code, Signal, Claude: all files opened in clone data dir, 0 in original's (lsof) |
+| S3 Electron helpers | **PASS with helper rename** | Changing CFBundleName alone → Electron FATAL "Unable to find helper app"; keeping CFBundleName → helpers OK but clone asks for original's "<App> Safe Storage" keychain item; renaming helpers to "<Clone> Helper*.app" → no prompt, all helpers run |
+| S4 notification routing | pending (see appendix when done) | ad-hoc apps get notifications only when run from an Applications folder (from /tmp: instant UNError 1) |
+| S5 sandboxed app with iCloud/app-groups (WhatsApp) | **FAIL in identity mode** | own container created, process aborts (exit 134) after restricted entitlements stripped |
+| S6 badge icon | **PASS** | badged icon visible in Dock/Stage Manager after removing CFBundleIconName |
+| S7 clone's built-in updater | harmless but wasteful | Signal clone downloaded a 146 MB update into its data dir; clone bundle not replaced |
+| Disk | **~1.4 MB per clone** | only when unmodified nested code keeps vendor signatures; re-signing everything rewrote big binaries (~839 MB per Claude clone) |
+| Launch speed | **no clone overhead** | VS Code original 42.6 s / 39.7 s vs clone 41.8 s / 44.6 s on an overloaded Mac (disk 1.1 GB free) |
+
+**Decisions (binding for the core-engine plan)**
+1. **Signing:** never re-sign unmodified nested code. Sign only: renamed helper apps, the real executable behind the stub (with sanitized entitlements + identifier), and the main bundle. Library validation is off for the ad-hoc main executable (no hardened runtime), so vendor-signed frameworks load fine.
+2. **Electron naming:** set `CFBundleName` and `CFBundleDisplayName` to the clone name **and** rename every `Contents/Frameworks/<Old> Helper*.app` to `<Clone> Helper*.app`, renaming its executable and updating its `CFBundleExecutable`/`CFBundleName`. Non-Electron apps: set both names directly.
+3. **Data root:** `~/Library/Mitosis/Data/<8-hex id>` (Unix socket paths inside user-data-dir must stay < 104 chars; the spec's UUID path was 120 chars and broke VS Code).
+4. **Clone location** must be an Applications folder (`~/Applications/Mitosis/`), otherwise macOS refuses notifications.
+5. **Default Electron/Chromium launch settings:** `--user-data-dir={dataPath}` (confirmed).
+6. **Sandboxed apps that use iCloud, app groups or push** (restricted entitlements + sandbox) → **unsupported** in 0.1 with a clear reason; Light mode (0.4) is the answer. WhatsApp profile → unsupported.
+7. **Privacy permissions are per clone** (Files & Folders, other apps' data, camera, mic…). The in-app guide must explain this and deep-link to System Settings → Privacy & Security.
+8. **Health check:** after creating/refreshing a clone, launch-verify it (still running after 10 s) before reporting success; on failure roll back (or offer fallback) with a plain-language reason.
+9. **Per-clone stats (new, user request):** real extra disk (unshared bytes), data folder size, live RAM/CPU while running.
+10. **Clone updater caches:** show data-folder size and offer "Clean caches" (deletes `update-cache`, `Cache`, `Code Cache`, `GPUCache` inside the clone's data folder).

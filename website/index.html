@@ -54,14 +54,14 @@
         <div class="install-grid">
           <div class="command-card">
             <div class="command-heading"><h3>Terminal</h3><button class="copy-button" type="button" data-copy="curl" aria-label="Copy install command">Copy</button></div>
-            <code id="curl-command" class="command">Loading command…</code>
+            <code id="curl-command" class="command">curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash</code>
           </div>
           <div class="command-card">
             <div class="command-heading"><h3>Homebrew</h3><button class="copy-button" type="button" data-copy="brew" aria-label="Copy Homebrew command">Copy</button></div>
-            <code id="brew-command" class="command">Loading command…</code>
+            <code id="brew-command" class="command">brew install --cask deadhearth01/tap/mitosis</code>
           </div>
         </div>
-        <p class="release-note">Installs Mitosis.app in Applications and the <code>mitosis</code> command. Needs macOS 15 or later on Apple silicon. Prefer a download? Get the .zip from <a data-releases href="#">GitHub Releases</a>.</p>
+        <p class="release-note">Installs Mitosis.app in Applications and the <code>mitosis</code> command. Needs macOS 15 or later on Apple silicon. Prefer a download? Get the .zip from <a data-releases href="https://github.com/deadhearth01/Mitosis/releases/latest">GitHub Releases</a>.</p>
         <p id="copy-status" class="sr-only" role="status" aria-live="polite"></p>
       </div>
     </section>
@@ -131,7 +131,7 @@
           <h2 id="faq-title">Frequently asked questions</h2>
         </div>
         <div class="faq-list">
-          <div class="faq-item"><h3>Which apps work?</h3><p>Slack, Discord, Signal, VS Code, Claude, and many Electron or Chromium apps work well. Some apps have limits; Apple’s own apps aren’t supported. <a data-repo-readme href="#">See compatibility details</a>.</p></div>
+          <div class="faq-item"><h3>Which apps work?</h3><p>Slack, Discord, Signal, VS Code, Claude, and many Electron or Chromium apps work well. Some apps have limits; Apple’s own apps aren’t supported. <a data-repo-readme href="https://github.com/deadhearth01/Mitosis#which-apps-work">See compatibility details</a>.</p></div>
           <div class="faq-item"><h3>Where does clone data live?</h3><p>Clone data lives in <code>~/Library/Mitosis/Data/</code>. The clone apps live in <code>~/Applications/Mitosis/</code>.</p></div>
           <div class="faq-item"><h3>What happens when the original app updates?</h3><p>Mitosis updates its clones on its own, in the background. Your logins and data stay in place.</p></div>
           <div class="faq-item"><h3>Does Mitosis change the original app?</h3><p>No. The original app stays as it is.</p></div>
@@ -145,7 +145,7 @@
   <footer class="site-footer">
     <div class="wrap footer-inner">
       <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
-      <nav aria-label="Footer"><a data-repo href="#">GitHub</a><a data-license href="#">PolyForm Noncommercial license</a></nav>
+      <nav aria-label="Footer"><a data-repo href="https://github.com/deadhearth01/Mitosis">GitHub</a><a data-license href="https://github.com/deadhearth01/Mitosis/blob/main/LICENSE">PolyForm Noncommercial license</a></nav>
     </div>
   </footer>
 </body>

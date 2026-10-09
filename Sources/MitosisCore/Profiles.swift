@@ -51,7 +51,11 @@ public struct ProfileStore: Sendable {
     /// Only these launch arguments may appear in profiles (protects against e.g. remote-debugging flags).
     public static let allowedArgs: Set<String> = ["--user-data-dir={dataPath}"]
     /// Allowed environment variables and their only allowed values.
-    public static let allowedEnv: [String: Set<String>] = ["HOME": ["{dataPath}", "{dataPath}/home"]]
+    public static let allowedEnv: [String: Set<String>] = [
+        "HOME": ["{dataPath}", "{dataPath}/home"],
+        // Codex keeps its account and settings in CODEX_HOME (default ~/.codex), outside Electron's data folder.
+        "CODEX_HOME": ["{dataPath}/codex-home"],
+    ]
 
     private struct File: Codable {
         var schema: Int

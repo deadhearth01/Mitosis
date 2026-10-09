@@ -46,4 +46,15 @@ import Testing
         #expect(DefaultLaunchSettings.forFrameworks([.sparkle]).isEmpty)
         #expect(DefaultLaunchSettings.fallback == LaunchSettings(args: [], env: ["HOME": "{dataPath}"]))
     }
+
+    /// Codex keeps its account in CODEX_HOME (default ~/.codex), outside Electron's user-data folder.
+    @Test func codexClonesGetTheirOwnCodexHome() throws {
+        let codex = try #require(try ProfileStore.bundled().profile(forBundleID: "com.openai.codex"))
+        #expect(codex.launch.env == ["CODEX_HOME": "{dataPath}/codex-home"])
+        #expect(codex.launch.args == ["--user-data-dir={dataPath}"])
+        #expect(codex.version >= 2)
+        let bad = AppProfile(id: "x", bundleIDs: ["x"], version: 1, mode: .identity, support: .full,
+                             launch: LaunchSettings(args: [], env: ["CODEX_HOME": "/etc"]), notes: "")
+        #expect(throws: ProfileValidationError.self) { try ProfileStore(profiles: [bad]) }
+    }
 }

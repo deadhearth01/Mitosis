@@ -6,7 +6,31 @@ import Testing
     @Test func resolvesDataPathPlaceholders() {
         let c = LaunchConfig.resolve(LaunchSettings(args: ["--user-data-dir={dataPath}"], env: ["HOME": "{dataPath}/home"]),
                                      kind: .exec, target: "App.mitosis-real", dataPath: "/d/1")
-        #expect(c == LaunchConfig(kind: .exec, target: "App.mitosis-real", args: ["--user-data-dir=/d/1"], env: ["HOME": "/d/1/home"]))
+        #expect(c == LaunchConfig(kind: .exec, target: "App.mitosis-real", args: ["--user-data-dir=/d/1"], env: ["HOME": "/d/1/home"],
+                                  dirs: ["/d/1/home"]))
+    }
+
+    @Test func olderLaunchConfigsStillDecode() throws {
+        let json = #"{"kind":"exec","target":"A.mitosis-real","args":[],"env":{}}"#
+        let c = try JSONDecoder().decode(LaunchConfig.self, from: Data(json.utf8))
+        #expect(c.dirs.isEmpty)
+    }
+
+    /// Apps like Codex refuse a home folder that doesn't exist yet, so the stub creates the clone's folders first.
+    @Test func stubCreatesTheClonesFoldersBeforeStarting() throws {
+        let dir = try TestSupport.tempDir()
+        var o = FixtureOptions(); o.behavior = .exit(code: 0); o.signed = false
+        let app = try FixtureFactory.makeApp(in: dir, o)
+        let macOS = app.appendingPathComponent("Contents/MacOS")
+        try FileManager.default.moveItem(at: macOS.appendingPathComponent("Fixture"), to: macOS.appendingPathComponent("Fixture.mitosis-real"))
+        try FileManager.default.copyItem(at: TestSupport.stubBinary, to: macOS.appendingPathComponent("Fixture"))
+        let home = dir.appendingPathComponent("data/codex-home")
+        try LaunchConfig.resolve(LaunchSettings(args: [], env: ["CODEX_HOME": "{dataPath}/codex-home"]), kind: .exec,
+                                 target: "Fixture.mitosis-real", dataPath: dir.appendingPathComponent("data").path)
+            .write(toResources: app.appendingPathComponent("Contents/Resources"))
+        #expect(try Shell.run(macOS.appendingPathComponent("Fixture").path, []).status == 0)
+        var isDir: ObjCBool = false
+        #expect(FileManager.default.fileExists(atPath: home.path, isDirectory: &isDir) && isDir.boolValue)
     }
 
     @Test func execModeRunsRealExecutableWithArgsAndEnv() throws {

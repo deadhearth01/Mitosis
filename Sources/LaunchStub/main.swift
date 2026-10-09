@@ -7,6 +7,7 @@ struct StubConfig: Decodable {
     let args: [String]
     let env: [String: String]
     let pidFile: String?
+    let dirs: [String]?
 }
 
 func fail(_ message: String) -> Never {
@@ -20,6 +21,11 @@ guard let configURL = Bundle.main.url(forResource: "mitosis-launch", withExtensi
 else { fail("missing or invalid mitosis-launch.json") }
 
 let passthrough = CommandLine.arguments.dropFirst().filter { !$0.hasPrefix("-psn_") }
+
+// The clone's own folders (for example CODEX_HOME) must exist before the app starts.
+for dir in config.dirs ?? [] {
+    try? FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
+}
 
 switch config.kind {
 case "exec":

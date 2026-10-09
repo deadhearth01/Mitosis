@@ -35,6 +35,11 @@ public struct CloneMaintenance: Sendable {
         guard let info = try? AppInspector().inspect(source), info.bundleID == entry.manifest.source.bundleID else {
             return .originalMissing
         }
+        // Mitosis learned a better way to clone this app (newer profile): rebuild, like an app update.
+        if let profile = builder.profiles.profile(forBundleID: info.bundleID),
+           (entry.manifest.profile?.version ?? 0) < profile.version {
+            return .updateAvailable(currentVersion: info.version)
+        }
         if let old = entry.manifest.source.cdhash, let new = info.cdhash {
             return old == new ? .upToDate : .updateAvailable(currentVersion: info.version)
         }

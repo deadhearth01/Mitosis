@@ -4,6 +4,14 @@ All notable changes to Mitosis are documented here. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-09
+
+### Fixed
+- **Codex clones now have their own account.** Codex keeps its sign-in in `~/.codex`, outside the app's normal data folder, so clones showed the original's account. Each Codex clone now gets its own Codex folder (account, settings, history) and starts signed out. Existing Codex clones are rebuilt automatically; sign in again in each one.
+
+### Changed
+- When Mitosis learns a better way to clone an app, existing clones of it are rebuilt like after an app update.
+
 ## [0.2.0] - 2026-10-09
 
 ### Added
@@ -55,7 +63,8 @@ First preview: the clone engine and the `mitosis` command-line tool.
 - Refresh after the original app updates; delete to the Trash (never permanently).
 - `mitosis` command-line tool: `doctor`, `clone`, `list`, `stats`, `clean`, `refresh`, `delete`, `open`.
 
-[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/deadhearth01/Mitosis/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0-alpha.1...v0.1.0

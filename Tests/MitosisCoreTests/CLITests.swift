@@ -15,7 +15,7 @@ import Testing
 
     @Test func versionFlag() throws {
         let r = try Self.run(["--version"], root: try TestSupport.tempDir())
-        #expect(r.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "0.2.0")
+        #expect(r.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "0.2.1")
     }
 
     @Test func doctorCloneListStatsCleanDeleteFlow() throws {

@@ -57,6 +57,30 @@ import Testing
         #expect(CloneRegistry.embeddedManifest(in: entry.bundleURL)?.source.version == "1.0")
     }
 
+    /// A fix in an app's profile (for example Codex's own account folder) reaches existing clones as an update.
+    @Test func newerProfileMakesTheCloneOutdatedUntilRefreshed() throws {
+        func store(_ version: Int, env: [String: String]) throws -> ProfileStore {
+            try ProfileStore(profiles: [AppProfile(id: "fixture", bundleIDs: ["com.example.fixture"], version: version, mode: .identity,
+                                                   support: .full, launch: LaunchSettings(args: ["--user-data-dir={dataPath}"], env: env),
+                                                   notes: "")])
+        }
+        let (root, source, _) = try CloneBuilderIdentityTests.setUp()
+        let env = TestSupport.environment(root: root)
+        let v1 = CloneBuilder(environment: env, profiles: try store(1, env: [:]))
+        let entry = try v1.create(CloneRequest(source: source, name: "Fixture (Profile)", badge: Badge(text: "P", color: "#0A84FF")))
+        #expect(CloneMaintenance(builder: v1, isRunning: { _ in false }).status(of: entry) == .upToDate)
+
+        let v2 = CloneBuilder(environment: env, profiles: try store(2, env: ["HOME": "{dataPath}/home"]))
+        let m = CloneMaintenance(builder: v2, isRunning: { _ in false })
+        guard case .updateAvailable = m.status(of: entry) else { Issue.record("expected an update"); return }
+        #expect(m.refreshOutdated([entry]).refreshed == ["Fixture (Profile)"])
+        let updated = try #require(try CloneRegistry(fileURL: env.registryFile).load().first)
+        #expect(updated.manifest.profile?.version == 2)
+        #expect(m.status(of: updated) == .upToDate)
+        let launch = try JSONDecoder().decode(LaunchConfig.self, from: Data(contentsOf: updated.bundleURL.appendingPathComponent("Contents/Resources/mitosis-launch.json")))
+        #expect(launch.env["HOME"] == updated.manifest.dataPath + "/home")
+    }
+
     @Test func restyleChangesOnlyTheBadge() throws {
         let (_, _, builder, entry) = try Self.setUp()
         let icon = entry.bundleURL.appendingPathComponent("Contents/Resources/MitosisIcon.icns")

@@ -55,4 +55,16 @@ import Testing
         }
         #expect(extra == fullSize, "extra \(extra) vs full \(fullSize)")
     }
+
+    @Test func usageOfAProcessTreeIncludesChildren() throws {
+        let child = Process()
+        child.executableURL = URL(fileURLWithPath: "/bin/sleep")
+        child.arguments = ["5"]
+        try child.run()
+        defer { child.terminate() }
+        let usage = try #require(StatsCollector.usage(rootPID: getpid()))
+        #expect(usage.processCount >= 2)
+        #expect(usage.memoryBytes > 0)
+        #expect(StatsCollector.usage(rootPID: 999_999) == nil)
+    }
 }

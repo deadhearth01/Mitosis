@@ -1,0 +1,3 @@
+import MitosisUI
+
+MitosisRootApp.main()

@@ -15,6 +15,7 @@ public struct CloneWorkflow: Sendable {
     /// A clone that doesn't start is removed completely (bundle, fresh data, registry entry).
     public func createVerified(_ request: CloneRequest, window: Duration = .seconds(10)) async throws -> RegistryEntry {
         let entry = try builder.create(request)
+        builder.progress?("launch check")
         let alive: Bool
         do {
             alive = try await CloneLauncher.openAndCheck(entry, window: window)
@@ -24,8 +25,9 @@ public struct CloneWorkflow: Sendable {
         }
         guard alive else {
             try removeFailed(entry)
+            let hint = entry.manifest.mode == .identity ? " Try compatibility (fallback) mode." : ""
             throw CloneError.failed(step: "launch check",
-                                    message: "\"\(entry.manifest.name)\" didn't stay open, so it was removed. Try compatibility (fallback) mode.")
+                                    message: "\"\(entry.manifest.name)\" didn't stay open, so it was removed.\(hint)")
         }
         return entry
     }
@@ -41,6 +43,7 @@ public struct CloneWorkflow: Sendable {
         defer { try? fm.removeItem(at: backup) }
 
         let updated = try maintenance.refresh(entry)
+        builder.progress?("launch check")
         let alive = (try? await CloneLauncher.openAndCheck(updated, window: window)) ?? false
         if alive { return updated }
 

@@ -23,10 +23,17 @@ public enum RunningMonitor {
         guard let text = try? String(contentsOfFile: file, encoding: .utf8),
               let pid = pid_t(text.trimmingCharacters(in: .whitespacesAndNewlines)), pid > 0,
               kill(pid, 0) == 0,
-              let r = try? Shell.run("/bin/ps", ["-o", "comm=", "-p", "\(pid)"], check: false),
-              r.stdout.hasPrefix(m.source.path + "/")
+              let path = executablePath(of: pid),
+              path.hasPrefix(m.source.path + "/") || path.hasPrefix(URL(fileURLWithPath: m.source.path).resolvingSymlinksInPath().path + "/")
         else { return nil }
         return pid
+    }
+
+    /// The executable path of a live process (nil if it isn't running), without spawning `ps`.
+    public static func executablePath(of pid: pid_t) -> String? {
+        var buffer = [CChar](repeating: 0, count: 4 * Int(MAXPATHLEN))
+        guard proc_pidpath(pid, &buffer, UInt32(buffer.count)) > 0 else { return nil }
+        return String(decoding: buffer.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)
     }
 
     /// pids of processes whose executable lives inside the bundle (main app + helpers).

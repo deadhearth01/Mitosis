@@ -38,6 +38,14 @@ public struct Badge: Codable, Equatable, Sendable {
         "blue": "#0A84FF", "green": "#30D158", "orange": "#FF9F0A", "red": "#FF453A",
         "purple": "#BF5AF2", "pink": "#FF375F", "yellow": "#FFD60A", "gray": "#8E8E93",
     ]
+
+    /// A preset name ("blue") or "#RRGGBB" (any case) as uppercase "#RRGGBB"; nil for anything else.
+    public static func normalizedColor(_ input: String) -> String? {
+        if let preset = presets[input.lowercased()] { return preset }
+        let digits = input.dropFirst()
+        guard input.hasPrefix("#"), digits.count == 6, digits.allSatisfy(\.isHexDigit) else { return nil }
+        return input.uppercased()
+    }
 }
 
 public struct CloneManifest: Codable, Equatable, Sendable, Identifiable {

@@ -1,0 +1,181 @@
+import AppKit
+import MitosisCore
+import SwiftUI
+
+struct MainWindow: View {
+    @Bindable var model: AppModel
+    var updates: UpdateChecker? = nil
+    @State private var columns: NavigationSplitViewVisibility = .all
+    @AppStorage(Prefs.onboardedKey) private var onboarded = false
+    @State private var showOnboarding = false
+
+    var body: some View {
+        NavigationSplitView(columnVisibility: $columns) {
+            CloneListView(model: model)
+                .navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
+        } detail: {
+            detail
+                .safeAreaInset(edge: .top, spacing: 0) { updateBanner }
+        }
+        .navigationTitle("Mitosis")
+        .navigationSubtitle(subtitle)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button {
+                    model.startNewClone()
+                } label: {
+                    Label("New Clone", systemImage: "plus")
+                }
+                .help("Create a clone (⌘N)")
+            }
+        }
+        .dropDestination(for: URL.self) { urls, _ in
+            model.handleDrop(urls)
+            return true
+        }
+        .alert(promptTitle, isPresented: promptShown, presenting: model.prompt) { prompt in
+            promptActions(prompt)
+        } message: { prompt in
+            Text(promptMessage(prompt))
+        }
+        .sheet(item: $model.newClone) { session in
+            NewCloneSheet(model: session) { model.newClone = nil }
+        }
+        .sheet(item: $model.restyling) { entry in
+            RestyleSheet(model: model, entry: entry)
+        }
+        .sheet(item: $model.failure) { failure in
+            FailureView(title: failure.title, report: failure.report) { model.failure = nil }
+        }
+        .sheet(isPresented: $showOnboarding) {
+            OnboardingView { startFirstClone in
+                onboarded = true
+                showOnboarding = false
+                if startFirstClone {
+                    Task { try? await Task.sleep(for: .milliseconds(400)); model.startNewClone() }
+                }
+            }
+            .tint(Brand.accent)
+            .interactiveDismissDisabled()
+        }
+        .onAppear {
+            columns = model.entries.isEmpty ? .detailOnly : .all
+            if !onboarded && model.services != nil { showOnboarding = true }
+        }
+        .onChange(of: model.entries.isEmpty) { _, empty in columns = empty ? .detailOnly : .all }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            model.reload()   // also picks up clones the background updater refreshed
+        }
+    }
+
+    @ViewBuilder private var detail: some View {
+        if let error = model.loadError {
+            ContentUnavailableView("Couldn't load your clones", systemImage: "exclamationmark.triangle", description: Text(error))
+        } else if model.entries.isEmpty {
+            EmptyStateView { model.startNewClone() }
+        } else if let e = model.selectedEntry {
+            CloneDetailView(model: model, entry: e)
+                .id(e.id)
+        } else if model.visibleEntries.isEmpty {
+            ContentUnavailableView.search(text: model.search)
+        } else {
+            ContentUnavailableView("Select a clone", systemImage: "square.on.square",
+                                   description: Text("Choose a clone in the sidebar to see its details and stats."))
+        }
+    }
+
+    @ViewBuilder private var updateBanner: some View {
+        if let updates, !updates.dismissed, case .available(let version, let url) = updates.state {
+            HStack(spacing: Brand.Space.s) {
+                Image(systemName: "arrow.down.circle.fill").foregroundStyle(Brand.accent)
+                Text("Mitosis \(version) is available.")
+                Spacer()
+                Link("View Release", destination: url)
+                Button("Copy Update Command") {
+                    NSPasteboard.general.clearContents()
+                    NSPasteboard.general.setString(UpdateChecker.updateCommand, forType: .string)
+                }
+                Button {
+                    updates.dismissed = true
+                } label: {
+                    Image(systemName: "xmark")
+                }
+                .buttonStyle(.borderless)
+                .help("Hide until next launch")
+                .accessibilityLabel("Hide update message")
+            }
+            .font(.callout)
+            .padding(.horizontal, Brand.Space.m)
+            .padding(.vertical, Brand.Space.s)
+            .background(.bar)
+            .overlay(alignment: .bottom) { Divider() }
+        }
+    }
+
+    private var subtitle: String {
+        let n = model.entries.count
+        return n == 0 ? "" : (n == 1 ? "1 clone" : "\(n) clones")
+    }
+
+    // MARK: Prompts
+
+    private var promptShown: Binding<Bool> {
+        Binding(get: { model.prompt != nil }, set: { if !$0 { model.prompt = nil } })
+    }
+
+    private var promptTitle: String {
+        switch model.prompt {
+        case .quitFirst(let e, _)?: return "Quit \(e.manifest.name) first?"
+        case .confirmDelete(let e)?: return "Delete \(e.manifest.name)?"
+        case .confirmClean(let e)?: return "Clean caches for \(e.manifest.name)?"
+        case .message(let title, _)?: return title
+        case nil: return ""
+        }
+    }
+
+    private func promptMessage(_ prompt: AppPrompt) -> String {
+        switch prompt {
+        case .quitFirst(let e, let action):
+            let then: String
+            switch action {
+            case .refresh: then = "rebuild it from the current \(CloneLibrary.appName(for: e)). Your logins and data stay."
+            case .restyle: then = "update its badge."
+            case .delete: then = "move it to the Trash."
+            case .clean: then = "clean its caches."
+            }
+            return "\(e.manifest.name) is open. Mitosis will ask it to quit, then \(then)"
+        case .confirmDelete:
+            return "The clone goes to the Trash. Its logins and settings stay unless you also delete its data."
+        case .confirmClean:
+            return "This deletes temporary files the app can download again. Logins and settings stay."
+        case .message(_, let text):
+            return text
+        }
+    }
+
+    /// Runs a follow-up after the current alert has closed. Closing an alert resets `model.prompt`, so a
+    /// follow-up prompt ("Quit it first?") set during the button action would otherwise be lost.
+    private func afterDismiss(_ body: @escaping @MainActor () -> Void) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            body()
+        }
+    }
+
+    @ViewBuilder private func promptActions(_ prompt: AppPrompt) -> some View {
+        switch prompt {
+        case .quitFirst(let e, let action):
+            Button("Quit and \(action.verb)") { model.quitThenPerform(action, on: e) }
+            Button("Cancel", role: .cancel) {}
+        case .confirmDelete(let e):
+            Button("Move to Trash") { afterDismiss { model.request(.delete(deleteData: false), for: e) } }
+            Button("Move to Trash with Data", role: .destructive) { afterDismiss { model.request(.delete(deleteData: true), for: e) } }
+            Button("Cancel", role: .cancel) {}
+        case .confirmClean(let e):
+            Button("Clean Caches") { afterDismiss { model.request(.clean, for: e) } }
+            Button("Cancel", role: .cancel) {}
+        case .message:
+            Button("OK", role: .cancel) {}
+        }
+    }
+}

@@ -165,3 +165,6 @@ h3 { font-size: 21px; font-weight: 600; line-height: 1.25; }
   color: var(--muted, inherit);
   opacity: 0.8;
 }
+
+.screenshot-section { padding-top: 0; }
+.screenshot { display: block; width: 100%; max-width: 1060px; height: auto; margin-inline: auto; border-radius: 14px; border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(2, 25, 68, 0.12); }

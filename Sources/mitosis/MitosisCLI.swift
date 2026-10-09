@@ -124,7 +124,7 @@ struct Clone: AsyncParsableCommand {
                 throw CLIError(description: "Use --label (e.g. --label Work → \"Slack (Work)\") or --name, but not both.")
             }
             let url = try Context.resolveApp(app)
-            let hex = Badge.presets[color.lowercased()] ?? (color.hasPrefix("#") && color.count == 7 ? color.uppercased() : nil)
+            let hex = Badge.normalizedColor(color)
             guard let hex else { throw CLIError(description: "Unknown color \"\(color)\".") }
             let modeOverride: CloneMode?
             switch mode.lowercased() {
@@ -203,9 +203,25 @@ struct Refresh: AsyncParsableCommand {
     @Argument(help: "Clone name.") var clone: String?
     @Flag(help: "Refresh every clone that has an update.") var all = false
     @Flag(help: "Don't open the refreshed clone to check that it starts.") var noVerify = false
+    @Flag(help: "Refresh clones whose original changed, without opening them; skip running ones (used for automatic updates).")
+    var outdated = false
+    @Flag(help: "With --outdated: print only problems.") var quiet = false
 
     func run() async throws {
         let builder = try friendly { try Context.builder() }
+        if outdated {
+            let report = CloneMaintenance(builder: builder).refreshOutdated(try friendly { try Context.entries() })
+            if !quiet {
+                for name in report.refreshed { print("Refreshed \"\(name)\"") }
+                for name in report.skippedRunning { print("Skipped \"\(name)\": it's open. It updates after you quit it.") }
+                for name in report.skippedUpdating { print("Skipped \"\(name)\": its original app is still updating.") }
+                if report.isEmpty { print("Everything is up to date.") }
+            }
+            guard report.failed.isEmpty else {
+                throw CLIError(description: report.failed.sorted { $0.key < $1.key }.map { "Couldn't refresh \"\($0.key)\": \($0.value)" }.joined(separator: "\n"))
+            }
+            return
+        }
         let targets = try friendly { () throws -> [RegistryEntry] in
             let maintenance = CloneMaintenance(builder: builder)
             let targets: [RegistryEntry]

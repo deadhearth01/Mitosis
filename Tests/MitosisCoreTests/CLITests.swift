@@ -14,7 +14,7 @@ import Testing
 
     @Test func versionFlag() throws {
         let r = try Self.run(["--version"], root: try TestSupport.tempDir())
-        #expect(r.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "0.1.0-alpha.1")
+        #expect(r.stdout.trimmingCharacters(in: .whitespacesAndNewlines) == "0.1.0")
     }
 
     @Test func doctorCloneListStatsCleanDeleteFlow() throws {
@@ -55,6 +55,19 @@ import Testing
         #expect(try Self.run(["list"], root: root).stdout.contains("No clones yet"))
     }
 
+    @Test func refreshOutdatedRefreshesChangedClones() throws {
+        let root = try TestSupport.tempDir()
+        let app = try FixtureFactory.makeApp(in: root)
+        #expect(try Self.run(["clone", app.path, "--label", "Work", "--no-verify"], root: root).status == 0)
+        let quiet = try Self.run(["refresh", "--outdated", "--quiet"], root: root)
+        #expect(quiet.status == 0)
+        #expect(quiet.stdout.isEmpty)
+        try CloneMaintenanceTests.bumpVersion(of: app, to: "2.0")
+        let r = try Self.run(["refresh", "--outdated"], root: root)
+        #expect(r.status == 0, "\(r.stderr)")
+        #expect(r.stdout.contains("Refreshed \"Fixture (Work)\""))
+    }
+
     @Test func nameOptionStillWorks() throws {
         let root = try TestSupport.tempDir()
         let app = try FixtureFactory.makeApp(in: root)
@@ -75,6 +88,9 @@ import Testing
         let missing = try Self.run(["clone", "DefinitelyNotAnApp", "--label", "X", "--no-verify"], root: root)
         #expect(missing.status != 0)
         #expect(missing.stderr.contains("Couldn't find an app called \"DefinitelyNotAnApp\"."))
+        let color = try Self.run(["clone", app.path, "--label", "X", "--color", "#GGGGGG", "--no-verify"], root: root)
+        #expect(color.status != 0)
+        #expect(color.stderr.contains("Unknown color \"#GGGGGG\""))
         let noClone = try Self.run(["delete", "ghost"], root: root)
         #expect(noClone.stderr.contains("No clone matches \"ghost\"."))
     }

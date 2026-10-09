@@ -16,6 +16,18 @@ import Testing
     }
 }
 
+@Suite struct ProcessPathTests {
+    @Test func executablePathOfLiveAndDeadProcess() throws {
+        let mine = try #require(RunningMonitor.executablePath(of: getpid()))
+        #expect(FileManager.default.isExecutableFile(atPath: mine))
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/true")
+        try p.run()
+        p.waitUntilExit()
+        #expect(RunningMonitor.executablePath(of: p.processIdentifier) == nil)
+    }
+}
+
 /// Launches real (tiny, invisible) GUI apps through macOS. Skip with MITOSIS_SKIP_LAUNCH_TESTS=1 (e.g. in CI).
 @Suite(.serialized, .enabled(if: ProcessInfo.processInfo.environment["MITOSIS_SKIP_LAUNCH_TESTS"] == nil))
 struct LaunchTests {
@@ -96,16 +108,33 @@ struct LaunchTests {
     // Final review I2: a clone that doesn't start is removed by the core workflow, with an accurate error.
     @Test func createVerifiedRemovesCloneThatDoesNotStart() async throws {
         var o = FixtureOptions(); o.behavior = .exit(code: 1)
-        let (source, builder) = try Self.setUpSource(o)
+        var (source, builder) = try Self.setUpSource(o)
+        let recorder = StepRecorder()
+        builder.progress = recorder.callback
         let err = await #expect(throws: CloneError.self) {
             _ = try await CloneWorkflow(builder: builder).createVerified(
                 CloneRequest(source: source, name: "Broken (Start)", badge: Badge(text: "B", color: "#FF453A")), window: .seconds(3))
         }
         if case .failed(let step, _)? = err { #expect(step == "launch check") } else { Issue.record("unexpected error \(String(describing: err))") }
+        #expect(recorder.steps.last == "launch check")
         let clones = (try? FileManager.default.contentsOfDirectory(atPath: builder.environment.clonesDir.path)) ?? []
         #expect(clones.filter { $0.hasSuffix(".app") }.isEmpty)
         #expect(((try? FileManager.default.contentsOfDirectory(atPath: builder.environment.dataRoot.path)) ?? []).isEmpty)
         #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().isEmpty)
+    }
+
+    // A compatibility-mode clone that doesn't start must not suggest compatibility mode again.
+    @Test func failedFallbackCloneDoesNotSuggestFallback() async throws {
+        var o = FixtureOptions(); o.behavior = .exit(code: 1)
+        let (source, builder) = try Self.setUpSource(o)
+        let err = await #expect(throws: CloneError.self) {
+            _ = try await CloneWorkflow(builder: builder).createVerified(
+                CloneRequest(source: source, name: "Broken (Safe)", badge: Badge(text: "B", color: "#FF453A"), modeOverride: .fallback),
+                window: .seconds(2))
+        }
+        let text = err.map { String(describing: $0) } ?? ""
+        #expect(text.contains("didn't stay open"))
+        #expect(!text.contains("compatibility"))
     }
 
     // Final review I1: refresh keeps the previous version if the new one doesn't start.

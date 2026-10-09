@@ -8,10 +8,11 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Mitosis — run separate copies of your Mac apps">
   <meta property="og:description" content="One app. Separate worlds. Give every part of your life its own Mac app login, data, and Dock icon.">
-  <meta property="og:url" content="https://theavni.studio/labs/mitosis/">
-  <meta property="og:image" content="https://theavni.studio/labs/mitosis/assets/hero.png">
-  <meta property="og:image:alt" content="Mito, the blue Mitosis mascot, winking">
-  <link rel="canonical" href="https://theavni.studio/labs/mitosis/">
+  <meta property="og:url" content="https://deadhearth01.github.io/Mitosis/">
+  <meta property="og:image" content="https://deadhearth01.github.io/Mitosis/assets/social-preview.png">
+  <meta property="og:image:alt" content="Mitosis: run separate copies of your Mac apps, with Mito the mascot">
+  <link rel="canonical" href="https://deadhearth01.github.io/Mitosis/">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/png" href="assets/favicon.png">
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
@@ -56,12 +57,21 @@
             <code id="curl-command" class="command">Loading command…</code>
           </div>
           <div class="command-card">
-            <div class="command-heading"><h3>Homebrew</h3></div>
-            <p class="command-soon">Coming with the Mac app in 0.1.</p>
+            <div class="command-heading"><h3>Homebrew</h3><button class="copy-button" type="button" data-copy="brew" aria-label="Copy Homebrew command">Copy</button></div>
+            <code id="brew-command" class="command">Loading command…</code>
           </div>
         </div>
-        <p class="release-note">Today this installs the <code>mitosis</code> command-line preview (0.1.0-alpha.1). The Mac app arrives in 0.1.</p>
+        <p class="release-note">Installs Mitosis.app in Applications and the <code>mitosis</code> command. Needs macOS 15 or later on Apple silicon. Prefer a download? Get the .zip from <a data-releases href="#">GitHub Releases</a>.</p>
         <p id="copy-status" class="sr-only" role="status" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="section screenshot-section" aria-label="The Mitosis app">
+      <div class="wrap">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="assets/screen-dark.png">
+          <img class="screenshot" src="assets/screen-light.png" width="1600" height="1165" loading="lazy" alt="The Mitosis window: clones listed by app in the sidebar, and a clone's page with its status, actions, and usage stats">
+        </picture>
       </div>
     </section>
 
@@ -123,7 +133,7 @@
         <div class="faq-list">
           <div class="faq-item"><h3>Which apps work?</h3><p>Slack, Discord, Signal, VS Code, Claude, and many Electron or Chromium apps work well. Some apps have limits; Apple’s own apps aren’t supported. <a data-repo-readme href="#">See compatibility details</a>.</p></div>
           <div class="faq-item"><h3>Where does clone data live?</h3><p>Clone data lives in <code>~/Library/Mitosis/Data/</code>. The clone apps live in <code>~/Applications/Mitosis/</code>.</p></div>
-          <div class="faq-item"><h3>What happens when the original app updates?</h3><p>Refresh the clone with one click. Your login and data stay in place.</p></div>
+          <div class="faq-item"><h3>What happens when the original app updates?</h3><p>Mitosis updates its clones on its own, in the background. Your logins and data stay in place.</p></div>
           <div class="faq-item"><h3>Does Mitosis change the original app?</h3><p>No. The original app stays as it is.</p></div>
           <div class="faq-item"><h3>How do I uninstall a clone?</h3><p>Move it to the Trash. Its data stays unless you choose to remove it.</p></div>
           <div class="faq-item"><h3>Can I use it at work?</h3><p>Yes. Mitosis is free for any use, including work. Its source code can’t be used in commercial or paid products.</p></div>

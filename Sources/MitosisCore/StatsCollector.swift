@@ -4,6 +4,12 @@ public struct CloneUsage: Equatable, Sendable {
     public var processCount: Int
     public var cpuPercent: Double
     public var memoryBytes: Int64
+
+    public init(processCount: Int, cpuPercent: Double, memoryBytes: Int64) {
+        self.processCount = processCount
+        self.cpuPercent = cpuPercent
+        self.memoryBytes = memoryBytes
+    }
 }
 
 public struct CloneStats: Equatable, Sendable {
@@ -15,6 +21,13 @@ public struct CloneStats: Equatable, Sendable {
     public var dataBytes: Int64
     /// Live usage while running; nil when not running.
     public var usage: CloneUsage?
+
+    public init(extraDiskBytes: Int64, appBytes: Int64, dataBytes: Int64, usage: CloneUsage?) {
+        self.extraDiskBytes = extraDiskBytes
+        self.appBytes = appBytes
+        self.dataBytes = dataBytes
+        self.usage = usage
+    }
 }
 
 public enum StatsCollector {
@@ -72,6 +85,38 @@ public enum StatsCollector {
         return count == 0 ? nil : CloneUsage(processCount: count, cpuPercent: cpu, memoryBytes: rssKB * 1024)
     }
 
+    /// A process and all its descendants (a compatibility-mode clone runs as the original app, started by its stub).
+    public static func usage(rootPID: pid_t) -> CloneUsage? {
+        guard let r = try? Shell.run("/bin/ps", ["-Ao", "pid=,ppid=,pcpu=,rss="], check: false) else { return nil }
+        var rows: [(pid: pid_t, ppid: pid_t, cpu: Double, rssKB: Int64)] = []
+        for line in r.stdout.split(separator: "\n") {
+            let p = line.split(separator: " ", omittingEmptySubsequences: true)
+            guard p.count == 4, let pid = pid_t(p[0]), let ppid = pid_t(p[1]) else { continue }
+            rows.append((pid, ppid, Double(p[2]) ?? 0, Int64(p[3]) ?? 0))
+        }
+        guard rows.contains(where: { $0.pid == rootPID }) else { return nil }
+        var tree: Set<pid_t> = [rootPID]
+        var grew = true
+        while grew {
+            grew = false
+            for row in rows where !tree.contains(row.pid) && tree.contains(row.ppid) {
+                tree.insert(row.pid)
+                grew = true
+            }
+        }
+        let members = rows.filter { tree.contains($0.pid) }
+        return CloneUsage(processCount: members.count, cpuPercent: members.reduce(0) { $0 + $1.cpu },
+                          memoryBytes: members.reduce(0) { $0 + $1.rssKB } * 1024)
+    }
+
+    /// Live usage for a clone, whichever way it runs.
+    public static func usage(for entry: RegistryEntry) -> CloneUsage? {
+        switch entry.manifest.mode {
+        case .identity: return usage(bundle: entry.bundleURL)
+        case .fallback: return RunningMonitor.instancePID(of: entry.manifest).flatMap { usage(rootPID: $0) }
+        }
+    }
+
     public static func stats(for entry: RegistryEntry) -> CloneStats {
         let m = entry.manifest
         let container = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Library/Containers/\(m.cloneBundleID)")
@@ -79,7 +124,7 @@ public enum StatsCollector {
             extraDiskBytes: extraDiskBytes(clone: entry.bundleURL, source: URL(fileURLWithPath: m.source.path)),
             appBytes: FileCloner.allocatedSize(of: entry.bundleURL),
             dataBytes: dataBytes([URL(fileURLWithPath: m.dataPath), container]),
-            usage: usage(bundle: entry.bundleURL)
+            usage: usage(for: entry)
         )
     }
 

@@ -18,6 +18,13 @@ import Testing
         )
     }
 
+    @Test func normalizedColor() {
+        #expect(Badge.normalizedColor("blue") == "#0A84FF")
+        #expect(Badge.normalizedColor("Green") == "#30D158")
+        #expect(Badge.normalizedColor("#30d158") == "#30D158")
+        for bad in ["#ZZZZZZ", "#12345", "30D158", "", "#30D1588"] { #expect(Badge.normalizedColor(bad) == nil, "\(bad)") }
+    }
+
     @Test func manifestRoundTripsThroughJSON() throws {
         let m = Self.sampleManifest()
         let data = try CloneManifest.encoder().encode(m)

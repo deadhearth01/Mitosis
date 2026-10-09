@@ -24,6 +24,14 @@ import Testing
         #expect(try Entitlements.read(from: clone).isEmpty)
     }
 
+    @Test func reportsFallbackSteps() throws {
+        var (_, source, builder) = try CloneBuilderIdentityTests.setUp()
+        let recorder = StepRecorder()
+        builder.progress = recorder.callback
+        _ = try builder.create(CloneRequest(source: source, name: "Fixture (Steps)", badge: Badge(text: "S", color: "#0A84FF"), modeOverride: .fallback))
+        #expect(recorder.steps == ["copy", "stub", "icon", "plist", "manifest", "sign", "verify", "install"])
+    }
+
     @Test func modeOverrideForcesFallback() throws {
         let (_, source, builder) = try CloneBuilderIdentityTests.setUp()
         let e = try builder.create(CloneRequest(source: source, name: "Forced", badge: Badge(text: "F", color: "#8E8E93"), modeOverride: .fallback))

@@ -10,8 +10,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/deadhearth01/Mitosis/releases"><img src="https://img.shields.io/github/v/release/deadhearth01/Mitosis?include_prereleases&label=release&color=41AEF8&style=flat-square" alt="Latest release"></a>
+  <a href="https://github.com/deadhearth01/Mitosis/releases/latest"><img src="https://img.shields.io/github/v/release/deadhearth01/Mitosis?label=release&color=41AEF8&style=flat-square" alt="Latest release"></a>
   <a href="https://github.com/deadhearth01/Mitosis/releases"><img src="https://img.shields.io/github/downloads/deadhearth01/Mitosis/total?color=41AEF8&style=flat-square" alt="Downloads"></a>
+  <a href="https://github.com/deadhearth01/Mitosis/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/deadhearth01/Mitosis/ci.yml?branch=main&label=tests&style=flat-square" alt="Tests"></a>
   <img src="https://img.shields.io/badge/macOS-15%2B-1450A8?style=flat-square&logo=apple&logoColor=white" alt="Requires macOS 15 or later">
   <img src="https://img.shields.io/badge/Apple%20silicon-native-1450A8?style=flat-square" alt="Native on Apple silicon">
   <img src="https://img.shields.io/badge/Swift-6-F05138?style=flat-square&logo=swift&logoColor=white" alt="Written in Swift 6">
@@ -22,15 +23,15 @@
 <p align="center">
   <a href="#install"><img src="https://img.shields.io/badge/Install%20Mitosis-41AEF8?style=for-the-badge&logo=apple&logoColor=white" height="38" alt="Install Mitosis"></a>
   &nbsp;
-  <a href="https://github.com/deadhearth01/Mitosis/releases"><img src="https://img.shields.io/badge/All%20releases-1450A8?style=for-the-badge&logo=github&logoColor=white" height="38" alt="All releases"></a>
+  <a href="https://github.com/deadhearth01/Mitosis/releases/latest"><img src="https://img.shields.io/badge/Download%20.zip-1450A8?style=for-the-badge&logo=github&logoColor=white" height="38" alt="Download the latest release"></a>
 </p>
 
 <p align="center">
-  <img src="Assets/Brand/mascot-poses/hero.png" width="520" alt="Mito standing between two smaller clones wearing W and P badges">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="Assets/Screenshots/clone-dark.png">
+    <img src="Assets/Screenshots/clone-light.png" width="860" alt="The Mitosis window: clones listed by app in the sidebar, and a clone's page with its status, actions, and usage stats">
+  </picture>
 </p>
-
-> [!NOTE]
-> Mitosis is in early development. **Available today:** the `mitosis` command-line tool (0.1.0-alpha.1 preview). **Coming in 0.1:** the native Mac app with guided onboarding, per-clone stats, and a built-in help guide.
 
 <p align="center">
   <a href="#features">Features</a> ·
@@ -40,20 +41,22 @@
   <a href="#how-it-works">How it works</a> ·
   <a href="#faq">FAQ</a> ·
   <a href="#roadmap">Roadmap</a> ·
-  <a href="#contributing">Contributing</a>
+  <a href="#contributing">Contributing</a> ·
+  <a href="https://deadhearth01.github.io/Mitosis/">Website</a>
 </p>
 
 ## Features
 
 - **Separate logins.** Sign in to a different account in every copy: Slack (Work) and Slack (Personal), side by side.
 - **Separate data.** Settings, chats, and caches stay with their own copy and never touch the original.
-- **Separate Dock icons.** Each copy gets a small badge, so you can tell them apart at a glance.
+- **Separate Dock icons.** Each copy gets a small badge (letters or an emoji), so you can tell them apart at a glance.
 - **Open in any order.** Start the original or any copy first; they all run at the same time.
-- **Light on your Mac.** Copies share the original's files on disk (APFS cloning), so a copy usually costs a couple of megabytes.
-- **Checks before it says "done".** Every new copy is opened once to make sure it really starts. A copy that doesn't start is removed, and a failed update restores the previous version.
-- **Stats for every copy.** See the extra disk space, data size, RAM, and CPU each copy uses, and clean its caches without losing logins.
+- **Updates on its own.** When the original app updates, Mitosis rebuilds its copies in the background, even while Mitosis is closed. Logins and data stay.
+- **Light on your Mac.** Copies share the original's files on disk (APFS cloning), so a copy usually costs a couple of megabytes. Mitosis itself idles at about 45 MB of memory and no CPU.
+- **Stats for every copy.** See the extra disk space, data size, memory, and CPU each copy uses, and clean its caches without losing logins.
+- **Guided and checked.** Pick an app, add a label, done. Every new copy is opened once to make sure it really starts; one that doesn't is removed, and a failed update restores the previous version.
+- **Native and private.** Built in SwiftUI, with a help guide, menu bar access, and a `mitosis` command. No accounts, no analytics; the only network request is an optional update check.
 - **Safe by design.** The original app is never modified. Deleting moves things to the Trash; nothing is erased permanently.
-- **Private.** No accounts, no analytics. The clone engine makes no network connections.
 
 ## Install
 
@@ -63,24 +66,32 @@ Paste this in Terminal:
 curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash
 ```
 
-The installer downloads the newest release, **verifies its SHA-256 checksum**, and installs `mitosis` to `~/.local/bin` for your user only. No admin password needed.
+The installer downloads the newest release, **verifies its SHA-256 checksum and signature**, puts Mitosis in `/Applications`, links the `mitosis` command into `~/.local/bin`, and opens the app. No admin password needed. Run it again any time to update.
 
 > Requires macOS 15 or later on an Apple silicon Mac.
 
 <details>
 <summary><b>Other ways to install</b></summary>
 
-**Homebrew:** coming with the Mac app in 0.1.
+**Homebrew:**
 
-**Manual download:** grab `mitosis-macos-arm64.tar.gz` from the [releases page](https://github.com/deadhearth01/Mitosis/releases), check it against the `.sha256` file, and keep the files in the `mitosis` folder together. If you download it with a browser, macOS quarantines it; the install script above avoids that.
+```bash
+brew install --cask deadhearth01/tap/mitosis
+```
 
-**Build from source** (Xcode 16 or later):
+**Manual download:** get `Mitosis-<version>.zip` from the [latest release](https://github.com/deadhearth01/Mitosis/releases/latest), check it against the `.sha256` file, unzip it, and move `Mitosis.app` to Applications. Mitosis isn't notarized (see the [FAQ](#faq)), so macOS blocks a browser-downloaded copy the first time; clear that once with:
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Mitosis.app
+```
+
+**Build from source** (Xcode 26 or later):
 
 ```bash
 git clone https://github.com/deadhearth01/Mitosis.git
 cd Mitosis
-swift build -c release
-.build/release/mitosis --help
+scripts/build-app.sh        # builds dist/Mitosis.app
+swift test                  # runs the test suite
 ```
 
 </details>
@@ -88,18 +99,34 @@ swift build -c release
 <details>
 <summary><b>Uninstall</b></summary>
 
-1. Delete your clones first if you like: `mitosis delete "Slack (Work)" --delete-data` (they go to the Trash).
-2. Remove the tool:
+1. Delete your clones first if you like: select one in Mitosis and choose **Delete…** (it goes to the Trash).
+2. In Mitosis, turn off **Settings ▸ General ▸ Update clones automatically** (this removes the background updater), then quit Mitosis.
+3. Move `Mitosis.app` to the Trash and remove the command:
 
 ```bash
-rm -rf ~/.local/share/mitosis ~/.local/bin/mitosis
+rm -f ~/.local/bin/mitosis
 ```
 
-Clones live in `~/Applications/Mitosis/` and their data in `~/Library/Mitosis/`, so you can also remove those folders yourself.
+Clones live in `~/Applications/Mitosis/` and their data in `~/Library/Mitosis/`, so you can also remove those folders yourself. With Homebrew: `brew uninstall --cask mitosis`.
 
 </details>
 
 ## Quick start
+
+1. Open Mitosis and click **New Clone** (⌘N), or drag an app onto the window.
+2. Pick the app. Each one shows whether it **Works great**, **works with limits**, or isn't supported yet.
+3. Add a label like **Work**. Mitosis names the copy `Slack (Work)`, draws its badge, and checks that it starts.
+4. Sign in inside the clone. It's a separate app now: keep it in the Dock, give it its own notifications, open it next to the original.
+
+<table>
+  <tr>
+    <td><img src="Assets/Screenshots/new-clone-pick.png" alt="Choosing the app to clone, with a support label for every app"></td>
+    <td><img src="Assets/Screenshots/new-clone-details.png" alt="Adding a label and badge, with a live preview of the clone's icon"></td>
+    <td><img src="Assets/Screenshots/new-clone-done.png" alt="The clone is ready"></td>
+  </tr>
+</table>
+
+Prefer Terminal? The same engine is available as `mitosis`:
 
 ```bash
 mitosis doctor Slack                  # can Slack be cloned, and how?
@@ -110,8 +137,6 @@ mitosis clean "Slack (Work)"          # delete caches; logins and settings stay
 mitosis refresh --all                 # rebuild clones after their original app updates
 mitosis delete "Slack (Work)"         # move the clone to the Trash (data kept unless --delete-data)
 ```
-
-Clone names always follow `App (Label)`, so a copy never looks like a different app. Add `--badge` and `--color` to style the Dock badge, and run `mitosis help clone` for every option.
 
 ## Which apps work?
 
@@ -131,6 +156,7 @@ Run `mitosis doctor <App>` to see exactly how an app will be cloned. Tried an ap
 3. **Own data folder.** A tiny launcher starts the app with its own data folder in `~/Library/Mitosis/Data/`, so logins never mix.
 4. **Signed on your Mac.** Only the files Mitosis changed are re-signed, with a local ad-hoc signature; the app's original signatures stay intact.
 5. **Verified.** The copy is opened once to confirm it starts before Mitosis reports success.
+6. **Kept up to date.** A small background job watches the original apps (no CPU while waiting) and rebuilds their copies after an update. Open copies wait until you quit them.
 
 Apps that can't take a new identity use a compatibility mode that runs the original app with a separate data folder.
 
@@ -145,7 +171,7 @@ macOS sees each clone as a new app, so it asks again for notifications, files, t
 <details>
 <summary><b>What happens when the original app updates?</b></summary>
 
-`mitosis list` shows "update available". Run `mitosis refresh "Slack (Work)"` (or `--all`). Your logins and data stay. If the refreshed copy doesn't start, Mitosis restores the previous version.
+Mitosis rebuilds its clones automatically, in the background, keeping your logins and data. A clone that's open is rebuilt after you quit it. You can turn this off in Settings and refresh by hand instead.
 </details>
 
 <details>
@@ -163,7 +189,7 @@ Never. All changes happen on the copy.
 <details>
 <summary><b>Is it safe? Why isn't it notarized?</b></summary>
 
-Mitosis is free and built without a paid Apple Developer account, so it can't be notarized. The installer verifies a checksum, and all source code is here to read. Clones are signed locally on your Mac.
+Mitosis is free and built without a paid Apple Developer account, so it can't be notarized. The install script and the Homebrew cask download it in a way macOS doesn't block, and the script verifies the checksum and signature. All source code is here to read, and clones are signed locally on your Mac.
 </details>
 
 <details>
@@ -177,12 +203,13 @@ Yes. Mitosis is free for any use, including at work. What you can't do is sell i
 - [x] Clone engine with identity and compatibility modes
 - [x] Launch check, safe refresh with automatic restore, delete to Trash
 - [x] Per-clone stats and cache cleaning
-- [x] `mitosis` command-line tool and one-line installer
-- [ ] **0.1:** Native Mac app with guided onboarding, app picker, stats panel, and help guide
-- [ ] Homebrew tap
-- [ ] Menu bar access to your clones
+- [x] Native Mac app: guided New Clone flow, clone pages with stats, help guide, menu bar
+- [x] Automatic clone updates when the original app updates
+- [x] `mitosis` command, one-line installer, Homebrew tap
 - [ ] Workspaces: open a set of clones together
+- [ ] Login router: sign-in links open in the clone that asked for them
 - [ ] Light mode for sandboxed apps (WhatsApp and similar)
+- [ ] Notarized builds
 
 See [CHANGELOG.md](CHANGELOG.md) for what's new in each release.
 

@@ -32,4 +32,10 @@ public enum Signer {
     public static func verify(_ bundle: URL) throws {
         try Shell.run(codesign, ["--verify", "--deep", "--strict", bundle.path])
     }
+
+    /// Quick check of an app's own signature and sealed resources (not nested code). Fails while an app is
+    /// half-way through updating itself, which is when Mitosis must not copy it.
+    public static func isIntact(_ app: URL) -> Bool {
+        (try? Shell.run(codesign, ["--verify", app.path], check: false))?.status == 0
+    }
 }

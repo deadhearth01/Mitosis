@@ -36,7 +36,7 @@ struct AppPickerView: View {
                 TipRow(pose: .search, text: "Apps marked Works great get their own login, data, notifications, and Dock icon.")
             }
             HStack {
-                Text("You can also drop an app here.")
+                Text(countText + "You can also drop an app here.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                 Spacer()
@@ -86,6 +86,12 @@ struct AppPickerView: View {
         }
     }
 
+    private var countText: String {
+        guard !model.loadingApps, !model.apps.isEmpty else { return "" }
+        let shown = model.visibleApps.count
+        return shown == model.apps.count ? "\(shown) apps. " : "\(shown) of \(model.apps.count) apps. "
+    }
+
     private func continueWithSelection() {
         guard let app = model.selectedApp, model.canChoose(app) else { return }
         Task { await model.choose(app) }
@@ -98,14 +104,14 @@ struct AppRow: View {
 
     var body: some View {
         HStack(spacing: Brand.Space.m - 4) {
-            AppIconView(path: app.url.path, size: 32)
-            VStack(alignment: .leading, spacing: 1) {
-                Text(app.name)
-                if !app.version.isEmpty {
-                    Text(app.version)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
+            AppIconView(path: app.url.path, size: 26)
+            Text(app.name)
+                .lineLimit(1)
+            if !app.version.isEmpty {
+                Text(app.version)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
             Spacer()
             if let decision {
@@ -116,7 +122,7 @@ struct AppRow: View {
                     .accessibilityLabel("Checking")
             }
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 1)
         .opacity(decision?.support == .unsupported ? 0.5 : 1)
         .accessibilityElement(children: .combine)
     }

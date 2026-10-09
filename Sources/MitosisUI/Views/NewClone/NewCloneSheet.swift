@@ -25,7 +25,7 @@ struct NewCloneSheet: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .frame(width: 640, height: model.step == .pick ? 540 : 440)
+        .frame(width: model.step == .pick ? 700 : 640, height: model.step == .pick ? 680 : 440)
         .animation(reduceMotion ? nil : .easeInOut(duration: 0.2), value: model.step)
         .interactiveDismissDisabled(model.isWorking)
         .task { await model.loadApps() }

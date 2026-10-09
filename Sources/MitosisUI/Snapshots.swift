@@ -48,7 +48,7 @@ public enum SnapshotRunner {
                 return AnyView(FailureView(title: "Couldn't create Signal (Work)", report: report, retryTitle: "Try Compatibility Mode", retry: {}, close: {})
                     .tint(Brand.accent).background(.windowBackground))
             },
-            Shot(name: "new-pick", size: CGSize(width: 640, height: 540), titled: false) {
+            Shot(name: "new-pick", size: CGSize(width: 700, height: 680), titled: false) {
                 let m = s.newClone(step: .pick); m.selectedID = m.apps[5].id
                 return sheet(NewCloneSheet(model: m, close: {}))
             },
@@ -154,6 +154,23 @@ struct HelpTopicPreview: View {
                 .navigationSplitViewColumnWidth(min: 200, ideal: 220, max: 280)
         } detail: { HelpPage(topic: topic) }
         .onAppear { selection = topic }
+    }
+}
+
+/// `MitosisSnapshot --catalog`: what the New Clone picker would list on this Mac, and each app's support level.
+public enum CatalogReport {
+    @MainActor public static func run() {
+        guard let services = try? AppServices.live() else { print("no services"); return }
+        let apps = AppCatalog.scan()
+        let decider = ModeDecider(profiles: services.profiles)
+        var counts: [String: Int] = [:]
+        for app in apps {
+            let decision = (try? AppInspector().inspect(app.url, includeCDHash: false)).map { decider.decide(for: $0) }
+            let level = decision?.support.displayName ?? "unreadable"
+            counts[level, default: 0] += 1
+            print("\(level.padding(toLength: 18, withPad: " ", startingAt: 0)) \(app.name)  —  \(decision?.reasons.first?.prefix(110) ?? "")")
+        }
+        print("TOTAL \(apps.count): \(counts)")
     }
 }
 

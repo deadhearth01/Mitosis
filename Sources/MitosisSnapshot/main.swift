@@ -6,7 +6,9 @@ import MitosisUI
 // swift run MitosisSnapshot [output-dir] [name-filter]
 // swift run MitosisSnapshot --live-create <path-to-app>
 let args = CommandLine.arguments
-if args.count > 2, args[1] == "--live-create" {
+if args.count > 1, args[1] == "--catalog" {
+    MainActor.assumeIsolated { CatalogReport.run() }
+} else if args.count > 2, args[1] == "--live-create" {
     let app = URL(fileURLWithPath: args[2])
     Task { @MainActor in
         let ok = await LiveCheck.run(app: app)

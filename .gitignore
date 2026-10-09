@@ -1,2 +1,5 @@
 .superpowers/
 .DS_Store
+.build/
+.swiftpm/
+*.xcuserstate

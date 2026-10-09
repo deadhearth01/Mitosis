@@ -124,7 +124,7 @@ struct Clone: AsyncParsableCommand {
                 throw CLIError(description: "Use --label (e.g. --label Work → \"Slack (Work)\") or --name, but not both.")
             }
             let url = try Context.resolveApp(app)
-            let hex = Badge.presets[color.lowercased()] ?? (color.hasPrefix("#") && color.count == 7 ? color.uppercased() : nil)
+            let hex = Badge.normalizedColor(color)
             guard let hex else { throw CLIError(description: "Unknown color \"\(color)\".") }
             let modeOverride: CloneMode?
             switch mode.lowercased() {

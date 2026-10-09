@@ -75,6 +75,9 @@ import Testing
         let missing = try Self.run(["clone", "DefinitelyNotAnApp", "--label", "X", "--no-verify"], root: root)
         #expect(missing.status != 0)
         #expect(missing.stderr.contains("Couldn't find an app called \"DefinitelyNotAnApp\"."))
+        let color = try Self.run(["clone", app.path, "--label", "X", "--color", "#GGGGGG", "--no-verify"], root: root)
+        #expect(color.status != 0)
+        #expect(color.stderr.contains("Unknown color \"#GGGGGG\""))
         let noClone = try Self.run(["delete", "ghost"], root: root)
         #expect(noClone.stderr.contains("No clone matches \"ghost\"."))
     }

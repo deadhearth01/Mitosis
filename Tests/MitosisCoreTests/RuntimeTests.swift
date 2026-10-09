@@ -16,6 +16,18 @@ import Testing
     }
 }
 
+@Suite struct ProcessPathTests {
+    @Test func executablePathOfLiveAndDeadProcess() throws {
+        let mine = try #require(RunningMonitor.executablePath(of: getpid()))
+        #expect(FileManager.default.isExecutableFile(atPath: mine))
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/true")
+        try p.run()
+        p.waitUntilExit()
+        #expect(RunningMonitor.executablePath(of: p.processIdentifier) == nil)
+    }
+}
+
 /// Launches real (tiny, invisible) GUI apps through macOS. Skip with MITOSIS_SKIP_LAUNCH_TESTS=1 (e.g. in CI).
 @Suite(.serialized, .enabled(if: ProcessInfo.processInfo.environment["MITOSIS_SKIP_LAUNCH_TESTS"] == nil))
 struct LaunchTests {

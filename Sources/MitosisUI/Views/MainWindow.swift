@@ -177,17 +177,26 @@ struct MainWindow: View {
         }
     }
 
+    /// Runs a follow-up after the current alert has closed. Closing an alert resets `model.prompt`, so a
+    /// follow-up prompt ("Quit it first?") set during the button action would otherwise be lost.
+    private func afterDismiss(_ body: @escaping @MainActor () -> Void) {
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            body()
+        }
+    }
+
     @ViewBuilder private func promptActions(_ prompt: AppPrompt) -> some View {
         switch prompt {
         case .quitFirst(let e, let action):
             Button("Quit and \(action.verb)") { model.quitThenPerform(action, on: e) }
             Button("Cancel", role: .cancel) {}
         case .confirmDelete(let e):
-            Button("Move to Trash") { model.request(.delete(deleteData: false), for: e) }
-            Button("Move to Trash with Data", role: .destructive) { model.request(.delete(deleteData: true), for: e) }
+            Button("Move to Trash") { afterDismiss { model.request(.delete(deleteData: false), for: e) } }
+            Button("Move to Trash with Data", role: .destructive) { afterDismiss { model.request(.delete(deleteData: true), for: e) } }
             Button("Cancel", role: .cancel) {}
         case .confirmClean(let e):
-            Button("Clean Caches") { model.request(.clean, for: e) }
+            Button("Clean Caches") { afterDismiss { model.request(.clean, for: e) } }
             Button("Cancel", role: .cancel) {}
         case .message:
             Button("OK", role: .cancel) {}

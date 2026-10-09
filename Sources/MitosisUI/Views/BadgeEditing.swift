@@ -97,7 +97,11 @@ struct RestyleSheet: View {
                     let target = entry
                     let newBadge = badge
                     dismiss()
-                    model.request(.restyle(newBadge), for: target)
+                    // After the sheet closes, so a "Quit it first?" alert can appear.
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(300))
+                        model.request(.restyle(newBadge), for: target)
+                    }
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(badge == entry.manifest.badge)

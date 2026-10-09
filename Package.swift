@@ -42,7 +42,7 @@ let package = Package(
         ),
         .testTarget(
             name: "MitosisUITests",
-            dependencies: ["MitosisUI"]
+            dependencies: ["MitosisUI", "MitosisCore"]
         ),
     ]
 )

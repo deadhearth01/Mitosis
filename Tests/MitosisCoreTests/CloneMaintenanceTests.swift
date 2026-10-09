@@ -28,6 +28,30 @@ import Testing
         #expect(m.status(of: entry) == .originalMissing)
     }
 
+    @Test func restyleChangesOnlyTheBadge() throws {
+        let (_, _, builder, entry) = try Self.setUp()
+        let icon = entry.bundleURL.appendingPathComponent("Contents/Resources/MitosisIcon.icns")
+        let before = try Data(contentsOf: icon)
+        let m = CloneMaintenance(builder: builder, isRunning: { _ in false })
+        let styled = try m.restyle(entry, badge: Badge(text: "Z", color: "#FF453A"))
+        #expect(styled.manifest.badge == Badge(text: "Z", color: "#FF453A"))
+        #expect(styled.id == entry.id)
+        #expect(styled.manifest.cloneBundleID == entry.manifest.cloneBundleID)
+        #expect(styled.manifest.dataPath == entry.manifest.dataPath)
+        #expect(styled.manifest.name == entry.manifest.name)
+        #expect(styled.bundlePath == entry.bundlePath)
+        #expect(CloneRegistry.embeddedManifest(in: entry.bundleURL)?.badge.text == "Z")
+        #expect(try Data(contentsOf: icon) != before)
+        #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().first?.manifest.badge.color == "#FF453A")
+        try Signer.verify(entry.bundleURL)
+    }
+
+    @Test func restyleRefusesWhileRunning() throws {
+        let (_, _, builder, entry) = try Self.setUp()
+        let m = CloneMaintenance(builder: builder, isRunning: { _ in true })
+        #expect(throws: CloneError.cloneRunning("Fixture (Work)")) { try m.restyle(entry, badge: Badge(text: "Z", color: "#FF453A")) }
+    }
+
     @Test func refreshKeepsIdentityAndData() throws {
         let (_, source, builder, entry) = try Self.setUp()
         let marker = URL(fileURLWithPath: entry.manifest.dataPath).appendingPathComponent("login.db")

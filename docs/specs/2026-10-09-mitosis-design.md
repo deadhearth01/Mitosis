@@ -316,3 +316,32 @@ Outcome: a short "Spike results" section appended to this spec with decisions (s
 **Naming (user request 2026-10-09):** clone display names follow "<App> (<Label>)", e.g. "Slack (Work)"; the UI asks for the label only and shows the composed name.
 
 **Brand (decided 2026-10-09):** app icon + mascot = "mascot-2" — a friendly blue rounded-tile creature with a split line down its middle and a wink (about to divide). Master: `Assets/Brand/mitosis-mascot-1024.png`. Use the same character in onboarding, help guide, website and social posts.
+
+## 15. Login router (0.2, designed 2026-10-09)
+
+**Problem.** Many apps sign in through the browser. The website then opens a link such as `slack://…`, and macOS
+delivers it to the scheme's default handler, usually the original app. So signing in from a clone signs in the
+wrong copy (Parall's best-known gap).
+
+**Design.**
+- **Opt-in per original app:** "Send sign-in links to the right copy" on a clone's page. Only full (identity)
+  clones can be targeted; compatibility-mode clones run as the original and can't receive their own links.
+- **A tiny router app.** `Mitosis Link Router.app` (bundle ID `com.mitosis-mac.LinkRouter`, LSUIElement) lives in
+  `~/Applications/Mitosis/.router/`. It is generated from the `MitosisRouter` executable shipped inside Mitosis.app,
+  its Info.plist declares the custom URL schemes of every opted-in app, it is ad-hoc signed, and it is made the
+  default handler for those schemes through `NSWorkspace.setDefaultApplication(at:toOpenURLsWithScheme:)`.
+  The spike on 2026-10-09 confirmed this works without a prompt for custom schemes, but only from an Applications
+  folder (it doesn't work from /tmp).
+- **Routing.**
+  - **Candidates:** the original app plus its identity clones.
+  - **Exactly one running:** the link goes there directly.
+  - **Otherwise:** a small chooser ("Open this sign-in link in…") lists the candidates, running ones first, and
+    preselects the app whose window sits highest in the window order (excluding browsers), which is the app that
+    started the sign-in.
+  - **Delivery:** `NSWorkspace.open([url], withApplicationAt:)`.
+  - **Unknown scheme or no candidates:** the link goes to the previous default handler.
+- **State.** `~/Library/Application Support/Mitosis/link-router.json` records each opted-in app's schemes and the
+  previous default handler per scheme, so turning routing off (or deleting the last clone) restores the original
+  handler.
+- **Schemes.** Custom schemes come from the original app's `CFBundleURLTypes`. Web and system schemes (http, https,
+  file, mailto…) are never taken over.

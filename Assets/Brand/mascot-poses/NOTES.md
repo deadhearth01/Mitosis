@@ -8,3 +8,15 @@
 - `pose-thinking.png` — The mascot looks upward at a three-dot thought bubble during progress.
 - `pose-sleeping.png` — The mascot rests with closed eyes and floating sleep shapes when nothing is running.
 - `hero.png` — The mascot stands with two smaller clones wearing subtle W and P badges for the website hero.
+- `pose-search.png` — Mito inspects an app through a magnifying glass while choosing what to clone.
+- `pose-building.png` — Mito holds a wrench as its center seam glows during clone creation.
+- `pose-key.png` — Mito offers a golden key with a reassuring smile for permissions.
+- `pose-notyet.png` — Mito gives a kind, apologetic shrug when an app is not supported yet.
+- `pose-refresh.png` — Mito holds a refresh symbol for updates and refreshing.
+- `pose-clean.png` — Mito sweeps with a tiny broom and sparkles while cleaning caches.
+- `pose-stats.png` — Mito studies a small bar chart card for disk and RAM stats.
+- `pose-goodbye.png` — Mito waves while carrying a cardboard box as a clone moves to Trash.
+- `pose-guide.png` — Mito points to an open book for the help guide.
+- `pose-juggle.png` — Mito juggles three pastel app tiles for workspaces.
+- `pose-feather.png` — Mito holds a light feather for light mode.
+- `pose-point.png` — Mito points right toward the website install action.

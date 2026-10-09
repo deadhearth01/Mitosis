@@ -1,6 +1,14 @@
 import Foundation
+import Synchronization
 import Testing
 @testable import MitosisCore
+
+/// Collects progress steps reported from any thread.
+final class StepRecorder: Sendable {
+    private let box = Mutex<[String]>([])
+    var steps: [String] { box.withLock { $0 } }
+    var callback: @Sendable (String) -> Void { { [self] step in box.withLock { $0.append(step) } } }
+}
 
 @Suite struct CloneBuilderIdentityTests {
     static func setUp(_ options: FixtureOptions = {
@@ -16,6 +24,14 @@ import Testing
         let source = try FixtureFactory.makeApp(in: apps, options)
         let builder = CloneBuilder(environment: TestSupport.environment(root: root), profiles: try ProfileStore(profiles: []))
         return (root, source, builder)
+    }
+
+    @Test func reportsEachStepInOrder() throws {
+        var (_, source, builder) = try Self.setUp()
+        let recorder = StepRecorder()
+        builder.progress = recorder.callback
+        _ = try builder.create(CloneRequest(source: source, name: "Fixture (Steps)", badge: Badge(text: "S", color: "#0A84FF")))
+        #expect(recorder.steps == ["copy", "helpers", "stub", "icon", "plist", "manifest", "sign", "verify", "install"])
     }
 
     @Test func createsASignedIdentityCloneWithItsOwnID() throws {

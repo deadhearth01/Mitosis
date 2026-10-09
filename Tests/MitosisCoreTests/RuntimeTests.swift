@@ -108,12 +108,15 @@ struct LaunchTests {
     // Final review I2: a clone that doesn't start is removed by the core workflow, with an accurate error.
     @Test func createVerifiedRemovesCloneThatDoesNotStart() async throws {
         var o = FixtureOptions(); o.behavior = .exit(code: 1)
-        let (source, builder) = try Self.setUpSource(o)
+        var (source, builder) = try Self.setUpSource(o)
+        let recorder = StepRecorder()
+        builder.progress = recorder.callback
         let err = await #expect(throws: CloneError.self) {
             _ = try await CloneWorkflow(builder: builder).createVerified(
                 CloneRequest(source: source, name: "Broken (Start)", badge: Badge(text: "B", color: "#FF453A")), window: .seconds(3))
         }
         if case .failed(let step, _)? = err { #expect(step == "launch check") } else { Issue.record("unexpected error \(String(describing: err))") }
+        #expect(recorder.steps.last == "launch check")
         let clones = (try? FileManager.default.contentsOfDirectory(atPath: builder.environment.clonesDir.path)) ?? []
         #expect(clones.filter { $0.hasSuffix(".app") }.isEmpty)
         #expect(((try? FileManager.default.contentsOfDirectory(atPath: builder.environment.dataRoot.path)) ?? []).isEmpty)

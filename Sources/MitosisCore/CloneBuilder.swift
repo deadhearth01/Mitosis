@@ -37,7 +37,8 @@ public enum CloneError: Error, Equatable, CustomStringConvertible, Sendable {
         }
     }
 
-    static func stepLabel(_ step: String) -> String {
+    /// Plain-language label for a progress step, e.g. "copying the app".
+    public static func stepLabel(_ step: String) -> String {
         switch step {
         case "copy": return "copying the app"
         case "helpers": return "renaming the app's helpers"
@@ -87,6 +88,8 @@ struct BuildPlan: Sendable {
 public struct CloneBuilder: Sendable {
     public let environment: MitosisEnvironment
     public let profiles: ProfileStore
+    /// Called with each step name ("copy", "sign", … "install") just before it runs, from the building thread.
+    public var progress: (@Sendable (String) -> Void)?
     /// Test hook: throw right after the named step succeeds.
     var failAfterStep: String?
 
@@ -182,6 +185,7 @@ public struct CloneBuilder: Sendable {
             case .fallback: try buildFallback(plan, at: temp)
             }
             try step("verify") { try Signer.verify(temp) }
+            progress?("install")
             let final: URL
             if let existing {
                 _ = try fm.replaceItemAt(existing, withItemAt: temp)
@@ -205,6 +209,7 @@ public struct CloneBuilder: Sendable {
     }
 
     func step(_ name: String, _ body: () throws -> Void) throws {
+        progress?(name)
         do {
             try body()
         } catch let e as CloneError {

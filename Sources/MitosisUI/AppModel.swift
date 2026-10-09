@@ -120,7 +120,7 @@ final class AppModel {
         guard let services else { return }
         let snapshot = entries
         Task {
-            let result = try? await background {
+            let result = try? await offMain {
                 let maintenance = CloneMaintenance(builder: services.builder)
                 return Dictionary(uniqueKeysWithValues: snapshot.map { ($0.id, maintenance.status(of: $0)) })
             }
@@ -204,15 +204,15 @@ final class AppModel {
             }
         case .restyle(let badge):
             run(e, label: "Updating badge…", failureTitle: "Couldn't update the badge") {
-                _ = try await background { try CloneMaintenance(builder: services.builder).restyle(e, badge: badge) }
+                _ = try await offMain { try CloneMaintenance(builder: services.builder).restyle(e, badge: badge) }
             }
         case .delete(let deleteData):
             run(e, label: "Moving to Trash…", failureTitle: "Couldn't delete \(e.manifest.name)") {
-                try await background { try CloneMaintenance(builder: services.builder).delete(e, deleteData: deleteData) }
+                try await offMain { try CloneMaintenance(builder: services.builder).delete(e, deleteData: deleteData) }
             }
         case .clean:
             run(e, label: "Cleaning…", failureTitle: "Couldn't clean caches") {
-                let freed = try await background { try StatsCollector.cleanCaches(dataPath: URL(fileURLWithPath: e.manifest.dataPath)) }
+                let freed = try await offMain { try StatsCollector.cleanCaches(dataPath: URL(fileURLWithPath: e.manifest.dataPath)) }
                 self.prompt = .message(title: "Caches cleaned",
                                        text: freed > 0
                                            ? "Freed \(Format.bytes(freed)) from \(e.manifest.name). Logins and settings stay."
@@ -256,7 +256,7 @@ final class AppModel {
     func relink(_ e: RegistryEntry, to url: URL) {
         guard let services else { return }
         run(e, label: "Linking…", failureTitle: "Couldn't use that app") {
-            _ = try await background { try CloneMaintenance(builder: services.builder).relink(e, to: url) }
+            _ = try await offMain { try CloneMaintenance(builder: services.builder).relink(e, to: url) }
         }
     }
 
@@ -278,5 +278,10 @@ final class AppModel {
 }
 
 enum Format {
-    static func bytes(_ n: Int64) -> String { ByteCountFormatter.string(fromByteCount: n, countStyle: .file) }
+    static func bytes(_ n: Int64) -> String {
+        let f = ByteCountFormatter()
+        f.countStyle = .file
+        f.allowsNonnumericFormatting = false
+        return f.string(fromByteCount: n)
+    }
 }

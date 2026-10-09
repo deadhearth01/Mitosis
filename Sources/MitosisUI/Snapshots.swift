@@ -31,6 +31,23 @@ public enum SnapshotRunner {
                 let m = s.model(); m.selection = s.entries[1].id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
+            Shot(name: "main-inspector", size: CGSize(width: 1100, height: 680)) {
+                let m = s.model(); m.selection = s.entries[0].id; m.showInspector = true
+                return AnyView(MainWindow(model: m).tint(Brand.accent))
+            },
+            Shot(name: "inspector-update", size: CGSize(width: 1100, height: 680)) {
+                let m = s.model(); m.selection = s.entries[2].id; m.showInspector = true
+                return AnyView(MainWindow(model: m).tint(Brand.accent))
+            },
+            Shot(name: "sheet-restyle", size: CGSize(width: 460, height: 250), titled: false) {
+                AnyView(RestyleSheet(model: s.model(), entry: s.entries[1]).tint(Brand.accent).background(.windowBackground))
+            },
+            Shot(name: "sheet-failure", size: CGSize(width: 480, height: 400), titled: false) {
+                let report = ErrorReport.make(error: CloneError.failed(step: "launch check", message: "\"Signal (Work)\" didn't stay open, so it was removed. Try compatibility (fallback) mode."),
+                                              appName: "Signal", appVersion: "8.2.1", mode: .identity)
+                return AnyView(FailureView(title: "Couldn't create Signal (Work)", report: report, retryTitle: "Try Compatibility Mode", retry: {}, close: {})
+                    .tint(Brand.accent).background(.windowBackground))
+            },
             Shot(name: "main-empty", size: CGSize(width: 1000, height: 640)) {
                 AnyView(MainWindow(model: AppModel(preview: [])).tint(Brand.accent))
             },

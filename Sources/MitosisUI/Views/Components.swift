@@ -155,19 +155,29 @@ struct FailureView: View {
                 }
                 .frame(maxHeight: 110)
             }
-            HStack {
+            HStack(spacing: Brand.Space.m) {
                 Button(copied ? "Copied" : "Copy Details") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(report.message + "\n\n" + report.details, forType: .string)
                     copied = true
                 }
+                .buttonStyle(.link)
                 Button("Report on GitHub") { openURL(report.issueURL) }
+                    .buttonStyle(.link)
+                Spacer()
+            }
+            .font(.callout)
+            HStack {
                 Spacer()
                 if let retry, let retryTitle {
+                    Button("Close", action: close)
+                        .keyboardShortcut(.cancelAction)
                     Button(retryTitle, action: retry)
+                        .keyboardShortcut(.defaultAction)
+                } else {
+                    Button("Close", action: close)
+                        .keyboardShortcut(.defaultAction)
                 }
-                Button("Close", action: close)
-                    .keyboardShortcut(.defaultAction)
             }
         }
         .padding(Brand.Space.l)

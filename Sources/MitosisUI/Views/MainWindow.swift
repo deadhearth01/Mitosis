@@ -48,6 +48,9 @@ struct MainWindow: View {
         } message: { prompt in
             Text(promptMessage(prompt))
         }
+        .sheet(item: $model.restyling) { entry in
+            RestyleSheet(model: model, entry: entry)
+        }
         .sheet(item: $model.failure) { failure in
             FailureView(title: failure.title, report: failure.report) { model.failure = nil }
         }

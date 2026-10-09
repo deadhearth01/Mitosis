@@ -7,6 +7,15 @@
   // mitosis.theavni.studio: Cloudflare creates the DNS record and certificate for a Workers custom domain.
   "routes": [{ "pattern": "mitosis.theavni.studio", "custom_domain": true }],
   "workers_dev": true,
+  // Workers Logs (free tier). Static files are served without running Worker code, so these only fill up if the
+  // site ever gains a script.
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
   "assets": {
     "directory": "./public",
     "not_found_handling": "404-page",

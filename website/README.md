@@ -1,13 +1,20 @@
 # Mitosis website
 
-This is a plain static page. Preview it from this directory with:
+A plain static page in `public/`, served as static assets on [Cloudflare Workers](https://developers.cloudflare.com/workers/static-assets/) (no Worker script, so requests are free).
+
+Preview locally:
 
 ```sh
-python3 -m http.server 8000
+npm install
+npm run dev          # http://localhost:8787
 ```
 
-Open `http://localhost:8000/`.
+Deploy (after `npx wrangler login` once):
 
-To deploy, copy the contents of `website/` to the web root for `https://theavni.studio/labs/mitosis/`. All stylesheet, script, and image paths are relative, so the page works under `/labs/mitosis/`.
+```sh
+npm run deploy
+```
 
-Before the 0.1 release, replace `GITHUB_OWNER = 'OWNER'` in `script.js` with the actual repository owner and verify the installer and Homebrew tap paths. The page marks these commands as going live with 0.1.
+Pushes to `main` that touch `website/` deploy automatically through `.github/workflows/website.yml` once the repository has the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets.
+
+All paths in the page are relative, so it also works under a sub-path such as `/labs/mitosis/`.

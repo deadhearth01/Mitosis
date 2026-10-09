@@ -1,0 +1,12 @@
+{
+  "name": "mitosis-website",
+  "private": true,
+  "description": "The Mitosis website, served as static assets on Cloudflare Workers.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.149.0"
+  }
+}

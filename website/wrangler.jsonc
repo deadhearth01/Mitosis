@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  // The Mitosis website: static files only (no Worker script), so every request is served from Cloudflare's
+  // cache for free.
+  "name": "mitosis",
+  "compatibility_date": "2026-10-09",
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "404-page",
+    "html_handling": "auto-trailing-slash"
+  }
+}

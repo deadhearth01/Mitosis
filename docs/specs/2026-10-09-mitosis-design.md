@@ -4,7 +4,7 @@ _Date: 2026-10-09 · Status: draft for review · Repo folder: `mac-apps/app-clon
 
 ## 1. Intent
 
-**What:** Mitosis is a free, open-source macOS app that runs several fully separate copies ("clones") of the same Mac app — e.g. *Slack Work* and *Slack Client* side by side, each with its own login, data, Dock icon, and notifications.
+**What:** Mitosis is a free, source-available macOS app that runs several fully separate copies ("clones") of the same Mac app — e.g. *Slack Work* and *Slack Client* side by side, each with its own login, data, Dock icon, and notifications.
 
 **Why (owner's goal):** visibility and personal brand for the developer (GitHub stars, X/Reddit audience), not revenue. Ship 0.1 → 1.0, then market on X and Reddit.
 
@@ -40,7 +40,7 @@ This spec details **0.1** fully and fixes the architecture so later versions slo
 - **Minimum OS:** macOS 15. Liquid Glass styling applies automatically on macOS 26+.
 - **Architecture:** Apple silicon + Intel builds (universal) as long as macOS 15 supports Intel; macOS 27 is Apple-silicon-only, so Intel is best-effort.
 - **No paid Apple Developer account.** Mitosis is ad-hoc signed; clones are ad-hoc signed locally. Not distributable via Mac App Store or official Homebrew cask.
-- **License:** MIT.
+- **License:** PolyForm Noncommercial 1.0.0 + an additional permission letting anyone run unmodified releases for any purpose (including at work); no selling and no use of the source in commercial or paid products. The Mitosis name, icon, and Mito mascot are reserved (not licensed). Marketed as "free and source-available" (not "open source", which requires allowing commercial use). _Changed 2026-10-09 at the owner's request; replaces MIT._
 - **Mitosis bundle ID:** `com.mitosis-mac.Mitosis`.
 - **Privacy:** no telemetry/analytics. Network use: Mitosis update check (can be disabled). Nothing else in 0.1.
 
@@ -236,17 +236,22 @@ mitosis open <clone>
 
 ## 11. Repository layout
 
+_Revised 2026-10-09 (follows the conventions of large open-source Mac apps such as AeroSpace, Rectangle, and CodeEdit; one root Swift package instead of an Xcode project)._
+
 ```
 mitosis-mac/
-├─ Mitosis.xcodeproj
-├─ App/                 # SwiftUI app target
-├─ Packages/MitosisCore/ # engine (library) + Tests
-├─ CLI/                 # `mitosis` executable target
-├─ LaunchStub/          # tiny C/Swift binary
-├─ Profiles/profiles.json
-├─ scripts/install.sh, Makefile
-├─ docs/specs/, COMPATIBILITY.md, README.md, LICENSE (MIT)
-└─ .github/workflows/
+├─ Package.swift, Package.resolved   # one SwiftPM package: engine, stub, CLI, (app targets in Plan 3)
+├─ Sources/
+│  ├─ MitosisCore/      # engine library (no UI) + Resources/profiles.json
+│  ├─ LaunchStub/       # tiny launcher copied into clones
+│  └─ mitosis/          # `mitosis` CLI
+├─ Tests/MitosisCoreTests/
+├─ Assets/Brand/        # icon + Mito mascot masters (reserved, not licensed)
+├─ docs/                # specs/, plans/, brand/
+├─ website/             # one-page site
+├─ scripts/             # build-app.sh, install.sh (Plan 4)
+├─ .github/             # issue forms, PR template, (workflows in Plan 4)
+└─ README.md, LICENSE, CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md, CHANGELOG.md, .editorconfig
 ```
 
 ## 12. Phase 0 — Spike (throwaway, before 0.1)
@@ -274,7 +279,7 @@ Outcome: a short "Spike results" section appended to this spec with decisions (s
 | Mac App Store apps validate receipts tied to bundle ID | Mark "limited"; never bypass licensing; fallback offered |
 | Apple tightens ad-hoc signing/Gatekeeper rules | Curl install + build-from-source keep working; buy Developer ID when possible |
 | Homebrew tightens third-party tap rules | Source-building formula as backup; curl installer primary |
-| Parall or others copy the identity approach | Speed of shipping, open source community, CLI + workspaces roadmap |
+| Parall or others copy the identity approach | Speed of shipping, source-available community, CLI + workspaces roadmap |
 | App ToS concerns about multiple accounts | Mitosis only separates local data; README notes users are responsible for each app's terms |
 
 ## 14. Spike results (2026-10-09)

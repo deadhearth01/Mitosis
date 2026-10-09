@@ -4,3 +4,7 @@
 .swiftpm/
 *.xcuserstate
 Assets/icon-concepts/
+
+# Codex run logs
+codex*.log
+codex-summary*.txt

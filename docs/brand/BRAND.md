@@ -88,7 +88,7 @@ Error copy must reflect the actual cause and available recovery path; the exampl
 
 Use a centered max content width of **1120 px**, with 24 px side padding on desktop and 20 px on mobile. Give sections 80–96 px vertical space on desktop and 56–64 px on mobile. Use the shell or page white, few borders, and one primary CTA per section; avoid gradients, floating decorations, carousels, and long paragraphs.
 
-1. **Hero:** Mito in the approved pose; one-line value proposition, such as “Run separate copies of your Mac apps, side by side.” Add a clear **Install Mitosis** button and two copyable commands labeled **curl** and **Homebrew**. Populate them from the verified release instructions and current repository owner; never publish placeholder commands. State “Free and open source” nearby.
+1. **Hero:** Mito in the approved pose; one-line value proposition, such as “Run separate copies of your Mac apps, side by side.” Add a clear **Install Mitosis** button and two copyable commands labeled **curl** and **Homebrew**. Populate them from the verified release instructions and current repository owner; never publish placeholder commands. State “Free and source-available” nearby (never “open source”: the license forbids commercial use).
 2. **Three feature cards:** “Separate logins,” “Separate data,” “Separate Dock icons.” One sentence and one simple visual per card.
 3. **How it works:** “Choose an app” (Thinking), “Name your clone” (Split; show `Slack (Work)`), “Open both” (Success). Keep each step to one sentence.
 4. **FAQ:** Answer which apps work, where clone data lives, how updates affect clones, whether the original changes, and how to uninstall. Link to current docs for details.

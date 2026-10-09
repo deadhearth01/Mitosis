@@ -30,6 +30,46 @@
 - App and clone names with spaces and non-ASCII characters (`Ünïcode Äpp`) → work end-to-end (Task 14).
 - Refresh or delete while the clone is running → refused with "quit it first" (Task 16).
 
+## Amendments from Phase 0 (spec §14) — apply when executing the named task
+
+These override the task text where they conflict.
+
+- **A1 (Task 6):** `profiles.json`: remove the `telegram` entry; set `whatsapp` to `"support": "unsupported"` with notes `"Needs iCloud and shared app data that only work for the original app. Light mode (coming soon) will support it."`.
+- **A2 (Task 7):** add a rule after the profile check and before the restricted-entitlements rule: `if app.isSandboxed && !app.restrictedEntitlements.isEmpty` → `ModeDecision(mode: nil, support: .unsupported, reasons: ["This app relies on iCloud or shared app data that only works for the original app, so it can't be cloned yet. Light mode (coming soon) will support it."])`. Add test `sandboxedAppsWithRestrictedEntitlementsAreUnsupported` (info with `isSandboxed: true`, `restricted: ["com.apple.security.application-groups"]` → support `.unsupported`, mode `nil`). The `ModeDeciderTests.info` helper gains a `sandboxed: Bool = false` parameter.
+- **A3 (Task 12):** replace inside-out signing of *all* nested code with **signing only what Mitosis modified**. New API (replaces `signInsideOut`; `nestedCodeItems`/`isMachO` are dropped):
+  ```swift
+  public static func signModified(bundle: URL, entitlements: [String: Any], identifier: String,
+                                  helperBundles: [URL] = [], extraExecutables: [URL] = []) throws
+  ```
+  Order: each `helperBundles` item (ad-hoc, no entitlements), then each `extraExecutables` item (`--identifier identifier` + entitlements), then `bundle` (`--identifier identifier` + entitlements). Tests: (a) modified Info.plist + `signModified` → `verify` passes and entitlements are sanitized; (b) **unmodified nested framework keeps its exact cdhash** (`AppInspector.cdhash(of:)` on the framework before/after); (c) extra executable gets `Identifier=`. Tasks 14/15 call `signModified`.
+- **A4 (new Task 12b, before Task 13): `HelperRenamer`** in `Sources/MitosisCore/HelperRenamer.swift`:
+  ```swift
+  public enum HelperRenamer {
+      /// Renames Contents/Frameworks/"<oldName> Helper*.app" → "<newName> Helper*.app", renaming each helper's
+      /// executable and setting its CFBundleExecutable/CFBundleName. Returns the renamed bundle URLs.
+      public static func rename(in bundle: URL, from oldName: String, to newName: String) throws -> [URL]
+  }
+  ```
+  Test with fixture `helperApps: ["Fixture Helper", "Fixture Helper (Renderer)"]` → `["Work Helper.app", "Work Helper (Renderer).app"]`, executables `Work Helper`, `Work Helper (Renderer)`, Info.plist keys updated; non-matching names untouched; no helpers → `[]`.
+- **A5 (Task 14):** `MitosisEnvironment.standard` without root: `dataRoot = ~/Library/Mitosis/Data` (registry stays in `~/Library/Application Support/Mitosis/clones.json`). Data folder name = first 8 hex chars of the UUID, lowercased (extend to the full UUID only if that folder already exists). Identity build steps become: copy → **helpers** (only if `.electron`: `HelperRenamer.rename(in: temp, from: <clone Info.plist CFBundleName before editing, else executableName>, to: name)`) → stub → icon → plist → manifest → sign (`signModified(helperBundles: renamed, extraExecutables: [real])`). Add assertions to `createsASignedIdentityCloneWithItsOwnID`: data folder name has 8 characters; helper `Fixture Work Helper.app` exists; the fixture framework's cdhash is unchanged.
+- **A6 (new Task 16b, after Task 16): `StatsCollector`** in `Sources/MitosisCore/StatsCollector.swift`:
+  ```swift
+  public struct CloneUsage: Equatable, Sendable { public var processCount: Int; public var cpuPercent: Double; public var memoryBytes: Int64 }
+  public struct CloneStats: Equatable, Sendable { public var extraDiskBytes: Int64; public var appBytes: Int64; public var dataBytes: Int64; public var usage: CloneUsage? }
+  public enum StatsCollector {
+      /// Bytes of files in the clone that are new or differ (size or mtime) from the source — the real extra disk, since the rest is APFS-shared.
+      public static func extraDiskBytes(clone: URL, source: URL) -> Int64
+      public static func dataBytes(_ paths: [URL]) -> Int64            // allocated size; missing paths count 0
+      public static func usage(bundle: URL) -> CloneUsage?             // `ps -Ao pid=,pcpu=,rss=,comm=`, processes whose executable is inside the bundle; nil if none
+      public static func stats(for entry: RegistryEntry) -> CloneStats // data paths: dataPath + ~/Library/Containers/<cloneBundleID>
+      public static let cacheFolderNames: Set<String> = ["Cache", "Code Cache", "GPUCache", "DawnGraphiteCache", "DawnWebGPUCache", "update-cache", "CachedExtensionVSIXs"]
+      /// Deletes only the known cache folders directly inside the data path (regenerable). Returns bytes freed.
+      @discardableResult public static func cleanCaches(dataPath: URL) throws -> Int64
+  }
+  ```
+  Tests: identity clone of a fixture → `extraDiskBytes` > 0 and < `appBytes`; `dataBytes` counts a written file; `usage` of a non-running clone is `nil`; `cleanCaches` removes `Cache/` and `update-cache/` but keeps `Local Storage/` and reports freed bytes. Add a launch test in `LaunchTests`: running clone → `usage` has `processCount >= 1` and `memoryBytes > 0`.
+- **A7 (Task 18):** CLI additions: `mitosis stats <clone>` (prints `Extra disk: <n> (the rest is shared with <App>)`, `App size: <n>`, `Data: <n>`, and `Running: <k> processes · <cpu>% CPU · <mem>` or `Not running`; sizes via `ByteCountFormatter`), and `mitosis clean <clone>` (prints `Freed <n> of caches from "<name>".`). `clone` gains `--no-verify`; **by default** after creating, it runs `CloneLauncher.openAndCheck(window: .seconds(10))` and, if the clone isn't running, moves it (and its data) to the Trash and fails with `"<name>" didn't start correctly, so it was removed. Try again with --mode fallback.` CLI tests pass `--no-verify`. Add CLI test for `stats` (contains `Extra disk:` and `Not running`) and `clean`.
+
 ---
 
 ## File Structure

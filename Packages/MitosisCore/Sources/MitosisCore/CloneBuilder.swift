@@ -216,8 +216,42 @@ public struct CloneBuilder: Sendable {
         }
     }
 
+    /// A small shortcut app (own name, badge icon and bundle ID) whose stub opens the original app as a new
+    /// instance with the clone's data settings. Safe for any app, but keeps Parall-style limitations.
     func buildFallback(_ p: BuildPlan, at temp: URL) throws {
-        throw CloneError.failed(step: "copy", message: "fallback mode is implemented in Task 15")
+        let fm = FileManager.default
+        let contents = temp.appendingPathComponent("Contents")
+        let macOS = contents.appendingPathComponent("MacOS")
+        let resources = contents.appendingPathComponent("Resources")
+        let executable = "MitosisShortcut"
+
+        try step("copy") {
+            try fm.createDirectory(at: macOS, withIntermediateDirectories: true)
+            try fm.createDirectory(at: resources, withIntermediateDirectories: true)
+            try fm.copyItem(at: environment.stubBinary, to: macOS.appendingPathComponent(executable))
+        }
+        try step("stub") {
+            try LaunchConfig.resolve(p.launch, kind: .open, target: p.info.url.path, dataPath: p.dataPath)
+                .write(toResources: resources)
+        }
+        try step("icon") { try writeIcon(p, resources: resources) }
+        try step("plist") {
+            try InfoPlistEditor.write([
+                "CFBundleIdentifier": p.bundleID,
+                "CFBundleName": p.name,
+                "CFBundleDisplayName": p.name,
+                "CFBundleExecutable": executable,
+                "CFBundlePackageType": "APPL",
+                "CFBundleInfoDictionaryVersion": "6.0",
+                "CFBundleIconFile": IconRenderer.iconFileBaseName,
+                "CFBundleShortVersionString": p.info.version,
+                "CFBundleVersion": p.info.build,
+                "LSMinimumSystemVersion": "15.0",
+                "LSUIElement": true,
+            ], to: contents.appendingPathComponent("Info.plist"))
+        }
+        try step("manifest") { try writeManifest(p, resources: resources) }
+        try step("sign") { try Signer.signModified(bundle: temp, entitlements: [:], identifier: p.bundleID) }
     }
 
     func writeIcon(_ p: BuildPlan, resources: URL) throws {

@@ -116,9 +116,10 @@ struct Clone: AsyncParsableCommand {
     @Option(help: "Badge color: blue, green, orange, red, purple, pink, yellow, gray, or #RRGGBB.") var color: String = "blue"
     @Option(help: "auto, identity, or fallback.") var mode: String = "auto"
     @Flag(help: "Don't open the clone afterwards to check that it starts.") var noVerify = false
+    @Flag(help: "Allow a full copy when the app is on a different drive than ~/Applications.") var allowFullCopy = false
 
     func run() async throws {
-        let entry = try friendly { () throws -> RegistryEntry in
+        let request = try friendly { () throws -> CloneRequest in
             guard (label == nil) != (name == nil) else {
                 throw CLIError(description: "Use --label (e.g. --label Work → \"Slack (Work)\") or --name, but not both.")
             }
@@ -132,22 +133,26 @@ struct Clone: AsyncParsableCommand {
             case "fallback": modeOverride = .fallback
             default: throw CLIError(description: "Unknown mode \"\(mode)\". Use auto, identity, or fallback.")
             }
-            let appName = try AppInspector().inspect(url).name
-            let finalName = label.map { CloneName.compose(app: appName, label: $0) } ?? name ?? ""
+            let preflight = try Context.builder().preflight(source: url)
+            if preflight.willCopyFully && !allowFullCopy {
+                throw CLIError(description: "\(preflight.info.name) is on a different drive, so the clone would be a full copy (\(Context.bytes(preflight.copyBytes))) instead of sharing disk space. Re-run with --allow-full-copy to continue.")
+            }
+            let finalName = label.map { CloneName.compose(app: preflight.info.name, label: $0) } ?? name ?? ""
             let initialSource = (label ?? name ?? "").trimmingCharacters(in: .whitespaces)
             let text = String((badge ?? initialSource.first.map(String.init) ?? "?").prefix(2)).uppercased()
-            return try Context.builder().create(CloneRequest(source: url, name: finalName, badge: Badge(text: text, color: hex),
-                                                             modeOverride: modeOverride))
+            return CloneRequest(source: url, name: finalName, badge: Badge(text: text, color: hex), modeOverride: modeOverride)
         }
-        if !noVerify {
-            print("Checking that \"\(entry.manifest.name)\" starts…")
-            // Fallback clones run as the original app, so check the original's bundle ID for them.
-            let watchedID = entry.manifest.mode == .identity ? entry.manifest.cloneBundleID : entry.manifest.source.bundleID
-            let alive = try await CloneLauncher.openAndCheck(entry.bundleURL, bundleID: watchedID)
-            if !alive {
-                try? CloneMaintenance(builder: try Context.builder()).delete(entry, deleteData: true)
-                throw CLIError(description: "\"\(entry.manifest.name)\" didn't start correctly, so it was moved to the Trash. Try again with --mode fallback.")
+        let builder = try friendly { try Context.builder() }
+        let entry: RegistryEntry
+        do {
+            if noVerify {
+                entry = try builder.create(request)
+            } else {
+                print("Creating \"\(request.name)\" and checking that it starts…")
+                entry = try await CloneWorkflow(builder: builder).createVerified(request)
             }
+        } catch {
+            throw CLIError(description: String(describing: error))
         }
         print("Created \"\(entry.manifest.name)\" (\(entry.manifest.mode.rawValue) mode) at \(entry.bundlePath)")
     }
@@ -163,7 +168,7 @@ struct Stats: ParsableCommand {
             let s = StatsCollector.stats(for: entry)
             let original = URL(fileURLWithPath: entry.manifest.source.path).deletingPathExtension().lastPathComponent
             print(entry.manifest.name)
-            print("Extra disk: \(Context.bytes(s.extraDiskBytes)) (the rest is shared with \(original))")
+            print("Extra disk: about \(Context.bytes(s.extraDiskBytes)) (the rest is shared with \(original))")
             print("App size: \(Context.bytes(s.appBytes))")
             print("Data: \(Context.bytes(s.dataBytes))")
             if let u = s.usage {
@@ -188,14 +193,16 @@ struct Clean: ParsableCommand {
     }
 }
 
-struct Refresh: ParsableCommand {
+struct Refresh: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Rebuild clones from the current version of their original app.")
     @Argument(help: "Clone name.") var clone: String?
     @Flag(help: "Refresh every clone that has an update.") var all = false
+    @Flag(help: "Don't open the refreshed clone to check that it starts.") var noVerify = false
 
-    func run() throws {
-        try friendly {
-            let maintenance = CloneMaintenance(builder: try Context.builder())
+    func run() async throws {
+        let builder = try friendly { try Context.builder() }
+        let targets = try friendly { () throws -> [RegistryEntry] in
+            let maintenance = CloneMaintenance(builder: builder)
             let targets: [RegistryEntry]
             if all {
                 targets = try Context.entries().filter {
@@ -205,10 +212,16 @@ struct Refresh: ParsableCommand {
                 guard let clone else { throw CLIError(description: "Name a clone or use --all.") }
                 targets = [try Context.findClone(clone)]
             }
-            if targets.isEmpty { print("Everything is up to date.") }
-            for t in targets {
-                let updated = try maintenance.refresh(t)
+            return targets
+        }
+        if targets.isEmpty { print("Everything is up to date.") }
+        for t in targets {
+            do {
+                let updated = noVerify ? try CloneMaintenance(builder: builder).refresh(t)
+                                       : try await CloneWorkflow(builder: builder).refreshVerified(t)
                 print("Refreshed \"\(updated.manifest.name)\" to \(updated.manifest.source.version)")
+            } catch {
+                throw CLIError(description: String(describing: error))
             }
         }
     }

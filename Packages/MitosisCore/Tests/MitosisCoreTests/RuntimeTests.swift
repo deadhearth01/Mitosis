@@ -51,4 +51,75 @@ struct LaunchTests {
         let alive = try await CloneLauncher.openAndCheck(entry.bundleURL, bundleID: entry.manifest.cloneBundleID, window: .seconds(3))
         #expect(!alive)
     }
+
+    static func setUpSource(_ o: FixtureOptions) throws -> (URL, CloneBuilder) {
+        let root = try TestSupport.tempDir()
+        let apps = root.appendingPathComponent("Applications")
+        try FileManager.default.createDirectory(at: apps, withIntermediateDirectories: true)
+        var opts = o
+        opts.bundleID = "com.example.launchfixture.\(UUID().uuidString.prefix(8).lowercased())"
+        let source = try FixtureFactory.makeApp(in: apps, opts)
+        var env = TestSupport.environment(root: root)
+        env.registerWithLaunchServices = true
+        return (source, CloneBuilder(environment: env, profiles: try ProfileStore(profiles: [])))
+    }
+
+    // Final review C2/I3: a running fallback clone is detected through its own instance, and protected.
+    @Test func runningFallbackCloneIsDetectedAndProtected() async throws {
+        // Fallback is forced explicitly: an ad-hoc fixture claiming a restricted entitlement would be killed by macOS.
+        var o = FixtureOptions(); o.behavior = .stayOpen(seconds: 20)
+        let (source, builder) = try Self.setUpSource(o)
+        let entry = try builder.create(CloneRequest(source: source, name: "Fixture (Safe)", badge: Badge(text: "S", color: "#30D158"),
+                                                    modeOverride: .fallback))
+        defer { CloneLauncher.terminate(entry); LaunchServices.unregister(entry.bundleURL) }
+        #expect(entry.manifest.mode == .fallback)
+        #expect(!RunningMonitor.isRunning(clone: entry.manifest))
+        try CloneLauncher.open(entry.bundleURL)
+        // Shortcut → stub → app takes longer when the machine is busy (e.g. the whole suite running in parallel).
+        for _ in 0..<60 where !RunningMonitor.isRunning(clone: entry.manifest) { try await Task.sleep(for: .milliseconds(250)) }
+        #expect(RunningMonitor.isRunning(clone: entry.manifest))
+        let maintenance = CloneMaintenance(builder: builder)
+        #expect(throws: CloneError.cloneRunning("Fixture (Safe)")) { try maintenance.refresh(entry) }
+        CloneLauncher.terminate(entry)
+        try await Task.sleep(for: .seconds(1))
+        #expect(!RunningMonitor.isRunning(clone: entry.manifest))
+    }
+
+    // Final review I2: a clone that doesn't start is removed by the core workflow, with an accurate error.
+    @Test func createVerifiedRemovesCloneThatDoesNotStart() async throws {
+        var o = FixtureOptions(); o.behavior = .exit(code: 1)
+        let (source, builder) = try Self.setUpSource(o)
+        let err = await #expect(throws: CloneError.self) {
+            _ = try await CloneWorkflow(builder: builder).createVerified(
+                CloneRequest(source: source, name: "Broken (Start)", badge: Badge(text: "B", color: "#FF453A")), window: .seconds(3))
+        }
+        if case .failed(let step, _)? = err { #expect(step == "launch check") } else { Issue.record("unexpected error \(String(describing: err))") }
+        let clones = (try? FileManager.default.contentsOfDirectory(atPath: builder.environment.clonesDir.path)) ?? []
+        #expect(clones.filter { $0.hasSuffix(".app") }.isEmpty)
+        #expect(((try? FileManager.default.contentsOfDirectory(atPath: builder.environment.dataRoot.path)) ?? []).isEmpty)
+        #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().isEmpty)
+    }
+
+    // Final review I1: refresh keeps the previous version if the new one doesn't start.
+    @Test func refreshVerifiedRestoresPreviousVersionWhenNewOneFails() async throws {
+        var o = FixtureOptions(); o.behavior = .stayOpen(seconds: 20)
+        let (source, builder) = try Self.setUpSource(o)
+        let workflow = CloneWorkflow(builder: builder)
+        let entry = try await workflow.createVerified(CloneRequest(source: source, name: "Fixture (Refresh)", badge: Badge(text: "R", color: "#0A84FF")),
+                                                      window: .seconds(3))
+        defer { CloneLauncher.terminate(entry); LaunchServices.unregister(entry.bundleURL) }
+        CloneLauncher.terminate(entry)
+        try await Task.sleep(for: .seconds(1))
+
+        // The "new version" of the original app crashes at launch.
+        try "exit=1\n".write(to: source.appendingPathComponent("Contents/Resources/fixture.conf"), atomically: true, encoding: .utf8)
+        try Shell.run("/usr/bin/codesign", ["--force", "--sign", "-", source.path])
+        let err = await #expect(throws: CloneError.self) { _ = try await workflow.refreshVerified(entry, window: .seconds(3)) }
+        if case .failed(let step, _)? = err { #expect(step == "launch check") } else { Issue.record("unexpected error \(String(describing: err))") }
+        let conf = try String(contentsOf: entry.bundleURL.appendingPathComponent("Contents/Resources/fixture.conf"), encoding: .utf8)
+        #expect(conf.contains("stay="))   // previous version restored
+        #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().first?.manifest.source.cdhash == entry.manifest.source.cdhash)
+        let leftovers = try FileManager.default.contentsOfDirectory(atPath: builder.environment.clonesDir.path).filter { $0.hasPrefix(".mitosis-") }
+        #expect(leftovers.isEmpty)
+    }
 }

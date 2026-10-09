@@ -41,7 +41,9 @@ public struct CloneRegistry: Sendable {
         return entries
     }
 
+    /// Loads the registry; if it is missing or corrupt, rebuilds it from the manifests embedded in the clones.
     public func loadOrRebuild(clonesDir: URL) throws -> [RegistryEntry] {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return try rebuild(scanning: clonesDir) }
         do { return try load() } catch { return try rebuild(scanning: clonesDir) }
     }
 

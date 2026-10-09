@@ -1,0 +1,1 @@
+Created [BRAND.md](/Volumes/SSD_1TB/DEV/mac-apps/app-cloner/docs/brand/BRAND.md) with colors sampled from the approved mascot, SwiftUI and website guidance, mascot usage, and microcopy examples. It is 97 lines; no other files were created in the current directory.

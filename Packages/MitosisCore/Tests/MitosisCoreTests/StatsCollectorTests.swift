@@ -38,4 +38,21 @@ import Testing
         #expect(!fm.fileExists(atPath: dir.appendingPathComponent("update-cache").path))
         #expect(fm.fileExists(atPath: dir.appendingPathComponent("Local Storage/blob").path))   // user data kept
     }
+
+    // Final review I5: a full copy on another drive is not "nearly free".
+    @Test func crossVolumeCopyCountsAsFullSize() throws {
+        let internalDir = URL(fileURLWithPath: "/private/tmp/mitosis-xvol-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: internalDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: internalDir) }
+        var o = FixtureOptions(); o.signed = false
+        let src = try FixtureFactory.makeApp(in: internalDir, o)
+        let dst = try TestSupport.tempDir().appendingPathComponent("Copy.app")
+        #expect(!(try FileCloner.cloneOrCopy(from: src, to: dst)))   // different volume → real copy
+        let extra = StatsCollector.extraDiskBytes(clone: dst, source: src)
+        let fullSize = try FileManager.default.subpathsOfDirectory(atPath: dst.path).reduce(Int64(0)) { total, sub in
+            let attrs = try FileManager.default.attributesOfItem(atPath: dst.appendingPathComponent(sub).path)
+            return (attrs[.type] as? FileAttributeType) == .typeRegular ? total + ((attrs[.size] as? Int64) ?? 0) : total
+        }
+        #expect(extra == fullSize, "extra \(extra) vs full \(fullSize)")
+    }
 }

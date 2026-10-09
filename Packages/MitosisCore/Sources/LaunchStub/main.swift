@@ -6,6 +6,7 @@ struct StubConfig: Decodable {
     let target: String
     let args: [String]
     let env: [String: String]
+    let pidFile: String?
 }
 
 func fail(_ message: String) -> Never {
@@ -45,6 +46,25 @@ case "open":
     } catch {
         fail("open failed: \(error)")
     }
+
+case "spawn":
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: config.target)
+    p.arguments = config.args + passthrough
+    var environment = ProcessInfo.processInfo.environment
+    for (key, value) in config.env { environment[key] = value }
+    p.environment = environment
+    do {
+        try p.run()
+    } catch {
+        fail("could not start \(config.target): \(error)")
+    }
+    if let pidFile = config.pidFile {
+        try? "\(p.processIdentifier)".write(toFile: pidFile, atomically: true, encoding: .utf8)
+    }
+    p.waitUntilExit()
+    if let pidFile = config.pidFile { try? FileManager.default.removeItem(atPath: pidFile) }
+    exit(p.terminationStatus)
 
 default:
     fail("unknown launch kind \(config.kind)")

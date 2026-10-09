@@ -55,4 +55,16 @@ import Testing
         #expect(!FileManager.default.fileExists(atPath: f.path))
         #expect(FileManager.default.fileExists(atPath: moved.path))
     }
+
+    // Final review I4 (plan defect): a missing registry must be rebuilt, not treated as "no clones".
+    @Test func missingFileIsRebuiltFromEmbeddedManifests() throws {
+        let dir = try TestSupport.tempDir()
+        let clones = dir.appendingPathComponent("Clones")
+        let e = Self.entry(name: "Survivor", in: clones)
+        let resources = e.bundleURL.appendingPathComponent("Contents/Resources")
+        try FileManager.default.createDirectory(at: resources, withIntermediateDirectories: true)
+        try CloneManifest.encoder().encode(e.manifest).write(to: resources.appendingPathComponent(CloneRegistry.manifestFileName))
+        let reg = CloneRegistry(fileURL: dir.appendingPathComponent("clones.json"))
+        #expect(try reg.loadOrRebuild(clonesDir: clones).map(\.id) == [e.id])
+    }
 }

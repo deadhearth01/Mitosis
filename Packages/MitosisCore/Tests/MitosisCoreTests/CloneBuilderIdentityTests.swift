@@ -121,4 +121,35 @@ import Testing
             try builder.create(CloneRequest(source: missing, name: "X", badge: Badge(text: "X", color: "#0A84FF")))
         }
     }
+
+    // Final review C1: failures after the bundle reached its final place must not leave it behind.
+    @Test(arguments: ["install", "registry"])
+    func failureAfterInstallRemovesTheInstalledClone(step: String) throws {
+        let (root, source, base) = try Self.setUp()
+        var builder = base
+        builder.failAfterStep = step
+        #expect(throws: CloneError.self) {
+            try builder.create(CloneRequest(source: source, name: "Late", badge: Badge(text: "L", color: "#0A84FF")))
+        }
+        #expect(((try? FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("Clones").path)) ?? []).isEmpty)
+        #expect(((try? FileManager.default.contentsOfDirectory(atPath: root.appendingPathComponent("Data").path)) ?? []).isEmpty)
+        #expect(try CloneRegistry(fileURL: root.appendingPathComponent("clones.json")).load().isEmpty)
+    }
+
+    // Final review I6: warn before a full copy when the app is on another drive.
+    @Test func preflightReportsFullCopyAcrossVolumes() throws {
+        let (_, source, builder) = try Self.setUp()
+        let same = try builder.preflight(source: source)
+        #expect(!same.willCopyFully)
+        #expect(same.copyBytes == 0)
+        #expect(same.decision.support == .full)
+
+        let internalDir = URL(fileURLWithPath: "/private/tmp/mitosis-xvol-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: internalDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: internalDir) }
+        let far = try FixtureFactory.makeApp(in: internalDir)
+        let other = try builder.preflight(source: far)
+        #expect(other.willCopyFully)
+        #expect(other.copyBytes > 0)
+    }
 }

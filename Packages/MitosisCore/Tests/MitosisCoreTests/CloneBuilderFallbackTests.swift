@@ -18,7 +18,8 @@ import Testing
         #expect(info["CFBundleIconFile"] as? String == "MitosisIcon")
 
         let launch = try JSONDecoder().decode(LaunchConfig.self, from: Data(contentsOf: clone.appendingPathComponent("Contents/Resources/mitosis-launch.json")))
-        #expect(launch == LaunchConfig(kind: .open, target: source.path, args: [], env: ["HOME": entry.manifest.dataPath]))
+        #expect(launch == LaunchConfig(kind: .spawn, target: source.appendingPathComponent("Contents/MacOS/Fixture").path, args: [],
+                                     env: ["HOME": entry.manifest.dataPath], pidFile: entry.manifest.dataPath + "/.mitosis-instance.pid"))
         try Signer.verify(clone)
         #expect(try Entitlements.read(from: clone).isEmpty)
     }

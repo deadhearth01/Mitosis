@@ -47,9 +47,21 @@ public enum CloneError: Error, Equatable, CustomStringConvertible, Sendable {
         case "manifest": return "saving clone details"
         case "sign": return "signing the clone"
         case "verify": return "checking the clone"
+        case "install", "registry": return "saving the clone"
+        case "launch check": return "checking that it starts"
         default: return step
         }
     }
+}
+
+/// What cloning an app would involve — shown before cloning starts.
+public struct ClonePreflight: Sendable {
+    public var info: AppInfo
+    public var decision: ModeDecision
+    /// True when the app is on a different drive, so the clone is a full copy instead of a free APFS clone.
+    public var willCopyFully: Bool
+    /// Bytes a full copy would use (0 when the clone shares the original's disk space).
+    public var copyBytes: Int64
 }
 
 struct BuildPlan: Sendable {
@@ -83,6 +95,15 @@ public struct CloneBuilder: Sendable {
         self.profiles = profiles
     }
 
+    public func preflight(source: URL) throws -> ClonePreflight {
+        guard FileManager.default.fileExists(atPath: source.path) else { throw CloneError.sourceMissing(source.path) }
+        let info = try AppInspector().inspect(source)
+        let decision = ModeDecider(profiles: profiles).decide(for: info)
+        let full = decision.mode == .identity && !FileCloner.isSameVolume(source, environment.clonesDir)
+        return ClonePreflight(info: info, decision: decision, willCopyFully: full,
+                              copyBytes: full ? FileCloner.allocatedSize(of: source) : 0)
+    }
+
     public func create(_ request: CloneRequest) throws -> RegistryEntry {
         let name: String
         do { name = try CloneName.validate(request.name) } catch let e as CloneNameError { throw CloneError.invalidName(e) }
@@ -112,15 +133,28 @@ public struct CloneBuilder: Sendable {
                              profile: profile.map { .init(id: $0.id, version: $0.version) }, createdAt: now, refreshedAt: now)
 
         try fm.createDirectory(at: dataURL, withIntermediateDirectories: true)
+        var installed: URL?
         do {
             let url = try install(plan, replacing: nil)
+            installed = url
+            try checkpoint("registry")
             let entry = RegistryEntry(manifest: plan.manifest, bundlePath: url.path)
             try registry.upsert(entry)
             return entry
         } catch {
+            // Never leave a half-made clone behind: remove the installed bundle and its fresh data folder.
+            if let installed {
+                if environment.registerWithLaunchServices { LaunchServices.unregister(installed) }
+                try? fm.removeItem(at: installed)
+            }
             try? fm.removeItem(at: dataURL)
-            throw error
+            if let e = error as? CloneError { throw e }
+            throw CloneError.failed(step: "registry", message: String(describing: error))
         }
+    }
+
+    func checkpoint(_ name: String) throws {
+        if failAfterStep == name { throw CloneError.failed(step: name, message: "injected test failure") }
     }
 
     /// Short (8 hex chars) so Unix socket paths inside it stay under macOS's 103-character limit.
@@ -141,6 +175,7 @@ public struct CloneBuilder: Sendable {
         let fm = FileManager.default
         try fm.createDirectory(at: environment.clonesDir, withIntermediateDirectories: true)
         let temp = environment.clonesDir.appendingPathComponent(".mitosis-tmp-\(UUID().uuidString).app")
+        var placed: URL?
         do {
             switch plan.mode {
             case .identity: try buildIdentity(plan, at: temp)
@@ -154,11 +189,17 @@ public struct CloneBuilder: Sendable {
             } else {
                 final = environment.clonesDir.appendingPathComponent("\(plan.name).app")
                 try fm.moveItem(at: temp, to: final)
+                placed = final
             }
-            if environment.registerWithLaunchServices { try LaunchServices.register(final) }
+            if environment.registerWithLaunchServices { try? LaunchServices.register(final) }   // macOS also registers on first open
+            try checkpoint("install")
             return final
         } catch {
             try? fm.removeItem(at: temp)
+            if let placed {
+                if environment.registerWithLaunchServices { LaunchServices.unregister(placed) }
+                try? fm.removeItem(at: placed)
+            }
             throw error
         }
     }
@@ -231,7 +272,9 @@ public struct CloneBuilder: Sendable {
             try fm.copyItem(at: environment.stubBinary, to: macOS.appendingPathComponent(executable))
         }
         try step("stub") {
-            try LaunchConfig.resolve(p.launch, kind: .open, target: p.info.url.path, dataPath: p.dataPath)
+            let executable = p.info.url.appendingPathComponent("Contents/MacOS").appendingPathComponent(p.info.executableName)
+            try LaunchConfig.resolve(p.launch, kind: .spawn, target: executable.path, dataPath: p.dataPath,
+                                     pidFile: CloneBuilder.instancePIDFile(dataPath: p.dataPath))
                 .write(toResources: resources)
         }
         try step("icon") { try writeIcon(p, resources: resources) }
@@ -253,6 +296,9 @@ public struct CloneBuilder: Sendable {
         try step("manifest") { try writeManifest(p, resources: resources) }
         try step("sign") { try Signer.signModified(bundle: temp, entitlements: [:], identifier: p.bundleID) }
     }
+
+    /// Where a fallback clone's stub records the pid of the instance it started.
+    public static func instancePIDFile(dataPath: String) -> String { dataPath + "/.mitosis-instance.pid" }
 
     func writeIcon(_ p: BuildPlan, resources: URL) throws {
         guard let base = IconRenderer.baseIcon(forApp: p.info.url) else { throw IconError.noBaseIcon(p.info.name) }

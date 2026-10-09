@@ -22,10 +22,12 @@ public enum StatsCollector {
         "Cache", "Code Cache", "GPUCache", "DawnGraphiteCache", "DawnWebGPUCache", "update-cache", "CachedExtensionVSIXs",
     ]
 
-    /// Bytes of files in the clone that are new or differ (size or mtime) from the source — the real extra disk,
-    /// since unchanged files are APFS clones sharing the original's blocks.
+    /// Estimated bytes the clone really adds: files that are new or differ (size or mtime) from the source, since
+    /// unchanged files are APFS clones sharing the original's blocks. Clones on another drive count in full.
     public static func extraDiskBytes(clone: URL, source: URL) -> Int64 {
         let fm = FileManager.default
+        // A clone on another drive is a full copy, so nothing is shared.
+        let shared = fm.fileExists(atPath: source.path) && FileCloner.isSameVolume(clone, source)
         let keys: [URLResourceKey] = [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey, .contentModificationDateKey]
         guard let e = fm.enumerator(at: clone, includingPropertiesForKeys: keys) else { return 0 }
         let cloneRoot = clone.standardizedFileURL.path
@@ -35,6 +37,7 @@ public enum StatsCollector {
             let rel = String(url.standardizedFileURL.path.dropFirst(cloneRoot.count))
             let sourceFile = URL(fileURLWithPath: source.path + rel)
             let size = Int64(v.fileSize ?? 0)
+            guard shared else { total += size; continue }
             guard let s = try? sourceFile.resourceValues(forKeys: [.fileSizeKey, .contentModificationDateKey]) else {
                 total += size
                 continue

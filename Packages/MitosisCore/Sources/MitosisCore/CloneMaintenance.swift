@@ -8,9 +8,9 @@ public enum CloneStatus: Equatable, Sendable {
 
 public struct CloneMaintenance: Sendable {
     public let builder: CloneBuilder
-    public let isRunning: @Sendable (String) -> Bool
+    public let isRunning: @Sendable (CloneManifest) -> Bool
 
-    public init(builder: CloneBuilder, isRunning: @escaping @Sendable (String) -> Bool = RunningMonitor.isRunning(bundleID:)) {
+    public init(builder: CloneBuilder, isRunning: @escaping @Sendable (CloneManifest) -> Bool = RunningMonitor.isRunning(clone:)) {
         self.builder = builder
         self.isRunning = isRunning
     }
@@ -31,7 +31,7 @@ public struct CloneMaintenance: Sendable {
     /// Rebuilds the clone from the current original, keeping its ID, bundle ID, name, badge and data.
     public func refresh(_ entry: RegistryEntry) throws -> RegistryEntry {
         let m = entry.manifest
-        guard !isRunning(m.cloneBundleID) else { throw CloneError.cloneRunning(m.name) }
+        guard !isRunning(m) else { throw CloneError.cloneRunning(m.name) }
         let source = URL(fileURLWithPath: m.source.path)
         guard FileManager.default.fileExists(atPath: source.path) else { throw CloneError.sourceMissing(source.path) }
         let info = try AppInspector().inspect(source)
@@ -49,7 +49,7 @@ public struct CloneMaintenance: Sendable {
     /// Moves the clone (and optionally its data) to the Trash. Never deletes permanently.
     public func delete(_ entry: RegistryEntry, deleteData: Bool) throws {
         let m = entry.manifest
-        guard !isRunning(m.cloneBundleID) else { throw CloneError.cloneRunning(m.name) }
+        guard !isRunning(m) else { throw CloneError.cloneRunning(m.name) }
         let fm = FileManager.default
         let trashDir = builder.environment.trashOverride
         if builder.environment.registerWithLaunchServices { LaunchServices.unregister(entry.bundleURL) }

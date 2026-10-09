@@ -55,6 +55,19 @@ import Testing
         #expect(try Self.run(["list"], root: root).stdout.contains("No clones yet"))
     }
 
+    @Test func refreshOutdatedRefreshesChangedClones() throws {
+        let root = try TestSupport.tempDir()
+        let app = try FixtureFactory.makeApp(in: root)
+        #expect(try Self.run(["clone", app.path, "--label", "Work", "--no-verify"], root: root).status == 0)
+        let quiet = try Self.run(["refresh", "--outdated", "--quiet"], root: root)
+        #expect(quiet.status == 0)
+        #expect(quiet.stdout.isEmpty)
+        try CloneMaintenanceTests.bumpVersion(of: app, to: "2.0")
+        let r = try Self.run(["refresh", "--outdated"], root: root)
+        #expect(r.status == 0, "\(r.stderr)")
+        #expect(r.stdout.contains("Refreshed \"Fixture (Work)\""))
+    }
+
     @Test func nameOptionStillWorks() throws {
         let root = try TestSupport.tempDir()
         let app = try FixtureFactory.makeApp(in: root)

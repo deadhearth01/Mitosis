@@ -6,6 +6,19 @@ public enum CloneStatus: Equatable, Sendable {
     case originalMissing
 }
 
+/// What an automatic refresh pass did, by clone name.
+public struct AutoRefreshReport: Equatable, Sendable {
+    public var refreshed: [String] = []
+    public var skippedRunning: [String] = []
+    /// The original app is half-way through updating itself; try again later.
+    public var skippedUpdating: [String] = []
+    public var failed: [String: String] = [:]
+
+    public init() {}
+
+    public var isEmpty: Bool { self == AutoRefreshReport() }
+}
+
 public struct CloneMaintenance: Sendable {
     public let builder: CloneBuilder
     public let isRunning: @Sendable (CloneManifest) -> Bool
@@ -31,6 +44,30 @@ public struct CloneMaintenance: Sendable {
     /// Rebuilds the clone from the current original, keeping its ID, bundle ID, name, badge and data.
     public func refresh(_ entry: RegistryEntry) throws -> RegistryEntry {
         try rebuild(entry, badge: entry.manifest.badge)
+    }
+
+    /// Rebuilds every clone whose original app changed, without opening it. Running clones are skipped (they are
+    /// refreshed after they quit), and so are originals whose signature doesn't check out yet (mid-update).
+    /// Each rebuild is atomic, so a failure leaves the previous clone in place.
+    public func refreshOutdated(_ entries: [RegistryEntry]) -> AutoRefreshReport {
+        var report = AutoRefreshReport()
+        for entry in entries {
+            guard case .updateAvailable = status(of: entry) else { continue }
+            let name = entry.manifest.name
+            if isRunning(entry.manifest) {
+                report.skippedRunning.append(name)
+            } else if !Signer.isIntact(URL(fileURLWithPath: entry.manifest.source.path)) {
+                report.skippedUpdating.append(name)
+            } else {
+                do {
+                    _ = try refresh(entry)
+                    report.refreshed.append(name)
+                } catch {
+                    report.failed[name] = String(describing: error)
+                }
+            }
+        }
+        return report
     }
 
     /// Gives the clone a new badge (text and color). The name stays: Electron apps tie their saved logins to the

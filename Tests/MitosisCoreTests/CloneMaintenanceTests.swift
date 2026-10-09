@@ -28,6 +28,35 @@ import Testing
         #expect(m.status(of: entry) == .originalMissing)
     }
 
+    @Test func refreshOutdatedRebuildsOnlyChangedIdleClones() throws {
+        let (_, source, builder, entry) = try Self.setUp()
+        let idle = CloneMaintenance(builder: builder, isRunning: { _ in false })
+        #expect(idle.refreshOutdated([entry]) == AutoRefreshReport())   // nothing changed yet
+        try Self.bumpVersion(of: source, to: "2.0")
+
+        let busy = CloneMaintenance(builder: builder, isRunning: { _ in true })
+        #expect(busy.refreshOutdated([entry]).skippedRunning == ["Fixture (Work)"])
+
+        let report = idle.refreshOutdated([entry])
+        #expect(report.refreshed == ["Fixture (Work)"])
+        let updated = try #require(try CloneRegistry(fileURL: builder.environment.registryFile).load().first)
+        #expect(updated.manifest.source.version == "2.0")
+        #expect(idle.status(of: updated) == .upToDate)
+        #expect(updated.manifest.dataPath == entry.manifest.dataPath)
+    }
+
+    @Test func refreshOutdatedWaitsWhileTheOriginalIsMidUpdate() throws {
+        let (_, source, builder, entry) = try Self.setUp()
+        try Self.bumpVersion(of: source, to: "2.0")
+        // A half-written update: a file changed after signing.
+        try Data("partial".utf8).write(to: source.appendingPathComponent("Contents/Resources/fixture.conf"))
+        let m = CloneMaintenance(builder: builder, isRunning: { _ in false })
+        let report = m.refreshOutdated([entry])
+        #expect(report.skippedUpdating == ["Fixture (Work)"])
+        #expect(report.refreshed.isEmpty)
+        #expect(CloneRegistry.embeddedManifest(in: entry.bundleURL)?.source.version == "1.0")
+    }
+
     @Test func restyleChangesOnlyTheBadge() throws {
         let (_, _, builder, entry) = try Self.setUp()
         let icon = entry.bundleURL.appendingPathComponent("Contents/Resources/MitosisIcon.icns")

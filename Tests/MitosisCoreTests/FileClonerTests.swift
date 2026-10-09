@@ -34,7 +34,11 @@ import Testing
     @Test func sameVolumeDetection() throws {
         let dir = try TestSupport.tempDir()
         #expect(FileCloner.isSameVolume(dir, dir.appendingPathComponent("not/yet/created")))
-        #expect(!FileCloner.isSameVolume(dir, URL(fileURLWithPath: "/System/Library")))   // sealed system volume
+    }
+
+    @Test(.enabled(if: TestSupport.hasSecondVolume, "needs the repo on a different volume than /private/tmp"))
+    func differentVolumesAreDetected() throws {
+        #expect(!FileCloner.isSameVolume(try TestSupport.tempDir(), URL(fileURLWithPath: "/private/tmp")))
     }
 
     @Test func sizeIsPositive() throws {

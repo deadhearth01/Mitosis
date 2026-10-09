@@ -153,7 +153,8 @@ final class StepRecorder: Sendable {
     }
 
     // Final review I6: warn before a full copy when the app is on another drive.
-    @Test func preflightReportsFullCopyAcrossVolumes() throws {
+    @Test(.enabled(if: TestSupport.hasSecondVolume, "needs the repo on a different volume than /private/tmp"))
+    func preflightReportsFullCopyAcrossVolumes() throws {
         let (_, source, builder) = try Self.setUp()
         let same = try builder.preflight(source: source)
         #expect(!same.willCopyFully)

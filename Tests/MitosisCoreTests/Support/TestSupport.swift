@@ -27,6 +27,10 @@ enum TestSupport {
         return url
     }()
 
+    /// True when the test folder and /private/tmp are on different volumes (e.g. the repo on an external drive).
+    /// CI machines usually have a single volume, so cross-volume tests only run where one exists.
+    static let hasSecondVolume: Bool = !FileCloner.isSameVolume(tempRoot, URL(fileURLWithPath: "/private/tmp"))
+
     static func environment(root: URL) -> MitosisEnvironment {
         var env = MitosisEnvironment.standard(stubBinary: stubBinary, root: root)
         env.trashOverride = root.appendingPathComponent("Trash")

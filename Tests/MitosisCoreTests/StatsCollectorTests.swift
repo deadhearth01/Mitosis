@@ -40,7 +40,8 @@ import Testing
     }
 
     // Final review I5: a full copy on another drive is not "nearly free".
-    @Test func crossVolumeCopyCountsAsFullSize() throws {
+    @Test(.enabled(if: TestSupport.hasSecondVolume, "needs the repo on a different volume than /private/tmp"))
+    func crossVolumeCopyCountsAsFullSize() throws {
         let internalDir = URL(fileURLWithPath: "/private/tmp/mitosis-xvol-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: internalDir, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: internalDir) }

@@ -26,7 +26,7 @@ enum Brand {
 
 /// Mito, the mascot. One pose per view at most.
 enum Mascot: String, CaseIterable, Sendable {
-    case wave, split, empty, success, oops, thinking, search, building, key, notyet, refresh, clean, stats, goodbye, guide, sleeping
+    case wave, split, empty, success, oops, thinking, search, building, key, notyet, refresh, clean, stats, goodbye, guide, sleeping, point
 
     @MainActor private static var cache: [Mascot: NSImage] = [:]
 

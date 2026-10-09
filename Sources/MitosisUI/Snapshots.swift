@@ -33,6 +33,10 @@ public enum SnapshotRunner {
                 let m = s.model(); m.selection = s.entries.first { $0.manifest.name == "Signal (Work)" }?.id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))
             },
+            Shot(name: "detail-links", size: CGSize(width: 1060, height: 1100)) {
+                let m = s.model(); m.selection = s.entries.first { $0.manifest.name == "Signal (Work)" }?.id
+                return AnyView(MainWindow(model: m).tint(Brand.accent))
+            },
             Shot(name: "detail-update", size: CGSize(width: 1060, height: 720)) {
                 let m = s.model(); m.selection = s.entries[2].id
                 return AnyView(MainWindow(model: m).tint(Brand.accent))

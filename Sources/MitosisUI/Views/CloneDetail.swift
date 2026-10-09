@@ -21,6 +21,7 @@ struct CloneDetailView: View {
                 notice
                 usageSection
                 detailsSection
+                linksSection
                 maintenanceSection
             }
             .frame(maxWidth: 780, alignment: .leading)
@@ -173,6 +174,34 @@ struct CloneDetailView: View {
         switch entry.manifest.mode {
         case .identity: return "Own login, data, notifications and Dock icon"
         case .fallback: return "Own login and data; uses \(appName)'s Dock icon"
+        }
+    }
+
+    // MARK: Sign-in links
+
+    @ViewBuilder private var linksSection: some View {
+        if entry.manifest.mode == .identity, !model.linkSchemes(for: entry).isEmpty {
+            VStack(alignment: .leading, spacing: Brand.Space.m - 4) {
+                SectionTitle("Sign-in links")
+                Card {
+                    HStack(alignment: .center, spacing: Brand.Space.m) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Send sign-in links to the right copy").font(.body.weight(.medium))
+                            Text("When you sign in through your browser, the website sends a link back to \(appName). Mitosis delivers it to the copy you signed in from, and asks if that isn't clear.")
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: Brand.Space.m)
+                        Toggle("Send sign-in links to the right copy",
+                               isOn: Binding(get: { model.isLinkRouting(entry) }, set: { model.setLinkRouting($0, for: entry) }))
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                    }
+                    .padding(.horizontal, Brand.Space.m)
+                    .padding(.vertical, Brand.Space.m - 4)
+                }
+            }
         }
     }
 

@@ -8,7 +8,7 @@ struct MitosisCLI: AsyncParsableCommand {
         commandName: "mitosis",
         abstract: "Run separate copies of your Mac apps.",
         version: Mitosis.version,
-        subcommands: [List.self, Doctor.self, Clone.self, Stats.self, Clean.self, Refresh.self, Delete.self, Open.self]
+        subcommands: [List.self, Doctor.self, Clone.self, Stats.self, Clean.self, Refresh.self, Delete.self, Open.self, Links.self]
     )
 }
 
@@ -30,6 +30,15 @@ enum Context {
 
     static func builder() throws -> CloneBuilder {
         CloneBuilder(environment: environment(), profiles: try ProfileStore.bundled())
+    }
+
+    /// The link router executable sits next to the CLI inside Mitosis.app (Contents/Helpers).
+    static func linkRouter() -> LinkRouterSetup {
+        let vars = ProcessInfo.processInfo.environment
+        let exeDir = (Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0]))
+            .resolvingSymlinksInPath().deletingLastPathComponent()
+        let router = vars["MITOSIS_ROUTER"].map { URL(fileURLWithPath: $0) } ?? exeDir.appendingPathComponent("MitosisRouter")
+        return LinkRouterSetup(environment: environment(), handlers: WorkspaceURLHandlers(), routerExecutable: router)
     }
 
     static func entries() throws -> [RegistryEntry] {
@@ -269,6 +278,57 @@ struct Open: ParsableCommand {
     func run() throws {
         try friendly {
             try CloneLauncher.open(try Context.findClone(clone).bundleURL)
+        }
+    }
+}
+
+struct Links: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Send browser sign-in links to the copy of an app that started the sign-in.",
+        subcommands: [LinksStatus.self, LinksOn.self, LinksOff.self],
+        defaultSubcommand: LinksStatus.self
+    )
+}
+
+struct LinksStatus: ParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "status", abstract: "Show which apps' sign-in links Mitosis routes.")
+
+    func run() throws {
+        let apps = Context.linkRouter().state.apps
+        guard !apps.isEmpty else {
+            print("Sign-in link routing is off for every app. Turn it on with: mitosis links on Slack")
+            return
+        }
+        for (_, app) in apps.sorted(by: { $0.value.sourcePath < $1.value.sourcePath }) {
+            let name = URL(fileURLWithPath: app.sourcePath).deletingPathExtension().lastPathComponent
+            print("\(name): on (\(app.schemes.map { "\($0)://" }.joined(separator: ", ")))")
+        }
+    }
+}
+
+struct LinksOn: ParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "on", abstract: "Route an app's sign-in links to its clones.")
+    @Argument(help: "The original app: a name (\"Slack\"), bundle ID, or path.") var app: String
+
+    func run() throws {
+        try friendly {
+            let url = try Context.resolveApp(app)
+            try Context.linkRouter().enable(sourceApp: url)
+            print("Sign-in links for \(url.deletingPathExtension().lastPathComponent) now go to the copy that asked.")
+        }
+    }
+}
+
+struct LinksOff: ParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "off", abstract: "Give an app's sign-in links back to the app.")
+    @Argument(help: "The original app: a name (\"Slack\"), bundle ID, or path.") var app: String
+
+    func run() throws {
+        try friendly {
+            let url = try Context.resolveApp(app)
+            guard let id = try AppInspector.readInfoPlist(url)["CFBundleIdentifier"] as? String else { throw CLIError(description: "Couldn't read \(app).") }
+            try Context.linkRouter().disable(sourceBundleID: id)
+            print("Sign-in links for \(url.deletingPathExtension().lastPathComponent) go to the app itself again.")
         }
     }
 }

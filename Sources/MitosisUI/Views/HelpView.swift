@@ -20,7 +20,7 @@ struct HelpView: View {
 }
 
 enum HelpTopic: String, CaseIterable, Identifiable {
-    case start, apps, permissions, updates, stats, deleting, trouble, cli
+    case start, apps, permissions, links, updates, stats, deleting, trouble, cli
     var id: String { rawValue }
 
     var title: String {
@@ -28,6 +28,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .start: return "Getting started"
         case .apps: return "Which apps work"
         case .permissions: return "Permissions"
+        case .links: return "Sign-in links"
         case .updates: return "App updates"
         case .stats: return "Stats and caches"
         case .deleting: return "Deleting clones"
@@ -41,6 +42,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .start: return "sparkles"
         case .apps: return "checkmark.seal"
         case .permissions: return "lock.shield"
+        case .links: return "link"
         case .updates: return "arrow.triangle.2.circlepath"
         case .stats: return "chart.bar"
         case .deleting: return "trash"
@@ -54,6 +56,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .start: return .guide
         case .apps: return .search
         case .permissions: return .key
+        case .links: return .point
         case .updates: return .refresh
         case .stats: return .stats
         case .deleting: return .goodbye
@@ -81,6 +84,12 @@ enum HelpTopic: String, CaseIterable, Identifiable {
             return [
                 "macOS treats each clone as a new app. The first time a clone needs notifications, your files, the camera, or the microphone, macOS asks again.",
                 "That keeps each copy's access separate. You can review it anytime in System Settings ▸ Privacy & Security.",
+            ]
+        case .links:
+            return [
+                "Many apps sign you in through your browser. When you're done, the website sends a link back to the app, and macOS normally gives it to the original app, so the wrong copy gets signed in.",
+                "Turn on **Send sign-in links to the right copy** on a clone's page. Mitosis then receives those links and passes each one to the copy you signed in from. If several copies are open, it asks which one to use.",
+                "Turning it off, or deleting the app's last clone, gives the links back to the original app. Compatibility-mode clones can't receive their own links.",
             ]
         case .updates:
             return [

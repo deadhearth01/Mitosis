@@ -9,6 +9,7 @@ import Testing
         env["MITOSIS_TRASH_DIR"] = root.appendingPathComponent("Trash").path
         env["MITOSIS_NO_LSREGISTER"] = "1"
         env["MITOSIS_STUB"] = TestSupport.stubBinary.path
+        env["MITOSIS_ROUTER"] = TestSupport.routerBinary.path
         return try Shell.run(TestSupport.cliBinary.path, args, environment: env, check: false)
     }
 
@@ -66,6 +67,17 @@ import Testing
         let r = try Self.run(["refresh", "--outdated"], root: root)
         #expect(r.status == 0, "\(r.stderr)")
         #expect(r.stdout.contains("Refreshed \"Fixture (Work)\""))
+    }
+
+    @Test func linksStatusAndAppsWithoutSignInLinks() throws {
+        let root = try TestSupport.tempDir()
+        let status = try Self.run(["links"], root: root)
+        #expect(status.status == 0, "\(status.stderr)")
+        #expect(status.stdout.contains("Sign-in link routing is off for every app."))
+        let app = try FixtureFactory.makeApp(in: root)
+        let on = try Self.run(["links", "on", app.path], root: root)
+        #expect(on.status != 0)
+        #expect(on.stderr.contains("Fixture doesn't use sign-in links"))
     }
 
     @Test func nameOptionStillWorks() throws {

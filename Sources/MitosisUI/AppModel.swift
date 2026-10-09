@@ -57,6 +57,9 @@ final class AppModel {
     var selection: UUID?
     /// Fixed stats for previews and snapshots.
     var previewStats: [UUID: CloneStats] = [:]
+    /// Original apps (bundle IDs) whose sign-in links Mitosis routes.
+    private(set) var linkRoutedApps: Set<String> = []
+    @ObservationIgnored private var schemesCache: [String: [String]] = [:]
     var prompt: AppPrompt?
     var failure: Failure?
     var restyling: RegistryEntry?
@@ -111,6 +114,7 @@ final class AppModel {
         updateRunning(autoUpdate: false)
         refreshStatuses(autoUpdate: autoUpdate)
         syncAutoRefreshAgent()
+        syncLinkRouter()
     }
 
     /// Recomputes which clones are running. A clone that just quit gets its pending automatic update.
@@ -133,6 +137,45 @@ final class AppModel {
             }
             if let result { statuses = result }
             if autoUpdate { autoRefresh() }
+        }
+    }
+
+    // MARK: Sign-in links
+
+    /// Custom link schemes the clone's original app uses for browser sign-in (empty: nothing to route).
+    func linkSchemes(for e: RegistryEntry) -> [String] {
+        let path = e.manifest.source.path
+        if let hit = schemesCache[path] { return hit }
+        let schemes = URLSchemes.declared(byAppAt: URL(fileURLWithPath: path))
+        schemesCache[path] = schemes
+        return schemes
+    }
+
+    func isLinkRouting(_ e: RegistryEntry) -> Bool { linkRoutedApps.contains(e.manifest.source.bundleID) }
+
+    func setLinkRouting(_ on: Bool, for e: RegistryEntry) {
+        guard let router = services?.linkRouter else { return }
+        let source = URL(fileURLWithPath: e.manifest.source.path)
+        let id = e.manifest.source.bundleID
+        if on { linkRoutedApps.insert(id) } else { linkRoutedApps.remove(id) }
+        Task {
+            do {
+                try await offMain { on ? try router.enable(sourceApp: source) : try router.disable(sourceBundleID: id) }
+            } catch {
+                failure = Failure(title: on ? "Couldn't turn on sign-in links" : "Couldn't turn off sign-in links",
+                                  report: ErrorReport.make(error: error, appName: CloneLibrary.appName(for: e), appVersion: nil, mode: e.manifest.mode))
+            }
+            linkRoutedApps = Set(router.state.apps.keys)
+        }
+    }
+
+    /// Drops routing for apps without full clones and repairs the router if it went missing.
+    func syncLinkRouter() {
+        guard let router = services?.linkRouter else { return }
+        let snapshot = entries
+        Task {
+            _ = try? await offMain { try router.sync(entries: snapshot) }
+            linkRoutedApps = Set(router.state.apps.keys)
         }
     }
 

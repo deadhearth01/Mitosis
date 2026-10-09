@@ -15,6 +15,20 @@ struct AppServices: Sendable {
         return executable.resolvingSymlinksInPath().deletingLastPathComponent().appendingPathComponent("LaunchStub")
     }
 
+    /// The link router executable: inside Mitosis.app (Contents/Helpers) or next to the binary during development.
+    static func routerURL(bundle: URL, executable: URL) -> URL {
+        let inBundle = bundle.appendingPathComponent("Contents/Helpers/MitosisRouter")
+        if FileManager.default.fileExists(atPath: inBundle.path) { return inBundle }
+        return executable.resolvingSymlinksInPath().deletingLastPathComponent().appendingPathComponent("MitosisRouter")
+    }
+
+    var linkRouter: LinkRouterSetup? {
+        let executable = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])
+        let router = Self.routerURL(bundle: Bundle.main.bundleURL, executable: executable)
+        guard FileManager.default.isExecutableFile(atPath: router.path) else { return nil }
+        return LinkRouterSetup(environment: environment, handlers: WorkspaceURLHandlers(), routerExecutable: router)
+    }
+
     static func live() throws -> AppServices {
         let vars = ProcessInfo.processInfo.environment
         let executable = Bundle.main.executableURL ?? URL(fileURLWithPath: CommandLine.arguments[0])

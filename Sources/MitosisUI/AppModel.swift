@@ -81,6 +81,8 @@ final class AppModel {
         self.busy = busy
     }
 
+    func loadFailed(_ message: String) { loadError = message }
+
     // MARK: Derived
 
     var visibleEntries: [RegistryEntry] { CloneLibrary.filter(entries, sidebar: sidebar, running: running, search: search) }
@@ -216,6 +218,38 @@ final class AppModel {
                                            ? "Freed \(Format.bytes(freed)) from \(e.manifest.name). Logins and settings stay."
                                            : "\(e.manifest.name) had no caches to clean.")
             }
+        }
+    }
+
+    /// Lets the user point Mitosis at the original app's new location.
+    func findApp(for e: RegistryEntry) {
+        let panel = NSOpenPanel()
+        panel.title = "Find \(CloneLibrary.appName(for: e))"
+        panel.message = "Choose \(CloneLibrary.appName(for: e)) so \(e.manifest.name) can use it again."
+        panel.prompt = "Use This App"
+        panel.allowedContentTypes = [.applicationBundle]
+        panel.directoryURL = URL(fileURLWithPath: "/Applications")
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        relink(e, to: url)
+    }
+
+    // MARK: New clones
+
+    var showingNewClone = false
+    var newCloneSource: URL?
+
+    func startNewClone(source: URL? = nil) {
+        newCloneSource = source
+        showingNewClone = true
+    }
+
+    /// Apps dropped on the window or the Dock icon start a new clone; anything else gets a short explanation.
+    func handleDrop(_ urls: [URL]) {
+        guard let url = urls.first else { return }
+        if url.pathExtension.lowercased() == "app" {
+            startNewClone(source: url)
+        } else {
+            prompt = .message(title: "That's not an app", text: "Drop an app from your Applications folder to clone it.")
         }
     }
 

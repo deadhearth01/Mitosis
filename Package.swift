@@ -10,6 +10,7 @@ let package = Package(
         .executable(name: "MitosisApp", targets: ["MitosisApp"]),
         .executable(name: "mitosis", targets: ["mitosis"]),
         .executable(name: "LaunchStub", targets: ["LaunchStub"]),
+        .executable(name: "MitosisRouter", targets: ["MitosisRouter"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.5.0"),
@@ -20,6 +21,8 @@ let package = Package(
             resources: [.copy("Resources/profiles.json")]
         ),
         .executableTarget(name: "LaunchStub"),
+        // Mitosis Link Router: receives sign-in links and delivers them to the right copy of an app.
+        .executableTarget(name: "MitosisRouter", dependencies: ["MitosisCore"]),
         .executableTarget(
             name: "mitosis",
             dependencies: [
@@ -38,7 +41,7 @@ let package = Package(
         .executableTarget(name: "MitosisSnapshot", dependencies: ["MitosisUI"]),
         .testTarget(
             name: "MitosisCoreTests",
-            dependencies: ["MitosisCore", "LaunchStub", "mitosis"]
+            dependencies: ["MitosisCore", "LaunchStub", "mitosis", "MitosisRouter"]
         ),
         .testTarget(
             name: "MitosisUITests",

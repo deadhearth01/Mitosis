@@ -18,6 +18,7 @@ enum TestSupport {
 
     static var stubBinary: URL { productsDirectory.appendingPathComponent("LaunchStub") }
     static var cliBinary: URL { productsDirectory.appendingPathComponent("mitosis") }
+    static var routerBinary: URL { productsDirectory.appendingPathComponent("MitosisRouter") }
 
     /// Test scratch space inside the package's .build folder (the test runner ignores TMPDIR, and the
     /// system temp folder lives on the internal disk).

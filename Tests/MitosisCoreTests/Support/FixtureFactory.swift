@@ -60,7 +60,18 @@ enum FixtureFactory {
         else { FileManager.default.createFile(atPath: logPath, contents: Data(out.utf8)) }
     }
     if let exitCode { exit(exitCode) }
+    /// Records links opened in this app (sign-in link routing tests).
+    final class FixtureDelegate: NSObject, NSApplicationDelegate {
+        func application(_ application: NSApplication, open urls: [URL]) {
+            guard let logPath else { return }
+            let out = urls.map { "url=\($0.absoluteString) bundle=\(Bundle.main.bundleIdentifier ?? "")\n" }.joined()
+            if let h = FileHandle(forWritingAtPath: logPath) { h.seekToEndOfFile(); h.write(Data(out.utf8)); try? h.close() }
+            else { FileManager.default.createFile(atPath: logPath, contents: Data(out.utf8)) }
+        }
+    }
+    let delegate = FixtureDelegate()
     let app = NSApplication.shared
+    app.delegate = delegate
     app.setActivationPolicy(.accessory)
     DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(stay)) { exit(0) }
     app.run()

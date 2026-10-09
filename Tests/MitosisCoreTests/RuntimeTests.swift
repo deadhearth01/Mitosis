@@ -137,6 +137,48 @@ struct LaunchTests {
         #expect(!text.contains("compatibility"))
     }
 
+    // Login router (spec §15): with only the clone open, a sign-in link goes straight to it. Runs from a hidden folder
+    // in ~/Applications because macOS only accepts link handlers from an Applications folder.
+    @Test func signInLinkReachesTheOpenClone() async throws {
+        let id = UUID().uuidString.prefix(8).lowercased()
+        let fm = FileManager.default
+        let root = fm.homeDirectoryForCurrentUser.appendingPathComponent("Applications/.mitosis-linktest-\(id)")
+        try fm.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? fm.removeItem(at: root) }
+        let scheme = "mitosistest\(id)"
+        let log = root.appendingPathComponent("log.txt")
+        var o = FixtureOptions()
+        o.behavior = .stayOpen(seconds: 30)
+        o.bundleID = "com.example.linkfixture.\(id)"
+        o.extraInfo = ["CFBundleURLTypes": [["CFBundleURLSchemes": [scheme]]]]
+        o.logFile = log
+        let sourceDir = root.appendingPathComponent("Source")
+        try fm.createDirectory(at: sourceDir, withIntermediateDirectories: true)
+        let source = try FixtureFactory.makeApp(in: sourceDir, o)
+        var env = MitosisEnvironment.standard(stubBinary: TestSupport.stubBinary, root: root)
+        env.trashOverride = root.appendingPathComponent("Trash")
+        let builder = CloneBuilder(environment: env, profiles: try ProfileStore(profiles: []))
+        let clone = try builder.create(CloneRequest(source: source, name: "Fixture (Links)", badge: Badge(text: "L", color: "#0A84FF")))
+        defer { CloneLauncher.terminate(clone); LaunchServices.unregister(clone.bundleURL); LaunchServices.unregister(source) }
+
+        let setup = LinkRouterSetup(environment: env, handlers: WorkspaceURLHandlers(), routerExecutable: TestSupport.routerBinary)
+        try setup.enable(sourceApp: source)
+        defer { try? setup.disable(sourceBundleID: o.bundleID) }
+        #expect(WorkspaceURLHandlers().defaultHandler(forScheme: scheme) == LinkRouterSetup.bundleID)
+
+        try CloneLauncher.open(clone.bundleURL)
+        for _ in 0..<40 where !RunningMonitor.isRunning(bundleID: clone.manifest.cloneBundleID) { try await Task.sleep(for: .milliseconds(250)) }
+        try Shell.run("/usr/bin/open", ["\(scheme)://callback?code=42"])
+        let expected = "url=\(scheme)://callback?code=42 bundle=\(clone.manifest.cloneBundleID)"
+        var received = ""
+        for _ in 0..<60 {
+            received = (try? String(contentsOf: log, encoding: .utf8)) ?? ""
+            if received.contains(expected) { break }
+            try await Task.sleep(for: .milliseconds(250))
+        }
+        #expect(received.contains(expected), "log: \(received)")
+    }
+
     // Final review I1: refresh keeps the previous version if the new one doesn't start.
     @Test func refreshVerifiedRestoresPreviousVersionWhenNewOneFails() async throws {
         var o = FixtureOptions(); o.behavior = .stayOpen(seconds: 20)

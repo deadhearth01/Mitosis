@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 CONFIG="release"
 if [ "${1:-}" = "--debug" ]; then CONFIG="debug"; fi
 
-for product in MitosisApp mitosis LaunchStub; do
+for product in MitosisApp mitosis LaunchStub MitosisRouter; do
   swift build -c "${CONFIG}" --product "${product}"
 done
 BIN="$(swift build -c "${CONFIG}" --show-bin-path)"
@@ -19,7 +19,7 @@ rm -rf "${APP}"
 mkdir -p "${APP}/Contents/MacOS" "${APP}/Contents/Helpers" "${APP}/Contents/Resources"
 
 cp "${BIN}/MitosisApp" "${APP}/Contents/MacOS/Mitosis"
-cp "${BIN}/mitosis" "${BIN}/LaunchStub" "${APP}/Contents/Helpers/"
+cp "${BIN}/mitosis" "${BIN}/LaunchStub" "${BIN}/MitosisRouter" "${APP}/Contents/Helpers/"
 cp -R "${BIN}/MitosisCore_MitosisCore.bundle" "${BIN}/MitosisCore_MitosisUI.bundle" "${APP}/Contents/Resources/"
 
 # App icon. Preferred: the Icon Composer source compiled by actool (Xcode 26+), which macOS 26+ shows full size.
@@ -77,6 +77,7 @@ plutil -lint "${APP}/Contents/Info.plist" >/dev/null
 # Ad-hoc signatures, inside out (no paid Developer ID; see README "Is it safe?").
 codesign --force --sign - "${APP}/Contents/Helpers/mitosis"
 codesign --force --sign - "${APP}/Contents/Helpers/LaunchStub"
+codesign --force --sign - "${APP}/Contents/Helpers/MitosisRouter"
 codesign --force --sign - "${APP}"
 codesign --verify --strict "${APP}"
 

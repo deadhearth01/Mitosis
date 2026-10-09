@@ -1,4 +1,5 @@
 import Foundation
+@testable import MitosisCore
 
 enum TestSupport {
     /// Packages/MitosisCore
@@ -25,6 +26,13 @@ enum TestSupport {
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url
     }()
+
+    static func environment(root: URL) -> MitosisEnvironment {
+        var env = MitosisEnvironment.standard(stubBinary: stubBinary, root: root)
+        env.trashOverride = root.appendingPathComponent("Trash")
+        env.registerWithLaunchServices = false
+        return env
+    }
 
     static func tempDir() throws -> URL {
         let url = tempRoot

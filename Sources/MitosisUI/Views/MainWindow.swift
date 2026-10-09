@@ -78,8 +78,7 @@ struct MainWindow: View {
         }
         .onChange(of: model.entries.isEmpty) { _, empty in columns = empty ? .detailOnly : .all }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            model.refreshStatuses()
-            model.updateRunning()
+            model.reload()   // also picks up clones the background updater refreshed
         }
     }
 

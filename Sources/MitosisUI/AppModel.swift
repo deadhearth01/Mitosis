@@ -96,7 +96,8 @@ final class AppModel {
 
     // MARK: Loading
 
-    func reload() {
+    /// Re-reads the registry. `autoUpdate: false` is used after Mitosis's own refreshes so they can't loop.
+    func reload(autoUpdate: Bool = true) {
         guard let services else { return }
         do {
             entries = try CloneRegistry(fileURL: services.environment.registryFile).loadOrRebuild(clonesDir: services.environment.clonesDir)
@@ -105,18 +106,24 @@ final class AppModel {
             loadError = ErrorReport.sanitize("\(error)")
         }
         if let selection, entry(selection) == nil { self.selection = nil }
+        if selection == nil { selection = visibleEntries.first?.id }
         if case .app(let id) = sidebar, !entries.contains(where: { $0.manifest.source.bundleID == id }) { sidebar = .all }
-        updateRunning()
-        refreshStatuses()
+        updateRunning(autoUpdate: false)
+        refreshStatuses(autoUpdate: autoUpdate)
+        syncAutoRefreshAgent()
     }
 
-    func updateRunning() {
+    /// Recomputes which clones are running. A clone that just quit gets its pending automatic update.
+    func updateRunning(autoUpdate: Bool = true) {
         guard let tracker else { return }
-        running = tracker.running(entries)
+        let now = tracker.running(entries)
+        let quit = !running.subtracting(now).isEmpty
+        running = now
+        if quit && autoUpdate { refreshStatuses(autoUpdate: true) }
     }
 
     /// Checks every clone against its original (codesign reads), off the main actor.
-    func refreshStatuses() {
+    func refreshStatuses(autoUpdate: Bool = true) {
         guard let services else { return }
         let snapshot = entries
         Task {
@@ -125,7 +132,46 @@ final class AppModel {
                 return Dictionary(uniqueKeysWithValues: snapshot.map { ($0.id, maintenance.status(of: $0)) })
             }
             if let result { statuses = result }
+            if autoUpdate { autoRefresh() }
         }
+    }
+
+    // MARK: Automatic updates
+
+    var autoUpdateEnabled: Bool { UserDefaults.standard.bool(forKey: Prefs.autoUpdateKey) }
+
+    /// Rebuilds clones whose original app changed, without opening them. Open clones wait until they quit.
+    func autoRefresh() {
+        guard let services, autoUpdateEnabled else { return }
+        let outdated = entries.filter { e in
+            if case .updateAvailable = status(of: e), !isRunning(e), busy[e.id] == nil { return true }
+            return false
+        }
+        guard !outdated.isEmpty else { return }
+        for e in outdated { busy[e.id] = "Updating…" }
+        Task {
+            let report = try? await offMain { CloneMaintenance(builder: services.builder).refreshOutdated(outdated) }
+            for e in outdated { busy[e.id] = nil }
+            if let (name, message) = report?.failed.first {
+                let e = outdated.first { $0.manifest.name == name }
+                failure = Failure(title: "Couldn't update \(name) automatically",
+                                  report: ErrorReport.make(error: CloneError.failed(step: "refresh", message: message),
+                                                           appName: e.map(CloneLibrary.appName(for:)), appVersion: nil, mode: e?.manifest.mode))
+            }
+            reload(autoUpdate: false)
+        }
+    }
+
+    /// Keeps the background LaunchAgent in step with the clones and the setting. Only when running from an installed
+    /// Mitosis.app on the startup disk (launchd can't use a copy on an external drive or inside the build folder).
+    func syncAutoRefreshAgent() {
+        guard services != nil else { return }
+        let cli = CommandLineTool.bundledTool
+        let home = FileManager.default.homeDirectoryForCurrentUser
+        guard FileManager.default.isExecutableFile(atPath: cli.path), FileCloner.isSameVolume(cli, home) else { return }
+        let snapshot = entries
+        let enabled = autoUpdateEnabled
+        Task { _ = try? await offMain { try AutoRefreshAgent.sync(cli: cli, entries: snapshot, enabled: enabled) } }
     }
 
     // MARK: Simple actions
@@ -181,7 +227,7 @@ final class AppModel {
         RunningTracker.quit(e)
         Task {
             for _ in 0..<40 {
-                updateRunning()
+                updateRunning(autoUpdate: false)
                 if !isRunning(e) { break }
                 try? await Task.sleep(for: .milliseconds(250))
             }

@@ -23,6 +23,7 @@ struct GeneralSettings: View {
     let updates: UpdateChecker
     @AppStorage(Prefs.menuBarKey) private var showMenuBar = false
     @AppStorage(Prefs.checkUpdatesKey) private var checkUpdates = true
+    @AppStorage(Prefs.autoUpdateKey) private var autoUpdate = true
     @State private var cliMessage: String?
     @State private var cliFailed = false
 
@@ -39,6 +40,17 @@ struct GeneralSettings: View {
                 }
             }
             Section("Clones") {
+                VStack(alignment: .leading, spacing: 4) {
+                    Toggle("Update clones automatically", isOn: $autoUpdate)
+                        .onChange(of: autoUpdate) { _, _ in
+                            model.syncAutoRefreshAgent()
+                            model.autoRefresh()
+                        }
+                    Text("When an app updates, Mitosis rebuilds its clones in the background, even while Mitosis is closed. Logins and data stay. Clones that are open update after you quit them.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 LabeledContent("Location") {
                     HStack {
                         Text(CommandLineTool.display(model.services?.environment.clonesDir ?? URL(fileURLWithPath: "~/Applications/Mitosis")))
@@ -67,7 +79,7 @@ struct GeneralSettings: View {
         }
         .formStyle(.grouped)
         .scrollDisabled(true)
-        .frame(height: 400)
+        .frame(height: 470)
     }
 
     @ViewBuilder private var updateStatus: some View {

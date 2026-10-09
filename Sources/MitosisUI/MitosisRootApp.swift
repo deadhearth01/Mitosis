@@ -8,7 +8,7 @@ public struct MitosisRootApp: App {
     @AppStorage(Prefs.menuBarKey) private var showMenuBar = false
 
     public init() {
-        UserDefaults.standard.register(defaults: [Prefs.checkUpdatesKey: true, Prefs.showTipsKey: true])
+        UserDefaults.standard.register(defaults: [Prefs.checkUpdatesKey: true, Prefs.showTipsKey: true, Prefs.autoUpdateKey: true])
     }
 
     public var body: some Scene {

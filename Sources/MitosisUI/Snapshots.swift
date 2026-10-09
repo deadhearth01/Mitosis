@@ -174,6 +174,35 @@ public enum CatalogReport {
     }
 }
 
+/// `MitosisSnapshot --live-autoupdate <app>`: makes a clone, "updates" the original (new version, re-signed), and
+/// checks that the app model rebuilds the clone on its own. MITOSIS_HOME should point at a scratch folder.
+public enum LiveAutoUpdateCheck {
+    @MainActor public static func run(app: URL) async -> Bool {
+        UserDefaults.standard.set(true, forKey: Prefs.autoUpdateKey)
+        guard let services = try? AppServices.live() else { print("FAIL: services"); return false }
+        let builder = services.builder
+        guard let entry = try? builder.create(CloneRequest(source: app, name: "Fixture (Auto)", badge: Badge(text: "A", color: "#30D158"))) else {
+            print("FAIL: create"); return false
+        }
+        let plist = app.appendingPathComponent("Contents/Info.plist")
+        guard var info = try? InfoPlistEditor.read(plist) else { print("FAIL: plist"); return false }
+        let newVersion = "9.\(Int.random(in: 1...999))"
+        info["CFBundleShortVersionString"] = newVersion
+        try? InfoPlistEditor.write(info, to: plist)
+        _ = try? Shell.run("/usr/bin/codesign", ["--force", "--sign", "-", app.path])
+        print("original now \(newVersion); starting app model")
+        let model = AppModel(services: services)
+        var ok = false
+        for _ in 0..<60 {
+            try? await Task.sleep(for: .milliseconds(500))
+            if let e = model.entries.first(where: { $0.id == entry.id }), e.manifest.source.version == newVersion { ok = true; break }
+        }
+        print(ok ? "clone rebuilt automatically to \(newVersion)" : "FAIL: clone not rebuilt (status \(String(describing: model.statuses[entry.id])))")
+        try? CloneMaintenance(builder: builder).delete(entry, deleteData: true)
+        return ok
+    }
+}
+
 final class SnapshotWindow: NSWindow {
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
     // Render controls the way they look in the active window (accent-colored default buttons).

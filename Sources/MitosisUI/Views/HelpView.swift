@@ -84,9 +84,9 @@ enum HelpTopic: String, CaseIterable, Identifiable {
             ]
         case .updates:
             return [
-                "When an original app updates, its clones show Update available. Select the clone and choose Refresh.",
-                "Refresh rebuilds the clone from the new version and keeps your logins and data. If the new version doesn't start, Mitosis puts the previous one back.",
-                "Clones don't update themselves. Update the original app as usual, then refresh its clones.",
+                "When an original app updates, Mitosis rebuilds its clones automatically in the background, even while Mitosis is closed. Logins and data stay.",
+                "A clone that's open when its app updates is rebuilt after you quit it. If an app is still installing its update, Mitosis waits and tries again a little later.",
+                "To update by hand instead, turn off Settings ▸ General ▸ Update clones automatically. Clones then show Update available, and Refresh rebuilds one. If the new version doesn't start, Mitosis puts the previous one back.",
             ]
         case .stats:
             return [

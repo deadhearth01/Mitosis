@@ -230,4 +230,5 @@ enum Prefs {
     static let menuBarKey = "showMenuBarExtra"
     static let checkUpdatesKey = "checkForUpdates"
     static let lastUpdateCheckKey = "lastUpdateCheck"
+    static let autoUpdateKey = "autoUpdateClones"
 }

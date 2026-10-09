@@ -4,6 +4,14 @@ All notable changes to Mitosis are documented here. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-09
+
+### Changed
+- The menu bar icon is now a small Mito instead of a generic symbol.
+
+### Fixed
+- A clone put back from the Trash shows up in Mitosis again, and a clone you trash in Finder leaves the list.
+
 ## [0.1.0] - 2026-10-09
 
 The Mac app.
@@ -40,6 +48,7 @@ First preview: the clone engine and the `mitosis` command-line tool.
 - Refresh after the original app updates; delete to the Trash (never permanently).
 - `mitosis` command-line tool: `doctor`, `clone`, `list`, `stats`, `clean`, `refresh`, `delete`, `open`.
 
-[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0-alpha.1...v0.1.0
 [0.1.0-alpha.1]: https://github.com/deadhearth01/Mitosis/releases/tag/v0.1.0-alpha.1

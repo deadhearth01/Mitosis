@@ -27,6 +27,10 @@
 </p>
 
 <p align="center">
+  <a href="https://www.trymacapps.com" target="_blank" rel="noopener"><img src="https://www.trymacapps.com/badge.png" alt="Featured on TryMacApps" width="200" height="67"></a>
+</p>
+
+<p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="Assets/Screenshots/clone-dark.png">
     <img src="Assets/Screenshots/clone-light.png" width="860" alt="The Mitosis window: clones listed by app in the sidebar, and a clone's page with its status, actions, and usage stats">

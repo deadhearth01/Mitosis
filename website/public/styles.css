@@ -226,3 +226,7 @@ h3 { font-size: 21px; font-weight: 600; line-height: 1.25; }
 .guide-category { margin-top: 44px; }
 .guide-category h2 { margin-bottom: 18px; font-size: 26px; }
 .howto code.command-block { display: block; margin: 8px 0; padding: 10px 12px; overflow-x: auto; white-space: nowrap; background: var(--shell); border-radius: 8px; font-size: 13px; }
+
+/* "Featured on" badges */
+.featured-badge { display: inline-block; margin-top: 22px; border-radius: 10px; }
+.featured-badge img { display: block; width: 200px; height: auto; }

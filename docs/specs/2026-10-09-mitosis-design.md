@@ -302,3 +302,5 @@ Outcome: a short "Spike results" section appended to this spec with decisions (s
 8. **Health check:** after creating/refreshing a clone, launch-verify it (still running after 10 s) before reporting success; on failure roll back (or offer fallback) with a plain-language reason.
 9. **Per-clone stats (new, user request):** real extra disk (unshared bytes), data folder size, live RAM/CPU while running.
 10. **Clone updater caches:** show data-folder size and offer "Clean caches" (deletes `update-cache`, `Cache`, `Code Cache`, `GPUCache` inside the clone's data folder).
+
+**Naming (user request 2026-10-09):** clone display names follow "<App> (<Label>)", e.g. "Slack (Work)"; the UI asks for the label only and shows the composed name.

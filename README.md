@@ -42,7 +42,7 @@
   <a href="#faq">FAQ</a> ·
   <a href="#roadmap">Roadmap</a> ·
   <a href="#contributing">Contributing</a> ·
-  <a href="https://deadhearth01.github.io/Mitosis/">Website</a>
+  <a href="https://mitosis.theavni.studio/">Website</a>
 </p>
 
 ## Features

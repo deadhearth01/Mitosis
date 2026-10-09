@@ -4,6 +4,9 @@
   // cache for free.
   "name": "mitosis",
   "compatibility_date": "2026-10-09",
+  // mitosis.theavni.studio: Cloudflare creates the DNS record and certificate for a Workers custom domain.
+  "routes": [{ "pattern": "mitosis.theavni.studio", "custom_domain": true }],
+  "workers_dev": true,
   "assets": {
     "directory": "./public",
     "not_found_handling": "404-page",

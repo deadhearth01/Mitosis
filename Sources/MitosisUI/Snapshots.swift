@@ -240,6 +240,19 @@ public enum LiveAutoUpdateCheck {
     }
 }
 
+/// `MitosisSnapshot --live-selfupdate <Mitosis.app> <version>`: downloads that release from GitHub and installs it over
+/// the given (scratch) copy through the same code path as "Update Now", without relaunching.
+public enum LiveSelfUpdateCheck {
+    @MainActor public static func run(app: URL, version: String) async -> Bool {
+        let checker = UpdateChecker()
+        await checker.installUpdate(version: version, replacing: app, relaunch: false)
+        if case .failed(let message) = checker.install { print("FAIL: \(message)"); return false }
+        let installed = (try? InfoPlistEditor.read(app.appendingPathComponent("Contents/Info.plist")))?["CFBundleShortVersionString"] as? String
+        print("installed version: \(installed ?? "?")")
+        return installed == version
+    }
+}
+
 final class SnapshotWindow: NSWindow {
     override func constrainFrameRect(_ frameRect: NSRect, to screen: NSScreen?) -> NSRect { frameRect }
     // Render controls the way they look in the active window (accent-colored default buttons).

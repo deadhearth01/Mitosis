@@ -8,6 +8,16 @@ import MitosisUI
 let args = CommandLine.arguments
 if args.count > 1, args[1] == "--catalog" {
     MainActor.assumeIsolated { CatalogReport.run() }
+} else if args.count > 3, args[1] == "--live-selfupdate" {
+    let app = URL(fileURLWithPath: args[2])
+    let version = args[3]
+    Task { @MainActor in
+        let ok = await LiveSelfUpdateCheck.run(app: app, version: version)
+        print(ok ? "LIVE SELF-UPDATE PASSED" : "LIVE SELF-UPDATE FAILED")
+        exit(ok ? 0 : 1)
+    }
+    NSApplication.shared.setActivationPolicy(.accessory)
+    NSApplication.shared.run()
 } else if args.count > 2, args[1] == "--live-autoupdate" {
     let app = URL(fileURLWithPath: args[2])
     Task { @MainActor in

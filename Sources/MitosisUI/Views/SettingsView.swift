@@ -93,7 +93,7 @@ struct GeneralSettings: View {
         case .available(let version, let url):
             HStack {
                 Label("Mitosis \(version) is available.", systemImage: "arrow.down.circle.fill")
-                Link("View Release", destination: url)
+                UpdateActions(updates: updates, version: version, releaseURL: url)
             }
         case .failed(let message):
             Label(message, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.secondary)

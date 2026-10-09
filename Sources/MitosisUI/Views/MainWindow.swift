@@ -90,19 +90,17 @@ struct MainWindow: View {
                 Image(systemName: "arrow.down.circle.fill").foregroundStyle(Brand.accent)
                 Text("Mitosis \(version) is available.")
                 Spacer()
-                Link("View Release", destination: url)
-                Button("Copy Update Command") {
-                    NSPasteboard.general.clearContents()
-                    NSPasteboard.general.setString(UpdateChecker.updateCommand, forType: .string)
+                UpdateActions(updates: updates, version: version, releaseURL: url)
+                if updates.install == .idle {
+                    Button {
+                        updates.dismissed = true
+                    } label: {
+                        Image(systemName: "xmark")
+                    }
+                    .buttonStyle(.borderless)
+                    .help("Hide until next launch")
+                    .accessibilityLabel("Hide update message")
                 }
-                Button {
-                    updates.dismissed = true
-                } label: {
-                    Image(systemName: "xmark")
-                }
-                .buttonStyle(.borderless)
-                .help("Hide until next launch")
-                .accessibilityLabel("Hide update message")
             }
             .font(.callout)
             .padding(.horizontal, Brand.Space.m)

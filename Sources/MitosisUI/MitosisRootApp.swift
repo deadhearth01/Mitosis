@@ -35,7 +35,7 @@ public struct MitosisRootApp: App {
         }
 
         MenuBarExtra(isInserted: $showMenuBar) {
-            MenuBarContent(model: model)
+            MenuBarContent(model: model, updates: updates)
         } label: {
             Image(nsImage: MenuBarIcon.image)
                 .accessibilityLabel("Mitosis")

@@ -2,7 +2,7 @@
 
 > Free, source-available macOS app that runs separate copies of your Mac apps (for example Slack (Work) next to Slack), each with its own login, data, Dock icon, and notifications. macOS 15+ on Apple silicon.
 
-Current version: 0.2.1. Made by The Avni Studio (https://theavni.studio). Source: https://github.com/deadhearth01/Mitosis
+Current version: 0.2.2. Made by The Avni Studio (https://theavni.studio). Source: https://github.com/deadhearth01/Mitosis
 
 Key facts:
 - Clones share the original app's files on disk (APFS), so a clone usually adds a few megabytes.

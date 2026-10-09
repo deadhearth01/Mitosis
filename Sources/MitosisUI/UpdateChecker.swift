@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import MitosisCore
 import Observation
@@ -30,8 +31,61 @@ final class UpdateChecker {
     static let endpoint = URL(string: "https://api.github.com/repos/deadhearth01/Mitosis/releases?per_page=10")!
     static let updateCommand = "curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash"
 
+    enum InstallPhase: Equatable {
+        case idle
+        case downloading
+        case installing
+        case failed(String)
+    }
+
     var state: State = .idle
     var dismissed = false
+    var install: InstallPhase = .idle
+
+    /// In-place updates need a real Mitosis.app in a folder this user can write to.
+    var canInstallInPlace: Bool {
+        let app = Bundle.main.bundleURL
+        return app.pathExtension == "app" && FileManager.default.isWritableFile(atPath: app.deletingLastPathComponent().path)
+    }
+
+    /// Downloads the release, verifies it, replaces this Mitosis.app, and relaunches.
+    func installUpdate(version: String) async {
+        await installUpdate(version: version, replacing: Bundle.main.bundleURL, relaunch: true)
+    }
+
+    func installUpdate(version: String, replacing app: URL, relaunch: Bool) async {
+        install = .downloading
+        let (zipURL, checksumURL) = SelfUpdater.assetURLs(version: version)
+        let work = FileManager.default.temporaryDirectory.appendingPathComponent("mitosis-update-\(UUID().uuidString)")
+        do {
+            try FileManager.default.createDirectory(at: work, withIntermediateDirectories: true)
+            let zip = work.appendingPathComponent(zipURL.lastPathComponent)
+            let checksum = work.appendingPathComponent(checksumURL.lastPathComponent)
+            for (remote, local) in [(zipURL, zip), (checksumURL, checksum)] {
+                let (file, response) = try await URLSession.shared.download(from: remote)
+                guard (response as? HTTPURLResponse)?.statusCode == 200 else {
+                    throw SelfUpdaterError.cantReplace("GitHub didn't send the update. Try again later.")
+                }
+                try FileManager.default.moveItem(at: file, to: local)
+            }
+            install = .installing
+            _ = try await offMain { try SelfUpdater.install(zip: zip, checksumFile: checksum, replacing: app) }
+            try? FileManager.default.removeItem(at: work)
+            if relaunch { Self.relaunch(app) } else { install = .idle }
+        } catch {
+            try? FileManager.default.removeItem(at: work)
+            install = .failed((error as? SelfUpdaterError)?.description ?? "Couldn't download the update. Check your connection and try again.")
+        }
+    }
+
+    /// Opens the new version a moment after this one quits.
+    static func relaunch(_ app: URL) {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/bin/sh")
+        p.arguments = ["-c", "sleep 1; /usr/bin/open \"$0\"", app.path]
+        try? p.run()
+        NSApplication.shared.terminate(nil)
+    }
 
     /// The newest release that is newer than `current`. Prereleases count only for people already on one.
     nonisolated static func pick(_ releases: [Release], current: String) -> Release? {

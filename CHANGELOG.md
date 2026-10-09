@@ -4,6 +4,11 @@ All notable changes to Mitosis are documented here. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-10-09
+
+### Added
+- **Update Now.** When a new version is out, the banner, Settings, and the menu bar menu offer **Update Now**: Mitosis downloads the release, checks its checksum and signature, replaces itself, and reopens. No Terminal needed. (Copies in a folder you can't write to still get the copy-the-command option.)
+
 ## [0.2.1] - 2026-10-09
 
 ### Fixed
@@ -63,7 +68,8 @@ First preview: the clone engine and the `mitosis` command-line tool.
 - Refresh after the original app updates; delete to the Trash (never permanently).
 - `mitosis` command-line tool: `doctor`, `clone`, `list`, `stats`, `clean`, `refresh`, `delete`, `open`.
 
-[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/deadhearth01/Mitosis/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/deadhearth01/Mitosis/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/deadhearth01/Mitosis/compare/v0.1.0...v0.1.1

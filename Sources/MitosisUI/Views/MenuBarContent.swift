@@ -4,6 +4,7 @@ import SwiftUI
 /// The optional menu bar menu: open any clone quickly, or start a new one.
 struct MenuBarContent: View {
     let model: AppModel
+    var updates: UpdateChecker? = nil
     @Environment(\.openWindow) private var openWindow
 
     var body: some View {
@@ -23,6 +24,10 @@ struct MenuBarContent: View {
             }
         }
         Divider()
+        if let updates, case .available(let version, _) = updates.state, updates.canInstallInPlace, updates.install == .idle {
+            Button("Update Mitosis to \(version)") { Task { await updates.installUpdate(version: version) } }
+            Divider()
+        }
         Button("New Clone…") {
             showMain()
             model.startNewClone()

@@ -1,0 +1,24 @@
+<UserControl
+    x:Class="Mitosis.Windows.App.Controls.CloneBadgeIcon"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mitosis.Windows.App"
+    Width="{x:Bind IconSize, Mode=OneWay}"
+    Height="{x:Bind IconSize, Mode=OneWay}">
+    <UserControl.Resources>
+        <local:HexToBrushConverter x:Key="HexToBrush" />
+    </UserControl.Resources>
+    <!-- Preview-only app tile: initial letter on the app tint. Real badged clone
+         icons arrive with the engine (Stage 5+); never emoji, never real artwork. -->
+    <Border
+        Background="{x:Bind TintHex, Mode=OneWay, Converter={StaticResource HexToBrush}}"
+        CornerRadius="{x:Bind TileCornerRadius, Mode=OneWay}">
+        <TextBlock
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            FontSize="{x:Bind InitialFontSize, Mode=OneWay}"
+            FontWeight="SemiBold"
+            Foreground="White"
+            Text="{x:Bind Initial, Mode=OneWay}" />
+    </Border>
+</UserControl>

@@ -1,0 +1,150 @@
+<UserControl
+    x:Class="Mitosis.Windows.App.Views.SidebarView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mitosis.Windows.App.Controls"
+    xmlns:local="using:Mitosis.Windows.App"
+    xmlns:viewmodels="using:Mitosis.Windows.ViewModels">
+
+    <UserControl.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <local:CloneToStatusTextConverter x:Key="StatusText" />
+        <local:StatusToBrushConverter x:Key="StatusBrush" />
+        <CollectionViewSource
+            x:Name="GroupedClones"
+            IsSourceGrouped="True"
+            ItemsPath="Items"
+            Source="{x:Bind ViewModel.VisibleGroups, Mode=OneWay}" />
+    </UserControl.Resources>
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <TextBlock
+            Grid.Row="0"
+            Margin="16,12,16,0"
+            FontSize="12"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="{x:Bind ViewModel.CloneCountSubtitle, Mode=OneWay}" />
+
+        <AutoSuggestBox
+            x:Name="SearchBox"
+            Grid.Row="1"
+            Margin="12,4,12,4"
+            PlaceholderText="Search"
+            QueryIcon="Find"
+            Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+            <AutomationProperties.Name>Search clones</AutomationProperties.Name>
+        </AutoSuggestBox>
+
+        <ListView
+            Grid.Row="2"
+            Margin="4,4,4,0"
+            ItemsSource="{x:Bind GroupedClones.View, Mode=OneWay}"
+            KeyDown="OnListKeyDown"
+            RightTapped="OnListRightTapped"
+            SelectedItem="{x:Bind ViewModel.SelectedClone, Mode=TwoWay}"
+            SelectionMode="Single">
+            <AutomationProperties.Name>Clones grouped by app</AutomationProperties.Name>
+            <ListView.ContextFlyout>
+                <MenuFlyout>
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.OpenCloneCommand, Mode=OneWay}" Text="Open" />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.RefreshCommand, Mode=OneWay}" Text="Refresh" />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.EditBadgeCommand, Mode=OneWay}" Text="Edit Badge…" />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.FindAppCommand, Mode=OneWay}" Text="Find App…" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.RevealCloneCommand, Mode=OneWay}" Text="Show in File Explorer" />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.RevealOriginalCommand, Mode=OneWay}" Text="Show Original in File Explorer" />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.RevealDataCommand, Mode=OneWay}" Text="Show Data Folder" />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.CleanCachesCommand, Mode=OneWay}" Text="Clean Caches…" />
+                    <MenuFlyoutSeparator />
+                    <MenuFlyoutItem Command="{x:Bind ViewModel.DeleteCommand, Mode=OneWay}" Text="Delete…" />
+                </MenuFlyout>
+            </ListView.ContextFlyout>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="viewmodels:CloneGroupView">
+                            <StackPanel
+                                Margin="0,8,0,2"
+                                Orientation="Horizontal"
+                                Spacing="6">
+                                <controls:CloneBadgeIcon
+                                    IconSize="14"
+                                    Initial="{x:Bind Group.Initial, Mode=OneTime}"
+                                    InitialFontSize="9"
+                                    TintHex="{x:Bind Group.TintHex, Mode=OneTime}" />
+                                <TextBlock VerticalAlignment="Center" Text="{x:Bind Group.Name, Mode=OneTime}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:CloneItem">
+                    <StackPanel
+                        Padding="0,2"
+                        Orientation="Horizontal"
+                        Spacing="10"
+                        ToolTipService.ToolTip="{x:Bind Name, Mode=OneTime}">
+                        <controls:CloneBadgeIcon
+                            IconSize="30"
+                            Initial="{x:Bind BadgeText, Mode=OneTime}"
+                            InitialFontSize="13"
+                            TintHex="{x:Bind BadgeColorHex, Mode=OneTime}" />
+                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                            <TextBlock MaxLines="1" Text="{x:Bind Label, Mode=OneTime}" />
+                            <StackPanel Orientation="Horizontal" Spacing="5">
+                                <Ellipse
+                                    Width="7"
+                                    Height="7"
+                                    Fill="{x:Bind Converter={StaticResource StatusBrush}, Mode=OneTime}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    MaxLines="1"
+                                    Text="{x:Bind Converter={StaticResource StatusText}, Mode=OneTime}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <TextBlock
+            Grid.Row="2"
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+            Text="No clones match your search."
+            TextWrapping="Wrap"
+            Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+
+        <Button
+            Grid.Row="3"
+            Margin="16,12"
+            Padding="0,4"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Left"
+            Background="Transparent"
+            BorderThickness="0"
+            Command="{x:Bind ViewModel.NewCloneCommand, Mode=OneWay}"
+            ToolTipService.ToolTip="Create a clone (Ctrl+N)">
+            <AutomationProperties.Name>New Clone</AutomationProperties.Name>
+            <Button.KeyboardAccelerators>
+                <KeyboardAccelerator Key="N" Modifiers="Control" />
+            </Button.KeyboardAccelerators>
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="Add" />
+                <TextBlock
+                    FontWeight="Medium"
+                    Foreground="{ThemeResource MitosisAccentBrush}"
+                    Text="New Clone" />
+            </StackPanel>
+        </Button>
+    </Grid>
+</UserControl>

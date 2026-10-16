@@ -1,0 +1,59 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Verified macOS tokens (docs/WINDOWS-DESIGN-SPEC.md §4). Font sizes are
+         provisional Stage 2 mappings of the SF system styles; see code comments. -->
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <Color x:Key="MitosisAccentColor">#1A7FE0</Color>
+            <Color x:Key="MitosisPrimaryBlueColor">#41AEF8</Color>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <Color x:Key="MitosisAccentColor">#3B9EF0</Color>
+            <Color x:Key="MitosisPrimaryBlueColor">#41AEF8</Color>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="HighContrast">
+            <Color x:Key="MitosisAccentColor">#3B9EF0</Color>
+            <Color x:Key="MitosisPrimaryBlueColor">#41AEF8</Color>
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <SolidColorBrush x:Key="MitosisAccentBrush" Color="{ThemeResource MitosisAccentColor}" />
+    <SolidColorBrush x:Key="MitosisTipFillBrush" Color="{ThemeResource MitosisPrimaryBlueColor}" Opacity="0.08" />
+
+    <!-- largeTitle (detail name / help title). Provisional size. -->
+    <Style x:Key="MitosisDetailNameStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="32" />
+        <Setter Property="FontWeight" Value="Bold" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="MaxLines" Value="2" />
+    </Style>
+
+    <!-- title2 (sheet titles, empty state, done title). Provisional size. -->
+    <Style x:Key="MitosisTitle2Style" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- title3.semibold (section titles). Provisional size. -->
+    <Style x:Key="MitosisSectionTitleStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- Rounded-title2 semibold stat values with tabular digits. Provisional size. -->
+    <Style x:Key="MitosisTileValueStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="22" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="FontFamily" Value="Segoe UI Variable Display Semibold" />
+    </Style>
+
+    <!-- Card treatment: control fill + subtle border + 12px continuous-look corners. -->
+    <Style x:Key="MitosisCardStyle" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="12" />
+    </Style>
+</ResourceDictionary>

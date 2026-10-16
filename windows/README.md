@@ -6,20 +6,27 @@ See [docs/WINDOWS-PORT.md](../docs/WINDOWS-PORT.md) for the full port plan.
 
 ## Status
 
-Stage 0 foundation only. The WinUI 3 application shell (`Mitosis.Windows.App`)
-arrives in Stage 2; the clone engine, compatibility checks, process management
-and persistence arrive in Stages 3–8. Nothing here clones, launches, modifies
-or deletes any application.
+Stage 2 shell. `Mitosis.Windows.App` is a real, launchable WinUI 3 application that
+reproduces the main window (By-App sidebar, clone detail, empty state, update banner)
+from `docs/MACOS-UI-AUDIT.md`. It runs on **explicit preview data only**
+(`Mitosis.Windows.ViewModels.PreviewData`): every engine action shows an honest
+"not available in this preview" dialog and changes nothing. The New Clone wizard,
+Settings, Help, onboarding, tray menu, discovery, and the clone engine arrive in
+later stages. Nothing here clones, launches, modifies, or deletes any application.
 
 ## Prerequisites
 
 | Tool | Required | Status on the Stage 0 machine |
 |---|---|---|
 | Git | any recent | 2.54.0 installed |
-| .NET SDK | 10.0.100 or newer (LTS, `latestFeature` roll-forward per `global.json`) | **Missing** — runtime 9.0.18 only, no SDK. Install before building. |
-| Windows App SDK (NuGet `Microsoft.WindowsAppSDK` 2.5.1) | needed from Stage 2 (WinUI 3 UI) | Not referenced yet |
-| Visual Studio 2026 / VS Code + C# Dev Kit | recommended for XAML work | Not installed |
+| .NET SDK | 10.0.100 or newer (LTS, `latestFeature` roll-forward per `global.json`) | 10.0.402 installed |
+| Windows App SDK (NuGet `Microsoft.WindowsAppSDK` 2.5.1) | needed from Stage 2 (WinUI 3 UI) | Referenced; runtime 2.5.1 present on this machine (unpackaged app requires a machine runtime, see Run) |
+| Visual Studio 2026 / VS Code + C# Dev Kit | recommended for XAML work | Not installed; `dotnet` CLI only |
 | Windows 10 SDK / MSVC | only for native Win32 interop (Stage 5+) | Not installed |
+
+Minimum supported Windows version: **Windows 10 version 1809 (build 17763)**,
+per `TargetPlatformMinVersion 10.0.17763.0` in the app project (Windows App SDK
+floor); libraries target the 19041 API contract. Verified on Windows 11 25H2.
 
 No system-wide installation was performed during Stage 0. Install the .NET 10 SDK
 from <https://aka.ms/dotnet/download> (or `winget install Microsoft.DotNet.SDK.10`),
@@ -39,8 +46,11 @@ windows/
     Mitosis.Windows.Platform/ Windows-specific APIs and integration (net10.0-windows)
     Mitosis.Compatibility/    app detection and compatibility decisions (net10.0)
     Mitosis.CloneEngine/      clone creation, launching, refresh, recovery (net10.0)
+    Mitosis.Windows.ViewModels/ hand-rolled MVVM state for the shell, preview data, commands (net10.0)
+    Mitosis.Windows.App/      WinUI 3 application: main window, sidebar, detail, theme (unpackaged WinExe)
   tests/
     Mitosis.Domain.Tests/     MSTest suite for the domain layer
+    Mitosis.ViewModels.Tests/ MSTest suite for shell view models (selection, filtering, states, placeholders)
 ```
 
 Only `Mitosis.Domain` carries code so far: `CloneName`, a direct port of the
@@ -48,10 +58,35 @@ macOS naming rules (`Sources/MitosisCore/Naming.swift`), covered by
 `Mitosis.Domain.Tests`. The remaining libraries are structural placeholders that
 reserve the assembly and namespace boundaries for later stages.
 
-## Build and test (once the SDK is installed)
+## Build and test
 
 ```powershell
 cd windows   # dotnet commands run here so windows/global.json applies
-dotnet build Mitosis.sln
-dotnet test --solution Mitosis.sln
+dotnet restore Mitosis.sln
+dotnet build Mitosis.sln --no-restore
+dotnet test --solution Mitosis.sln --no-build
 ```
+
+## Run the app
+
+Unpackaged: build first, then run the exe (needs a Windows App SDK 2.x runtime;
+the app fails fast with a clear message when it is missing):
+
+```powershell
+.\src\Mitosis.Windows.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Mitosis.Windows.App.exe
+```
+
+What you should see: the Mitosis main window (1060×720) with preview data — 5 app
+groups, 6 sample clones, an update banner, and the empty state when nothing is
+selected. Selecting clones switches the detail page (update/missing notices included).
+Every engine action (New Clone, Open, Refresh, Delete, …) shows a dialog stating it
+is unavailable in the preview. Search filters live; Enter opens (placeholder),
+Delete requests delete (placeholder), Ctrl+N starts New Clone (placeholder),
+Ctrl+F focuses search, right-click shows the clone menu.
+
+Manual visual verification (no automated UI tests in this environment): compare the
+running window against `Assets/Screenshots/clone-light.png` / `clone-dark.png` and
+`docs/WINDOWS-DESIGN-SPEC.md`. Known provisional items: font-size mapping, tile and
+pill glyph choices (compile-safe `Symbol` enum), sidebar width 240, icon tiles are
+initial letters (real badged icons arrive with the engine), no Settings/Help/
+onboarding/tray yet, minimum window size not enforced.

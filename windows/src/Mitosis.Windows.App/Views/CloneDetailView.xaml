@@ -1,0 +1,361 @@
+<UserControl
+    x:Class="Mitosis.Windows.App.Views.CloneDetailView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mitosis.Windows.App.Controls"
+    xmlns:local="using:Mitosis.Windows.App">
+
+    <UserControl.Resources>
+        <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
+        <local:CloneToStatusTextConverter x:Key="StatusText" />
+        <local:RunningToActionTextConverter x:Key="OpenText" />
+        <local:StatusToBrushConverter x:Key="StatusBrush" />
+        <local:StatusToSymbolConverter x:Key="StatusSymbol" />
+    </UserControl.Resources>
+
+    <ScrollViewer>
+        <StackPanel
+            MaxWidth="780"
+            Padding="32,28"
+            Spacing="28">
+            <!-- Header -->
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24">
+                <controls:CloneBadgeIcon
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    IconSize="104"
+                    Initial="{x:Bind ViewModel.SelectedClone.BadgeText, Mode=OneWay}"
+                    InitialFontSize="40"
+                    TileCornerRadius="22"
+                    TintHex="{x:Bind ViewModel.SelectedClone.BadgeColorHex, Mode=OneWay}" />
+                <StackPanel Grid.Column="1" Spacing="8">
+                    <TextBlock Style="{StaticResource MitosisDetailNameStyle}" Text="{x:Bind ViewModel.SelectedClone.Name, Mode=OneWay}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Grid>
+                            <Border
+                                Background="{x:Bind ViewModel.SelectedClone, Mode=OneWay, Converter={StaticResource StatusBrush}}"
+                                CornerRadius="12"
+                                Opacity="0.13" />
+                            <StackPanel Orientation="Horizontal" Spacing="5" Padding="9,4">
+                                <SymbolIcon
+                                    Foreground="{x:Bind ViewModel.SelectedClone, Mode=OneWay, Converter={StaticResource StatusBrush}}"
+                                    Symbol="{x:Bind ViewModel.SelectedClone, Mode=OneWay, Converter={StaticResource StatusSymbol}}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    FontWeight="SemiBold"
+                                    Foreground="{x:Bind ViewModel.SelectedClone, Mode=OneWay, Converter={StaticResource StatusBrush}}"
+                                    Text="{x:Bind ViewModel.SelectedClone, Mode=OneWay, Converter={StaticResource StatusText}}" />
+                            </StackPanel>
+                        </Grid>
+                        <TextBlock
+                            VerticalAlignment="Center"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{x:Bind ViewModel.SelectedSubtitle, Mode=OneWay}" />
+                    </StackPanel>
+                    <StackPanel Margin="0,4,0,0" Orientation="Horizontal" Spacing="8">
+                        <Button
+                            Command="{x:Bind ViewModel.OpenCloneCommand, Mode=OneWay}"
+                            Content="{x:Bind ViewModel.SelectedClone, Mode=OneWay, Converter={StaticResource OpenText}}"
+                            Style="{StaticResource AccentButtonStyle}">
+                            <AutomationProperties.Name>Open clone</AutomationProperties.Name>
+                        </Button>
+                        <Button
+                            Command="{x:Bind ViewModel.EditBadgeCommand, Mode=OneWay}"
+                            Content="Edit Badge…" />
+                        <Button
+                            AutomationProperties.Name="More actions"
+                            ToolTipService.ToolTip="More actions">
+                            <SymbolIcon Symbol="More" />
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.OpenCloneCommand, Mode=OneWay}" Text="Open" />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.RefreshCommand, Mode=OneWay}" Text="Refresh" />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.EditBadgeCommand, Mode=OneWay}" Text="Edit Badge…" />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.FindAppCommand, Mode=OneWay}" Text="Find App…" />
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.RevealCloneCommand, Mode=OneWay}" Text="Show in File Explorer" />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.RevealOriginalCommand, Mode=OneWay}" Text="Show Original in File Explorer" />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.RevealDataCommand, Mode=OneWay}" Text="Show Data Folder" />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.CleanCachesCommand, Mode=OneWay}" Text="Clean Caches…" />
+                                    <MenuFlyoutSeparator />
+                                    <MenuFlyoutItem Command="{x:Bind ViewModel.DeleteCommand, Mode=OneWay}" Text="Delete…" />
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <!-- Notices -->
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.ShowUpdateNotice, Mode=OneWay}"
+                Message="{x:Bind ViewModel.SelectedUpdateMessage, Mode=OneWay}"
+                Severity="Warning"
+                Title="Update available">
+                <InfoBar.ActionButton>
+                    <Button Command="{x:Bind ViewModel.RefreshCommand, Mode=OneWay}" Content="Refresh" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+            <InfoBar
+                IsOpen="{x:Bind ViewModel.ShowMissingNotice, Mode=OneWay}"
+                Message="{x:Bind ViewModel.SelectedMissingMessage, Mode=OneWay}"
+                Severity="Error"
+                Title="Original missing">
+                <InfoBar.ActionButton>
+                    <Button Command="{x:Bind ViewModel.FindAppCommand, Mode=OneWay}" Content="Find App…" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <!-- Usage -->
+            <StackPanel Spacing="12">
+                <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Usage" />
+                <VariableSizedWrapGrid
+                    ItemHeight="168"
+                    ItemWidth="172"
+                    MaximumRowsOrColumns="4"
+                    Orientation="Horizontal">
+                    <Border Style="{StaticResource MitosisCardStyle}" Padding="16">
+                        <StackPanel Spacing="8">
+                            <Border
+                                Width="30"
+                                Height="30"
+                                Background="{ThemeResource MitosisTipFillBrush}"
+                                CornerRadius="8">
+                                <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="Save" />
+                            </Border>
+                            <TextBlock Style="{StaticResource MitosisTileValueStyle}" Text="{x:Bind ViewModel.SelectedClone.ExtraDiskText, Mode=OneWay}" />
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="Extra disk" />
+                                <TextBlock
+                                    MaxLines="2"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.SelectedClone.DiskCaption, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource MitosisCardStyle}" Padding="16">
+                        <StackPanel Spacing="8">
+                            <Border
+                                Width="30"
+                                Height="30"
+                                Background="{ThemeResource MitosisTipFillBrush}"
+                                CornerRadius="8">
+                                <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="Folder" />
+                            </Border>
+                            <TextBlock Style="{StaticResource MitosisTileValueStyle}" Text="{x:Bind ViewModel.SelectedClone.DataText, Mode=OneWay}" />
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="Data" />
+                                <TextBlock
+                                    MaxLines="2"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Logins, settings and caches" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource MitosisCardStyle}" Padding="16">
+                        <StackPanel Spacing="8">
+                            <Border
+                                Width="30"
+                                Height="30"
+                                Background="{ThemeResource MitosisTipFillBrush}"
+                                CornerRadius="8">
+                                <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="List" />
+                            </Border>
+                            <TextBlock Style="{StaticResource MitosisTileValueStyle}" Text="{x:Bind ViewModel.SelectedClone.MemoryText, Mode=OneWay}" />
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="Memory" />
+                                <TextBlock
+                                    MaxLines="2"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.SelectedClone.MemoryCaption, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                    <Border Style="{StaticResource MitosisCardStyle}" Padding="16">
+                        <StackPanel Spacing="8">
+                            <Border
+                                Width="30"
+                                Height="30"
+                                Background="{ThemeResource MitosisTipFillBrush}"
+                                CornerRadius="8">
+                                <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="Sync" />
+                            </Border>
+                            <TextBlock Style="{StaticResource MitosisTileValueStyle}" Text="{x:Bind ViewModel.SelectedClone.CpuText, Mode=OneWay}" />
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="CPU" />
+                                <TextBlock
+                                    MaxLines="2"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.SelectedClone.CpuCaption, Mode=OneWay}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </VariableSizedWrapGrid>
+            </StackPanel>
+
+            <!-- Details -->
+            <StackPanel Spacing="12">
+                <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Details" />
+                <Border Style="{StaticResource MitosisCardStyle}">
+                    <StackPanel>
+                        <Grid Padding="16,11" ColumnDefinitions="*,Auto">
+                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Mode" />
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" Spacing="2">
+                                <TextBlock HorizontalAlignment="Right" Text="{x:Bind ViewModel.SelectedModeName, Mode=OneWay}" />
+                                <TextBlock
+                                    HorizontalAlignment="Right"
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="{x:Bind ViewModel.SelectedModeNote, Mode=OneWay}" />
+                            </StackPanel>
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
+                        <Grid Padding="16,11" ColumnDefinitions="*,Auto">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="Original" />
+                            <StackPanel
+                                Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    MaxLines="1"
+                                    Text="{x:Bind ViewModel.SelectedClone.SourcePath, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTipService.ToolTip="{x:Bind ViewModel.SelectedClone.SourcePath, Mode=OneWay}" />
+                                <Button
+                                    Command="{x:Bind ViewModel.RevealOriginalCommand, Mode=OneWay}"
+                                    Content="Show"
+                                    FontSize="12"
+                                    Padding="8,2" />
+                            </StackPanel>
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
+                        <Grid Padding="16,11" ColumnDefinitions="*,Auto">
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="Data folder" />
+                            <StackPanel
+                                Grid.Column="1"
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <TextBlock
+                                    VerticalAlignment="Center"
+                                    MaxLines="1"
+                                    Text="{x:Bind ViewModel.SelectedClone.DataPath, Mode=OneWay}"
+                                    TextTrimming="CharacterEllipsis"
+                                    ToolTipService.ToolTip="{x:Bind ViewModel.SelectedClone.DataPath, Mode=OneWay}" />
+                                <Button
+                                    Command="{x:Bind ViewModel.RevealDataCommand, Mode=OneWay}"
+                                    Content="Show"
+                                    FontSize="12"
+                                    Padding="8,2" />
+                            </StackPanel>
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
+                        <Grid Padding="16,11" ColumnDefinitions="*,Auto">
+                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Created" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SelectedClone.CreatedText, Mode=OneWay}" />
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
+                        <Grid Padding="16,11" ColumnDefinitions="*,Auto">
+                            <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Last updated" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SelectedClone.UpdatedText, Mode=OneWay}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Sign-in links -->
+            <StackPanel
+                Spacing="12"
+                Visibility="{x:Bind ViewModel.ShowLinksCard, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Sign-in links" />
+                <Border Style="{StaticResource MitosisCardStyle}" Padding="16,12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <StackPanel Spacing="2">
+                            <TextBlock FontSize="14" FontWeight="Medium" Text="Send sign-in links to the right copy" />
+                            <TextBlock
+                                FontSize="13"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="When you sign in through your browser, the website sends a link back to the app. Mitosis delivers it to the copy you signed in from, and asks if that isn't clear."
+                                TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ToggleSwitch
+                            Grid.Column="1"
+                            VerticalAlignment="Center"
+                            IsOn="{x:Bind ViewModel.LinkRoutingOn, Mode=TwoWay}"
+                            OffContent=""
+                            OnContent="">
+                            <AutomationProperties.Name>Send sign-in links to the right copy</AutomationProperties.Name>
+                        </ToggleSwitch>
+                    </Grid>
+                </Border>
+            </StackPanel>
+
+            <!-- Maintenance -->
+            <StackPanel Spacing="12">
+                <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Maintenance" />
+                <Border Style="{StaticResource MitosisCardStyle}">
+                    <StackPanel>
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="Clean caches" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Delete temporary files the app can download again. Logins and settings stay."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.CleanCachesCommand, Mode=OneWay}"
+                                Content="Clean…" />
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="Rebuild" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Rebuild this clone from the current app. Logins and data stay."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.RefreshCommand, Mode=OneWay}"
+                                Content="Refresh" />
+                        </Grid>
+                        <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
+                        <Grid Padding="16,12" ColumnDefinitions="*,Auto">
+                            <StackPanel Spacing="2">
+                                <TextBlock FontSize="14" FontWeight="Medium" Text="Delete clone" />
+                                <TextBlock
+                                    FontSize="13"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Move it to the Recycle Bin. You choose whether its data goes too."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.DeleteCommand, Mode=OneWay}"
+                                Content="Delete…"
+                                Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

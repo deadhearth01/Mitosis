@@ -94,6 +94,9 @@ Reference graph (Stage 0): `Domain` ← `Application` ← `Infrastructure`;
   registration + chooser host → `Windows.Platform`. Confirm split before Stage 6.
 - **D2** — UI pattern for `Mitosis.Windows.App`: CommunityToolkit.Mvvm vs hand-rolled
   `INotifyPropertyChanged`. No dependency may be added until approved (Stage 2).
+  **Resolved in Stage 2: hand-rolled** (`ObservableObject` + `RelayCommand` in the new
+  `Mitosis.Windows.ViewModels` library, `net10.0`, no WinUI references so the MSTest
+  suite can cover selection/filtering/states/placeholders). Revisit only with cause.
 - **D3** — Per-clone launcher: dedicated stub `.exe` (mirrors `LaunchStub`) vs
   shortcut/symlink strategy. Affects clone layout (Stage 5).
 - **D4** — CLI project shape: single `Mitosis.Cli` sharing `Application`/`CloneEngine`

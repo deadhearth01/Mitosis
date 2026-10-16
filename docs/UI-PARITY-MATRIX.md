@@ -116,3 +116,32 @@ Top-level screens/states in source and their matrix rows: main window (W01,W25) 
 (W11–W18) · detail (W19–W26) · pick/details/working/done/failed (W27–W33) · badge editor
 (W35) · settings general/advanced (W36–W37) · help 9 topics (W38) · onboarding (W39) ·
 failure/prompts/banner (W40–W41,W08) · tray (W04,W42) · engine/CLI (W45–W55). All covered.
+
+## Stage 2 shell implementation notes
+
+Only rows genuinely built in the Stage 2 shell are listed. Everything else keeps its
+Stage 1 status. All shell data is explicit preview data; engine actions show honest
+"not available in this preview" dialogs and change nothing.
+
+- W01: window 1060×720, title `Mitosis`. Subtitle count shown in sidebar header instead
+  of the title bar (provisional); minimum size not enforced (gap).
+- W08: update `InfoBar` with Update Now (placeholder) + dismiss. Implemented.
+- W11–W14: groups, rows (initial-letter tiles stand in for badged icons), search,
+  New Clone button with tooltip. Implemented on preview data.
+- W15: Ctrl+F focuses search. Implemented.
+- W17: Enter opens (placeholder), Delete requests delete (placeholder). Implemented.
+- W18: row context menu with the 10 macOS items; right-click selects the row first.
+  Enablement mirrors macOS (Refresh/EditBadge/Show-Original disabled when the original
+  is missing; Find App only then). Implemented.
+- W19–W24: header, notices, 4 usage tiles, details card, links card (toggle holds local
+  state only), maintenance card. Static preview values; no live polling. Implemented.
+- W25: empty state (mascot art reused) + search-no-match state. Implemented.
+- W26: symbol + text statuses throughout. Implemented.
+- W41: engine actions route to explanatory dialogs (full alert flows need the engine).
+  Partial.
+- W44: Ctrl+N, Ctrl+F, Enter, Delete, Esc/Enter in dialogs. No menu bar yet. Partial.
+- Gaps remaining in shell scope: W02, W03, W04, W05 (menu bar), W06, W07, W09, W10, W16,
+  W27–W29 UI, W30–W35, W36–W40, W42, W43, W45–W57 (engine/CLI).
+- Provisional visuals pending runtime comparison: font-size mapping, tile/pill glyph
+  choices, sidebar width 240, initial-letter tiles, card/border/material rendering,
+  focus/hover/pressed treatments, Contrast Themes, Narrator order.

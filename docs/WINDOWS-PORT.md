@@ -56,7 +56,7 @@ Stage 2 implements the native Windows shell against that specification.
 |---|---|---|
 | Language / runtime | C# on .NET 10 (LTS, supported to 2028-11-14) | SDK `10.0.100`+, `latestFeature` roll-forward (`windows/global.json`) |
 | UI | WinUI 3 + XAML via the Windows App SDK (stable channel) | NuGet `Microsoft.WindowsAppSDK` **2.5.1** (2026-09-16); referenced from Stage 2 |
-| App model | Packaged MSIX, single-project packaging (Stage 2) | — |
+| App model | Unpackaged (framework-dependent; requires a machine Windows App SDK 2.x runtime, bootstrapped in `Program.Main`) | Min Windows 10 1809 per `TargetPlatformMinVersion` |
 | Storage (Stages 6+) | SQLite with EF Core | versions pinned when introduced |
 | Process / filesystem | Windows APIs + Win32 interop (`Mitosis.Windows.Platform`) | .NET 10 Windows targeting pack via `net10.0-windows10.0.19041.0` |
 | Tests | MSTest (`MSTest.Sdk`, Microsoft Testing Platform) | `4.5.1` pinned in `windows/global.json` |
@@ -68,7 +68,7 @@ Tooling found on the Stage 0 machine (Windows 11 25H2, build 26200):
 | Git | 2.54.0 installed |
 | .NET SDK | **Missing** — runtime 9.0.18 only, no SDK, so `dotnet build`/`dotnet test` cannot run yet |
 | Visual Studio / VS Code C# Dev Kit | Not installed |
-| WinUI 3 templates / Windows App SDK | Not installed (NuGet restore only, from Stage 2) |
+| WinUI 3 templates / Windows App SDK | No VS templates used; hand-authored SDK-style project + NuGet `Microsoft.WindowsAppSDK` 2.5.1 (built with `dotnet` CLI only) |
 | Windows 10/11 SDK, MSVC, NuGet CLI | Not installed (needed only for native interop/packaging work) |
 | winget | Available (no installs performed; needs explicit authorization) |
 
@@ -83,14 +83,15 @@ All Windows code lives under `windows/`; the Swift tree is never moved or rename
 
 | Project | Responsibility | Stage 0 state |
 |---|---|---|
-| `Mitosis.Windows.App` | Native WinUI 3 application and XAML UI | Not created; lands in Stage 2 against the parity spec |
+| `Mitosis.Windows.App` | Native WinUI 3 application and XAML UI | **Stage 2: main-window shell implemented** (sidebar, detail, empty state, banner; preview data only) |
 | `Mitosis.Application` | Use cases and application orchestration | Project + reference graph only |
 | `Mitosis.Domain` | Domain models, contracts, state definitions | `CloneName` (naming rules ported from `Sources/MitosisCore/Naming.swift`) + MSTest suite |
 | `Mitosis.Infrastructure` | Persistence, logging, filesystem abstractions | Project + reference graph only |
 | `Mitosis.Windows.Platform` | Windows-specific APIs and Win32 integration | Project + reference graph only (`net10.0-windows`) |
+| `Mitosis.Windows.ViewModels` | MVVM presentation state for the shell (added Stage 2; hand-rolled, no toolkit — see D2) | View models + preview data + MSTest suite |
 | `Mitosis.Compatibility` | Application detection and compatibility decisions | Project + reference graph only |
 | `Mitosis.CloneEngine` | Clone creation, launching, refresh, recovery | Project + reference graph only |
-| `Mitosis.Domain.Tests` | Unit tests for implemented domain behavior | `CloneNameTests` (13 tests) |
+| `Mitosis.Domain.Tests` / `Mitosis.ViewModels.Tests` | Unit tests for implemented behavior | `CloneNameTests` (14 tests) / `MainViewModelTests` (17 tests) |
 
 Reference graph: `Domain` ← `Application` ← `Infrastructure`;
 `Domain` ← `Compatibility`; `Application` + `Compatibility` ← `CloneEngine`;
@@ -146,7 +147,11 @@ external package and is test-only.
 - Stage 1: macOS UI audit and feature-parity specification — see
   `docs/MACOS-UI-AUDIT.md`, `docs/UI-PARITY-MATRIX.md`, `docs/WINDOWS-DESIGN-SPEC.md`,
   and `docs/WINDOWS-ARCHITECTURE-MAPPING.md`.
-- Stage 2: native Windows shell with visual parity.
+- Stage 2: native Windows shell with visual parity — **implemented**: unpackaged
+  WinUI 3 app (`Mitosis.Windows.App`, Windows App SDK 2.5.1, min Windows 10 1809)
+  with the main-window shell on explicit preview data; 31/31 tests green; app
+  launches with a real main window. Engine, wizard, Settings/Help/onboarding/tray
+  remain for later stages.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

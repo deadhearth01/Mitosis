@@ -63,7 +63,7 @@ public sealed class CloneNameTests
         Assert.AreEqual("Clone names can't start with a dot.", ex.Message);
     }
 
-    [DataTestMethod]
+    [TestMethod]
     [DataRow('/')]
     [DataRow(':')]
     [DataRow('\n')]

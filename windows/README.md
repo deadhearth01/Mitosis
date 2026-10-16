@@ -51,6 +51,7 @@ reserve the assembly and namespace boundaries for later stages.
 ## Build and test (once the SDK is installed)
 
 ```powershell
-dotnet build windows/Mitosis.sln
-dotnet test windows/Mitosis.sln
+cd windows   # dotnet commands run here so windows/global.json applies
+dotnet build Mitosis.sln
+dotnet test --solution Mitosis.sln
 ```

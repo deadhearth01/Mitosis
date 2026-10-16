@@ -73,6 +73,11 @@ so every request is refused by the missing-executor rule at the latest.
   behavior, update behavior all unknown); system components are `Unsupported` at
   assessment time. No category clears the evidence bar, so no strategy was
   validated — the empty catalog is the honest outcome, not a gap in the framework.
+- Stage 7 research (`docs/WINDOWS-STRATEGY-RESEARCH.md`) advanced the question:
+  vendor-documented profile flags are eligible for engineering review, portable
+  copies need review with a threat model, and Store/MSIX plus generic copies are
+  rejected. Research records are data, not strategies: the production catalog
+  remains empty and nothing executes.
 - The New Clone wizard surfaces this: the review step states that no validated
   provisioning strategy exists and only a planned profile is saved.
 

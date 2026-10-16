@@ -248,6 +248,27 @@ public sealed class DiscoveryViewModelTests
     }
 
     [TestMethod]
+    public async Task AssessmentPrerequisites_AreExposedForExplanation()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("Slack") });
+        var assessor = new FakeAssessor
+        {
+            AssessFunc = app => new CompatibilityAssessment(
+                CompatibilityStatus.NeedsReview, new[] { "Candidate." }, "x",
+                new[] { "Proof of isolation", "License confirmation" }, DateTimeOffset.UnixEpoch),
+        };
+        var model = new MainViewModel(discovery, assessor, new FakeProfileRepository());
+        await model.LoadAsync(TestContext.CancellationToken);
+        model.SelectedApp = model.VisibleAppGroups.SelectMany(g => g.Items).Single();
+
+        CollectionAssert.AreEqual(
+            new[] { "Proof of isolation", "License confirmation" },
+            model.SelectedAppNeeds.ToList());
+        Assert.IsTrue(model.ShowSelectedAppNeeds);
+    }
+
+    [TestMethod]
     public void DisplayTexts_MatchConventions()
     {
         Assert.AreEqual("Supported", MainViewModel.AssessmentStatusText(CompatibilityStatus.Supported));

@@ -215,5 +215,19 @@ Genuinely implemented and tested in Stage 6 (planning only; execution disabled):
   creation during planning (verified); registry paths never destinations.
 - Wizard review step states provisioning availability honestly (empty catalog →
   planned-profile-only notice).
+
+## Stage 7 research and availability notes
+
+Genuinely done in Stage 7 (research + explanation; execution still disabled):
+
+- Five candidates researched against vendor docs (2026-10-16): profile flags
+  eligible for review; portable copies need review; Store/MSIX, generic copies,
+  and vendor channels rejected with reasons.
+- `StrategyCandidate` records live apart from strategies by type; the planner
+  cannot select them and the production catalog stays empty.
+- App detail now lists missing prerequisites (`Still needed`); review keeps the
+  planned-profile-only notice.
+- Not implemented: evidence gathering, any executing strategy, strategy
+  selection UI beyond honest status display, per-app verification.
 - Not implemented: any executing strategy, copying, launching, deletion, recovery,
   reparse-point handling, evidence gathering, strategy selection UI.

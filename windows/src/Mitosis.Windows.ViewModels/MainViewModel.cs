@@ -222,6 +222,8 @@ public sealed class MainViewModel : ObservableObject
                 RaisePropertyChanged(nameof(SelectedAppVersionOrUnknown));
                 RaisePropertyChanged(nameof(SelectedAppScopeText));
                 RaisePropertyChanged(nameof(SelectedAppReasons));
+                RaisePropertyChanged(nameof(SelectedAppNeeds));
+                RaisePropertyChanged(nameof(ShowSelectedAppNeeds));
                 RaisePropertyChanged(nameof(ProfilesForSelectedApp));
                 RaisePropertyChanged(nameof(ShowProfilesEmpty));
                 CreateCloneFromAppCommand.RaiseCanExecuteChanged();
@@ -311,6 +313,12 @@ public sealed class MainViewModel : ObservableObject
 
     public string SelectedAppScopeText =>
         SelectedApp is { } item ? ScopeText(item.App.Scope) : string.Empty;
+
+    /// <summary>Missing prerequisites behind the current assessment, if any.</summary>
+    public IReadOnlyList<string> SelectedAppNeeds =>
+        SelectedApp is { } item ? item.Assessment.MissingPrerequisites : Array.Empty<string>();
+
+    public bool ShowSelectedAppNeeds => SelectedAppNeeds.Count > 0;
 
     public IReadOnlyList<string> SelectedAppReasons =>
         SelectedApp is { } item ? item.Assessment.Reasons : Array.Empty<string>();

@@ -170,8 +170,13 @@ external package and is test-only.
   green at the time. No provisioning. See `docs/WINDOWS-PROFILES.md`.
 - Stage 6: provisioning strategy framework — **implemented, execution disabled**:
   strategy contracts, deterministic planner with destination safety, execution
-  gate, empty production catalog by evidence; 162/162 tests green. No copying,
-  launching, or deletion. See `docs/WINDOWS-PROVISIONING.md`.
+  gate, empty production catalog by evidence; 162/162 tests green at the time.
+  No copying, launching, or deletion. See `docs/WINDOWS-PROVISIONING.md`.
+- Stage 7: strategy research + availability UI — **implemented, catalog still empty**:
+  vendor evidence reviewed (profile flags eligible for review; portable copies need
+  review; Store/MSIX and generic copies rejected), research records separated from
+  strategies by type, prerequisites shown on app detail; 171/171 tests green.
+  See `docs/WINDOWS-STRATEGY-RESEARCH.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

@@ -96,6 +96,21 @@
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Text="Independent copies arrive in a later stage."
                             TextWrapping="Wrap" />
+                        <TextBlock FontSize="13" FontWeight="Medium" Text="Still needed"
+                            Visibility="{x:Bind ViewModel.ShowSelectedAppNeeds, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                        <ItemsControl
+                            ItemsSource="{x:Bind ViewModel.SelectedAppNeeds, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.ShowSelectedAppNeeds, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock
+                                        FontSize="13"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind Mode=OneTime}"
+                                        TextWrapping="Wrap" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
                     </StackPanel>
                 </Border>
             </StackPanel>

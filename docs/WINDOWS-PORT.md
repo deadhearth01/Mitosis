@@ -143,7 +143,9 @@ external package and is test-only.
 ## 7. Staged development
 
 - Stage 0: repository audit and Windows foundation (this stage).
-- Stage 1: macOS UI audit and feature-parity specification.
+- Stage 1: macOS UI audit and feature-parity specification — see
+  `docs/MACOS-UI-AUDIT.md`, `docs/UI-PARITY-MATRIX.md`, `docs/WINDOWS-DESIGN-SPEC.md`,
+  and `docs/WINDOWS-ARCHITECTURE-MAPPING.md`.
 - Stage 2: native Windows shell with visual parity.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.

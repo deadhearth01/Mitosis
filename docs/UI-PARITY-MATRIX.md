@@ -229,5 +229,18 @@ Genuinely done in Stage 7 (research + explanation; execution still disabled):
   planned-profile-only notice.
 - Not implemented: evidence gathering, any executing strategy, strategy
   selection UI beyond honest status display, per-app verification.
+
+## Stage 8 evidence framework notes
+
+Genuinely done in Stage 8 (framework only; nothing verified live):
+
+- Evidence bundle schema (10 isolation dimensions, 5 statuses, sources with
+  dates, method/steps, approval kept separate, integrity hash) with deterministic
+  validation and evaluation; atomic JSON store apart from profiles.
+- App detail Compatibility card shows a counts-only verification summary
+  (`X of 10 dimensions recorded · Y verified · provisioning unavailable`),
+  defaulting to `No verification recorded for this application.`
+- Not implemented: live verification runs, evidence gathering automation,
+  counsel review, owner approvals, strategy registration.
 - Not implemented: any executing strategy, copying, launching, deletion, recovery,
   reparse-point handling, evidence gathering, strategy selection UI.

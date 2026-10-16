@@ -89,3 +89,6 @@ protocol-handler separation, update-in-place behavior); a lawful copy mechanism
 replacing APFS clonefile; signature/integrity story replacing ad-hoc codesign;
 reparse-point and ACL handling at execution; schema for strategy evidence bundles;
 UI for strategy selection once multiple strategies exist. All belong to Stage 7+.
+Evidence recording for these dimensions is defined in
+`docs/WINDOWS-EVIDENCE-BUNDLES.md` (Stage 8); verification itself stays unauthorized
+until a dedicated live-testing stage.

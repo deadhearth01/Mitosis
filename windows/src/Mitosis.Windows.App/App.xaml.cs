@@ -3,6 +3,7 @@ using Microsoft.Win32;
 using Mitosis.Application.Discovery;
 using Mitosis.Compatibility;
 using Mitosis.Domain;
+using Mitosis.Infrastructure.Evidence;
 using Mitosis.Infrastructure.Profiles;
 using Mitosis.Windows.Platform.Discovery;
 using Mitosis.Windows.Platform.Profiles;
@@ -48,6 +49,7 @@ public partial class App : Microsoft.UI.Xaml.Application
         return new MainViewModel(
             new WindowsAppDiscoveryService(sources),
             new CompatibilityAssessor(Array.Empty<CompatibilityStrategy>()),
-            new JsonCloneProfileRepository(WindowsProfilePaths.ProfileDirectory()));
+            new JsonCloneProfileRepository(WindowsProfilePaths.ProfileDirectory()),
+            new JsonEvidenceStore(WindowsProfilePaths.EvidenceDirectory()));
     }
 }

@@ -78,6 +78,24 @@ excluded from any mechanism.
 Candidates are data records, never strategies: the planner cannot select them and
 `ProductionCatalog` remains empty.
 
+## 7. Verification checklist (Stage 8)
+
+Per-candidate isolation dimensions are all **unverified**: no live verification runs
+are authorized, so no dimension is marked `Verified` for any candidate. The
+evidence framework (`docs/WINDOWS-EVIDENCE-BUNDLES.md`) defines the ten required
+dimensions, the bundle schema, and the evaluation rules that a future authorized
+stage would use:
+
+| Candidate | Data dirs | Registry | Mutex/IPC | Handlers | Services | Updates | Sensitive data | Launch | Recovery | Licensing |
+|---|---|---|---|---|---|---|---|---|---|---|
+| documented-profile-flags | ? (flag docs exist) | ? | ? | ? (`-no-remote` caveat noted) | ? | ? | n/a by design (no user data touched) | ? | ? | ? (ordinary use; per-app confirm pending) |
+| vendor-portable-copy | ? (local config docs exist) | ? | ? | ? | ? | ? (vendor update notes exist) | excluded by rule | ? | ? | ? (per-app confirm pending) |
+| store-msix-copy | rejected | rejected | rejected | rejected | rejected | rejected | rejected | rejected | rejected | rejected |
+| generic-registry-copy | rejected (no evidence for any dimension) | | | | | | | | | |
+| side-by-side channels | out of scope (nothing to build) | | | | | | | | | |
+
+`?` = unknown: vendor documentation suggests where to look, but nothing is verified.
+
 ## 7. Approval requirements for implementation
 
 Per-application verification of the three unknown dimensions; a reviewed threat

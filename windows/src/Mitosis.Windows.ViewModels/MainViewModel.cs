@@ -1,5 +1,6 @@
 using System.Globalization;
 using Mitosis.Application.Discovery;
+using Mitosis.Application.Evidence;
 using Mitosis.Application.Profiles;
 using Mitosis.CloneEngine.Provisioning;
 using Mitosis.Domain;
@@ -26,6 +27,8 @@ public sealed class MainViewModel : ObservableObject
     private List<AppGroupView> visibleAppGroups = new();
     private DiscoveredAppItem? selectedApp;
     private readonly ICloneProfileRepository? profiles;
+    private readonly IEvidenceStore? evidenceStore;
+    private List<EvidenceBundle> evidenceBundles = new();
     private List<CloneProfile> profileRecords = new();
     private List<OrphanProfileItem> orphanProfiles = new();
     private OrphanProfileItem? selectedOrphan;
@@ -100,12 +103,14 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Production constructor: discovery-backed. Preview data is never used here;
     /// see <see cref="ShowPreviewCommand"/> for the explicit opt-in fallback.</summary>
     public MainViewModel(
-        IAppDiscoveryService discovery, ICompatibilityAssessor assessor, ICloneProfileRepository profiles)
+        IAppDiscoveryService discovery, ICompatibilityAssessor assessor, ICloneProfileRepository profiles,
+        IEvidenceStore? evidenceStore = null)
         : this(Enumerable.Empty<AppGroupItem>(), Enumerable.Empty<CloneItem>(), isPreview: false)
     {
         this.discovery = discovery;
         this.assessor = assessor;
         this.profiles = profiles;
+        this.evidenceStore = evidenceStore;
     }
 
     /// <summary>True while entries come from <see cref="PreviewData"/> rather than discovery.</summary>
@@ -221,6 +226,7 @@ public sealed class MainViewModel : ObservableObject
                 RaisePropertyChanged(nameof(SelectedAppPublisherOrUnknown));
                 RaisePropertyChanged(nameof(SelectedAppVersionOrUnknown));
                 RaisePropertyChanged(nameof(SelectedAppScopeText));
+                RaisePropertyChanged(nameof(SelectedAppEvidenceSummary));
                 RaisePropertyChanged(nameof(SelectedAppReasons));
                 RaisePropertyChanged(nameof(SelectedAppNeeds));
                 RaisePropertyChanged(nameof(ShowSelectedAppNeeds));
@@ -313,6 +319,29 @@ public sealed class MainViewModel : ObservableObject
 
     public string SelectedAppScopeText =>
         SelectedApp is { } item ? ScopeText(item.App.Scope) : string.Empty;
+
+    public string SelectedAppEvidenceSummary
+    {
+        get
+        {
+            if (SelectedApp == null)
+            {
+                return string.Empty;
+            }
+
+            var bundle = evidenceBundles
+                .Where(b => string.Equals(b.AppId, SelectedApp.App.Id, StringComparison.Ordinal))
+                .MaxBy(b => b.VerifiedAtUtc);
+            if (bundle == null)
+            {
+                return "No verification recorded for this application.";
+            }
+
+            var summary = EvidenceEvaluator.Summarize(bundle);
+            return $"{summary.RecordedDimensions} of {summary.TotalDimensions} dimensions recorded · " +
+                $"{summary.VerifiedDimensions} verified · provisioning unavailable.";
+        }
+    }
 
     /// <summary>Missing prerequisites behind the current assessment, if any.</summary>
     public IReadOnlyList<string> SelectedAppNeeds =>
@@ -496,6 +525,25 @@ public sealed class MainViewModel : ObservableObject
                     IsLoadingProfiles = false;
                 }
             }
+
+            if (evidenceStore != null)
+            {
+                try
+                {
+                    evidenceBundles =
+                        (await evidenceStore.ListAsync(cancellationToken).ConfigureAwait(false)).ToList();
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch
+                {
+                    evidenceBundles = new List<EvidenceBundle>();
+                }
+            }
+
+            RaisePropertyChanged(nameof(SelectedAppEvidenceSummary));
         }
         catch (OperationCanceledException)
         {
@@ -521,6 +569,7 @@ public sealed class MainViewModel : ObservableObject
         clones = PreviewData.CreateClones().ToList();
         appItems = new List<DiscoveredAppItem>();
         profileRecords = new List<CloneProfile>();
+        evidenceBundles = new List<EvidenceBundle>();
         selectedApp = null;
         selectedOrphan = null;
         IsPreview = true;
@@ -537,6 +586,7 @@ public sealed class MainViewModel : ObservableObject
         RaisePropertyChanged(nameof(HasSelection));
         RaisePropertyChanged(nameof(ShowAppDetail));
         RaisePropertyChanged(nameof(ShowOrphanDetail));
+        RaisePropertyChanged(nameof(SelectedAppEvidenceSummary));
     }
 
     public static string ProfileStateText(CloneProfileState state) => state switch

@@ -9,4 +9,10 @@ public static class WindowsProfilePaths
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Mitosis",
         "Profiles");
+
+    /// <summary>Evidence bundles live apart from clone profiles and application data.</summary>
+    public static string EvidenceDirectory() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Mitosis",
+        "Evidence");
 }

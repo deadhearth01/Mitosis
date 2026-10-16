@@ -110,6 +110,13 @@ provisioning availability: profile flags are under research, nothing is validate
 yet (see `docs/WINDOWS-STRATEGY-RESEARCH.md`). Unsupported visual states and
 manual screenshot comparison steps are listed in `docs/UI-PARITY-MATRIX.md`.
 
+## Evidence bundles (Stage 8, framework only)
+
+Isolation evidence records live in `%LOCALAPPDATA%\Mitosis\Evidence` (versioned JSON,
+atomic saves, integrity-checked). Recording what must be proven is implemented;
+proving it requires separately authorized live testing. App detail shows a
+verification summary per application. Details: `docs/WINDOWS-EVIDENCE-BUNDLES.md`.
+
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when
 nothing is selected. Selecting an app shows its detail page with the compatibility

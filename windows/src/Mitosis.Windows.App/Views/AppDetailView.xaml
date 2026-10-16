@@ -98,6 +98,11 @@
                             TextWrapping="Wrap" />
                         <TextBlock FontSize="13" FontWeight="Medium" Text="Still needed"
                             Visibility="{x:Bind ViewModel.ShowSelectedAppNeeds, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="{x:Bind ViewModel.SelectedAppEvidenceSummary, Mode=OneWay}"
+                            TextWrapping="Wrap" />
                         <ItemsControl
                             ItemsSource="{x:Bind ViewModel.SelectedAppNeeds, Mode=OneWay}"
                             Visibility="{x:Bind ViewModel.ShowSelectedAppNeeds, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">

@@ -1,11 +1,16 @@
 using Microsoft.UI.Xaml;
+using Microsoft.Win32;
+using Mitosis.Application.Discovery;
+using Mitosis.Compatibility;
+using Mitosis.Domain;
+using Mitosis.Windows.Platform.Discovery;
 using Mitosis.Windows.ViewModels;
 
 namespace Mitosis.Windows.App;
 
-/// <summary>Application entry point. Builds the preview view model (Stage 2 runs on
-/// explicit preview data; the engine arrives in later stages) and opens the main window.</summary>
-public partial class App : Application
+/// <summary>Application entry point. Composition root: wires read-only discovery plus the
+/// compatibility assessor into the main view model. Stage 3 performs no cloning.</summary>
+public partial class App : Microsoft.UI.Xaml.Application
 {
     private Window? window;
 
@@ -16,9 +21,30 @@ public partial class App : Application
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        var viewModel = PreviewData.CreateMain();
+        var viewModel = ComposeMainViewModel();
         window = new MainWindow(viewModel);
         window.Closed += (_, _) => Bootstrap.Shutdown();
         window.Activate();
+    }
+
+    private static MainViewModel ComposeMainViewModel()
+    {
+        var reader = new RegistryKeyReader();
+        var sources = new IInstalledAppSource[]
+        {
+            new UninstallRegistrySource(
+                RegistryHive.CurrentUser, RegistryView.Default,
+                DiscoverySource.CurrentUserUninstall, InstallScope.CurrentUser, reader),
+            new UninstallRegistrySource(
+                RegistryHive.LocalMachine, RegistryView.Registry64,
+                DiscoverySource.LocalMachineUninstall64, InstallScope.Machine, reader),
+            new UninstallRegistrySource(
+                RegistryHive.LocalMachine, RegistryView.Registry32,
+                DiscoverySource.LocalMachineUninstall32, InstallScope.Machine, reader),
+            new AppxPackageSource(new PackageManagerEnumerator()),
+        };
+        return new MainViewModel(
+            new WindowsAppDiscoveryService(sources),
+            new CompatibilityAssessor(Array.Empty<CompatibilityStrategy>()));
     }
 }

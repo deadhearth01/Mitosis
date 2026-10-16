@@ -1,3 +1,5 @@
+using Mitosis.Domain;
+
 namespace Mitosis.Windows.ViewModels;
 
 /// <summary>Presentation mirror of macOS CloneStatus (MitosisCore/CloneMaintenance.swift).
@@ -68,6 +70,38 @@ public sealed class CloneGroupView
     public AppGroupItem Group { get; }
 
     public IReadOnlyList<CloneItem> Items { get; }
+}
+
+/// <summary>One discovered application with its compatibility assessment.
+/// Preview clone rows (<see cref="CloneItem"/>) and discovered apps are never mixed:
+/// production shows apps, explicit preview mode shows clones.</summary>
+public sealed record DiscoveredAppItem(DiscoveredApp App, CompatibilityAssessment Assessment)
+{
+    /// <summary>First letter or digit for the row tile; "#" when none is usable.</summary>
+    public string Initial
+    {
+        get
+        {
+            var first = App.DisplayName.Trim().FirstOrDefault(char.IsLetterOrDigit);
+            return first == default ? "#" : char.ToUpperInvariant(first).ToString();
+        }
+    }
+
+    public string StatusText => MainViewModel.AssessmentStatusText(Assessment.Status);
+}
+
+/// <summary>A sidebar group of discovered applications, keyed by initial letter.</summary>
+public sealed class AppGroupView
+{
+    public AppGroupView(AppGroupItem group, IReadOnlyList<DiscoveredAppItem> items)
+    {
+        Group = group;
+        Items = items;
+    }
+
+    public AppGroupItem Group { get; }
+
+    public IReadOnlyList<DiscoveredAppItem> Items { get; }
 }
 
 /// <summary>Request for the view to show an explanatory dialog (engine actions are

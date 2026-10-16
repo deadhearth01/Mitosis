@@ -6,13 +6,14 @@ See [docs/WINDOWS-PORT.md](../docs/WINDOWS-PORT.md) for the full port plan.
 
 ## Status
 
-Stage 2 shell. `Mitosis.Windows.App` is a real, launchable WinUI 3 application that
-reproduces the main window (By-App sidebar, clone detail, empty state, update banner)
-from `docs/MACOS-UI-AUDIT.md`. It runs on **explicit preview data only**
-(`Mitosis.Windows.ViewModels.PreviewData`): every engine action shows an honest
-"not available in this preview" dialog and changes nothing. The New Clone wizard,
-Settings, Help, onboarding, tray menu, discovery, and the clone engine arrive in
-later stages. Nothing here clones, launches, modifies, or deletes any application.
+Stage 3 shell + read-only discovery. `Mitosis.Windows.App` is a real, launchable
+WinUI 3 application: the sidebar lists genuinely discovered applications
+(read-only Windows registrations) with per-app compatibility verdicts, plus the
+clone detail, empty state, and update banner from Stage 2. Sample data survives
+only behind the explicit `Show preview instead` fallback and is never mixed with
+real results. The New Clone wizard, Settings, Help, onboarding, tray menu, and
+the clone engine arrive in later stages. Nothing here clones, launches, modifies,
+or deletes any application.
 
 ## Prerequisites
 
@@ -76,10 +77,26 @@ the app fails fast with a clear message when it is missing):
 .\src\Mitosis.Windows.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Mitosis.Windows.App.exe
 ```
 
-What you should see: the Mitosis main window (1060×720) with preview data — 5 app
-groups, 6 sample clones, an update banner, and the empty state when nothing is
-selected. Selecting clones switches the detail page (update/missing notices included).
-Every engine action (New Clone, Open, Refresh, Delete, …) shows a dialog stating it
+## Discovery (Stage 3, read-only)
+
+On launch the sidebar lists real installed applications from known Windows
+registrations (current-user/machine uninstall views plus packaged apps), grouped
+by initial letter with a compatibility verdict per app (`Not yet assessed` until
+per-application strategies land; system components are `Not supported`).
+Selecting an app shows its publisher, version, scope, sources, and reasons.
+
+- Read-only: registry keys open without write access; nothing is executed,
+  downloaded, or recursively scanned; standard user rights suffice.
+- Search covers names and publishers; loading/empty/error states include retry.
+- On failure, `Show preview instead` loads explicit sample data — never automatic,
+  never mixed with real results.
+- Details: `docs/WINDOWS-DISCOVERY.md`.
+
+What you should see: the Mitosis main window (1060×720) with discovered
+applications grouped by initial letter, an update banner, and the empty state when
+nothing is selected. Selecting an app shows its detail page with the compatibility
+verdict; selecting nothing (or a failed discovery without preview) shows the empty
+state. Every engine action (New Clone, Open, Refresh, Delete, …) shows a dialog stating it
 is unavailable in the preview. Search filters live; Enter opens (placeholder),
 Delete requests delete (placeholder), Ctrl+N starts New Clone (placeholder),
 Ctrl+F focuses search, right-click shows the clone menu.

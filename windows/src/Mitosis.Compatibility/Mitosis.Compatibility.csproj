@@ -4,5 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\Mitosis.Domain\Mitosis.Domain.csproj" />
+    <ProjectReference Include="..\Mitosis.Application\Mitosis.Application.csproj" />
   </ItemGroup>
 </Project>

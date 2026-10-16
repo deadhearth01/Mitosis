@@ -65,7 +65,7 @@ public sealed class StatusToBrushConverter : IValueConverter
         {
             if (clone.BusyText != null)
             {
-                return Application.Current.Resources["MitosisAccentBrush"];
+                return Microsoft.UI.Xaml.Application.Current.Resources["MitosisAccentBrush"];
             }
 
             return clone.Status switch

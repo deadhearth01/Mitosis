@@ -10,6 +10,13 @@ Reference graph (Stage 0): `Domain` ← `Application` ← `Infrastructure`;
 `Domain` ← `Compatibility`; `Application` + `Compatibility` ← `CloneEngine`;
 `Domain` ← `Windows.Platform` (`net10.0-windows10.0.19041.0`; rest `net10.0`).
 
+Stage 3 additions (documented, minimal): `Windows.Platform` → `Application`
+(discovery implementation behind the application port), `Compatibility` →
+`Application` (assessor behind its port), `Windows.ViewModels` → `Application`
++ `Domain` (view models consume ports and domain models), `Windows.App` →
+`Application`/`Compatibility`/`Domain`/`Windows.Platform` (manual composition
+root only). No new third-party dependencies.
+
 ## 1. `Mitosis.Domain` — models, contracts, state
 
 | macOS source | Responsibility → mapping |
@@ -111,6 +118,10 @@ Reference graph (Stage 0): `Domain` ← `Application` ← `Infrastructure`;
 - **D8** — Parity-matrix row W16 (All-Clones/Running sidebar rows) and stale `⌘I` help
   copy: drop, implement, or fix upstream on `main`? Recommend fixing the Help copy
   upstream and dropping both rows in v1; needs owner sign-off.
+- **D9 (decided in Stage 3)** — Discovery/assessor placement: ports
+  (`IAppDiscoveryService`, `ICompatibilityAssessor`) in `Mitosis.Application`,
+  implementations in `Mitosis.Windows.Platform` / `Mitosis.Compatibility`, manual
+  composition in `App.xaml.cs`. No container, no new dependencies.
 
 ## 9. Reusable contracts (no changes made)
 

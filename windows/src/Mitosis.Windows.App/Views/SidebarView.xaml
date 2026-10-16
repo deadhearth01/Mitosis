@@ -15,6 +15,11 @@
             IsSourceGrouped="True"
             ItemsPath="Items"
             Source="{x:Bind ViewModel.VisibleGroups, Mode=OneWay}" />
+        <CollectionViewSource
+            x:Name="GroupedApps"
+            IsSourceGrouped="True"
+            ItemsPath="Items"
+            Source="{x:Bind ViewModel.VisibleAppGroups, Mode=OneWay}" />
     </UserControl.Resources>
 
     <Grid RowDefinitions="Auto,Auto,*,Auto">
@@ -42,7 +47,8 @@
             KeyDown="OnListKeyDown"
             RightTapped="OnListRightTapped"
             SelectedItem="{x:Bind ViewModel.SelectedClone, Mode=TwoWay}"
-            SelectionMode="Single">
+            SelectionMode="Single"
+            Visibility="{x:Bind ViewModel.HasClones, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
             <AutomationProperties.Name>Clones grouped by app</AutomationProperties.Name>
             <ListView.ContextFlyout>
                 <MenuFlyout>
@@ -113,6 +119,121 @@
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
+
+        <ListView
+            Grid.Row="2"
+            Margin="4,4,4,0"
+            ItemsSource="{x:Bind GroupedApps.View, Mode=OneWay}"
+            KeyDown="OnAppsKeyDown"
+            SelectedItem="{x:Bind ViewModel.SelectedApp, Mode=TwoWay}"
+            SelectionMode="Single"
+            Visibility="{x:Bind ViewModel.HasApps, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <AutomationProperties.Name>Installed applications</AutomationProperties.Name>
+            <ListView.ItemContainerStyle>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                </Style>
+            </ListView.ItemContainerStyle>
+            <ListView.GroupStyle>
+                <GroupStyle>
+                    <GroupStyle.HeaderTemplate>
+                        <DataTemplate x:DataType="viewmodels:AppGroupView">
+                            <TextBlock
+                                Margin="0,8,0,2"
+                                FontSize="12"
+                                FontWeight="SemiBold"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind Group.Name, Mode=OneTime}" />
+                        </DataTemplate>
+                    </GroupStyle.HeaderTemplate>
+                </GroupStyle>
+            </ListView.GroupStyle>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="viewmodels:DiscoveredAppItem">
+                    <StackPanel
+                        Padding="0,2"
+                        Orientation="Horizontal"
+                        Spacing="10"
+                        ToolTipService.ToolTip="{x:Bind App.DisplayName, Mode=OneTime}">
+                        <controls:CloneBadgeIcon
+                            IconSize="30"
+                            Initial="{x:Bind Initial, Mode=OneTime}"
+                            InitialFontSize="13"
+                            TintHex="#8E8E93" />
+                        <StackPanel VerticalAlignment="Center" Spacing="1">
+                            <TextBlock MaxLines="1" Text="{x:Bind App.DisplayName, Mode=OneTime}" />
+                            <TextBlock
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                MaxLines="1"
+                                Text="{x:Bind StatusText, Mode=OneTime}" />
+                        </StackPanel>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <StackPanel
+            Grid.Row="2"
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="8"
+            Visibility="{x:Bind ViewModel.ShowAppsLoading, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <ProgressRing Width="24" Height="24" IsActive="True" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="Finding your apps…" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="2"
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="8"
+            Visibility="{x:Bind ViewModel.ShowAppsEmpty, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="No applications found." />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="Mitosis lists apps from Windows registrations."
+                TextWrapping="Wrap" />
+            <Button
+                HorizontalAlignment="Center"
+                Command="{x:Bind ViewModel.RefreshAppsCommand, Mode=OneWay}"
+                Content="Retry" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="2"
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="8"
+            Visibility="{x:Bind ViewModel.ShowAppsError, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <SymbolIcon
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                Symbol="Important" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="{x:Bind ViewModel.DiscoveryError, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            <Button
+                HorizontalAlignment="Center"
+                Command="{x:Bind ViewModel.RefreshAppsCommand, Mode=OneWay}"
+                Content="Retry" />
+            <Button
+                HorizontalAlignment="Center"
+                Command="{x:Bind ViewModel.ShowPreviewCommand, Mode=OneWay}"
+                Content="Show preview instead" />
+        </StackPanel>
 
         <TextBlock
             Grid.Row="2"

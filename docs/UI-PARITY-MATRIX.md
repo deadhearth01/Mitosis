@@ -145,3 +145,21 @@ Stage 1 status. All shell data is explicit preview data; engine actions show hon
 - Provisional visuals pending runtime comparison: font-size mapping, tile/pill glyph
   choices, sidebar width 240, initial-letter tiles, card/border/material rendering,
   focus/hover/pressed treatments, Contrast Themes, Narrator order.
+
+## Stage 3 discovery implementation notes
+
+Genuinely implemented and tested in Stage 3 (read-only; no cloning):
+
+- W45 (discovery half): uninstall-registration views (HKCU/HKLM-64/HKLM-32) +
+  packaged-app enumeration; deterministic identity, merge, ordering; per-record
+  warnings. Support capsules and the picker UI remain pending (no wizard yet).
+- W13: sidebar search now filters real records (name + publisher), still
+  case/diacritic-insensitive.
+- W25: loading (`Finding your apps…`), empty + retry, error + retry states added
+  for discovery; explicit `Show preview instead` fallback, never mixed.
+- W11: discovered apps group by initial letter; clone By-App grouping unchanged
+  (no clones exist before the engine).
+- New app detail page: publisher, version, scope, sources, compatibility status
+  with reasons, and an honest not-yet-available notice.
+- Not implemented: W46–W57 engine rows, wizard rows W27–W35, capsules UI,
+  doctor/CLI, tray, Settings/Help/onboarding.

@@ -31,6 +31,14 @@ public sealed partial class MainWindow : Window
         {
             root.KeyDown += OnContentKeyDown;
         }
+
+        Activated += OnFirstActivated;
+    }
+
+    private async void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+    {
+        Activated -= OnFirstActivated;
+        await ViewModel.LoadAsync();
     }
 
     private void OnContentKeyDown(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
@@ -58,7 +66,8 @@ public sealed partial class MainWindow : Window
 
     private void UpdateDetailVisibility()
     {
-        DetailView.Visibility = ViewModel.HasSelection ? Visibility.Visible : Visibility.Collapsed;
+        DetailView.Visibility = ViewModel.ShowCloneDetail ? Visibility.Visible : Visibility.Collapsed;
+        AppView.Visibility = ViewModel.ShowAppDetail ? Visibility.Visible : Visibility.Collapsed;
         EmptyPanel.Visibility = ViewModel.HasSelection ? Visibility.Collapsed : Visibility.Visible;
     }
 

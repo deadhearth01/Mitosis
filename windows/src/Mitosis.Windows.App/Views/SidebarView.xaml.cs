@@ -44,6 +44,17 @@ public sealed partial class SidebarView : UserControl
 
     public void FocusSearch() => SearchBox.Focus(FocusState.Programmatic);
 
+    private void OnAppsKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Enter
+            && ViewModel?.SelectedApp != null
+            && ViewModel.CreateCloneFromAppCommand.CanExecute(null))
+        {
+            ViewModel.CreateCloneFromAppCommand.Execute(null);
+            e.Handled = true;
+        }
+    }
+
     private void OnListRightTapped(object sender, RightTappedRoutedEventArgs e)
     {
         if (ViewModel == null || e.OriginalSource is not DependencyObject source)

@@ -16,6 +16,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="2.5.1" />
     <ProjectReference Include="..\Mitosis.Windows.ViewModels\Mitosis.Windows.ViewModels.csproj" />
+    <ProjectReference Include="..\Mitosis.Application\Mitosis.Application.csproj" />
+    <ProjectReference Include="..\Mitosis.Compatibility\Mitosis.Compatibility.csproj" />
+    <ProjectReference Include="..\Mitosis.Domain\Mitosis.Domain.csproj" />
+    <ProjectReference Include="..\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- Original asset, referenced in place; the Assets tree is never modified. -->

@@ -152,6 +152,13 @@ external package and is test-only.
   with the main-window shell on explicit preview data; 31/31 tests green; app
   launches with a real main window. Engine, wizard, Settings/Help/onboarding/tray
   remain for later stages.
+- Stage 3: read-only discovery + compatibility assessment — **implemented**:
+  uninstall-registration and packaged-app discovery with deterministic identity,
+  merge, and ordering; rule-based assessor (`Unknown` by default, `Unsupported`
+  for system components, empty strategy catalog by design); sidebar + app detail
+  integration with loading/empty/error/retry and explicit preview fallback;
+  71/71 tests green; 180-app non-elevated smoke test clean. See
+  `docs/WINDOWS-DISCOVERY.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

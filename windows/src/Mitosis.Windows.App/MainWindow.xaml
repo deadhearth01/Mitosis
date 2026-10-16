@@ -32,6 +32,12 @@
                 ViewModel="{x:Bind ViewModel, Mode=OneWay}"
                 Visibility="Collapsed" />
 
+            <views:AppDetailView
+                x:Name="AppView"
+                Grid.Column="1"
+                ViewModel="{x:Bind ViewModel, Mode=OneWay}"
+                Visibility="Collapsed" />
+
             <StackPanel
                 x:Name="EmptyPanel"
                 Grid.Column="1"

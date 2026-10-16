@@ -1,4 +1,6 @@
 using System.Globalization;
+using Mitosis.Application.Discovery;
+using Mitosis.Domain;
 
 namespace Mitosis.Windows.ViewModels;
 
@@ -10,13 +12,20 @@ public sealed class MainViewModel : ObservableObject
     private static readonly CompareOptions MatchOptions =
         CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
 
-    private readonly List<CloneItem> clones;
-    private readonly List<AppGroupItem> groups;
+    private List<CloneItem> clones;
+    private List<AppGroupItem> groups;
+    private readonly IAppDiscoveryService? discovery;
+    private readonly ICompatibilityAssessor? assessor;
 
     private string searchText = string.Empty;
     private CloneItem? selectedClone;
     private List<CloneGroupView> visibleGroups = new();
+    private List<DiscoveredAppItem> appItems = new();
+    private List<AppGroupView> visibleAppGroups = new();
+    private DiscoveredAppItem? selectedApp;
     private bool linkRoutingOn;
+    private bool isLoadingApps;
+    private string? discoveryError;
 
     public MainViewModel(IEnumerable<AppGroupItem> groups, IEnumerable<CloneItem> clones, bool isPreview,
         bool showUpdateBanner = false, string bannerVersion = "")
@@ -61,16 +70,30 @@ public sealed class MainViewModel : ObservableObject
         DismissBannerCommand = new RelayCommand(() => ShowUpdateBanner = false);
         InstallUpdateCommand = new RelayCommand(
             () => RaisePlaceholder("Update Mitosis", "Self-update arrives with packaging in a later stage. Nothing was changed."));
+        RefreshAppsCommand = new RelayCommand(async _ => await LoadAsync());
+        ShowPreviewCommand = new RelayCommand(ShowPreview);
+        CreateCloneFromAppCommand = new RelayCommand(
+            () => RaisePlaceholder("New Clone", "Creating clones from discovered apps arrives with the engine in a later stage."),
+            () => SelectedApp != null);
 
         RefreshVisibleGroups();
     }
 
+    /// <summary>Production constructor: discovery-backed. Preview data is never used here;
+    /// see <see cref="ShowPreviewCommand"/> for the explicit opt-in fallback.</summary>
+    public MainViewModel(IAppDiscoveryService discovery, ICompatibilityAssessor assessor)
+        : this(Enumerable.Empty<AppGroupItem>(), Enumerable.Empty<CloneItem>(), isPreview: false)
+    {
+        this.discovery = discovery;
+        this.assessor = assessor;
+    }
+
     /// <summary>True while entries come from <see cref="PreviewData"/> rather than discovery.</summary>
-    public bool IsPreview { get; }
+    public bool IsPreview { get; private set; }
 
     public bool ShowUpdateBanner { get; private set; }
 
-    public string BannerVersion { get; }
+    public string BannerVersion { get; private set; }
 
     public event EventHandler<DialogRequest>? DialogRequested;
 
@@ -109,9 +132,89 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public bool HasSelection => SelectedClone != null;
+    public bool HasSelection => SelectedClone != null || SelectedApp != null;
 
-    public bool HasNoResults => visibleGroups.Count == 0;
+    public bool HasNoResults => visibleGroups.Count == 0 && visibleAppGroups.Count == 0;
+
+    public bool HasApps => visibleAppGroups.Count > 0;
+
+    public bool HasClones => visibleGroups.Count > 0;
+
+    public bool IsLoadingApps
+    {
+        get => isLoadingApps;
+        private set
+        {
+            if (SetProperty(ref isLoadingApps, value))
+            {
+                RaisePropertyChanged(nameof(ShowAppsLoading));
+            }
+        }
+    }
+
+    public string? DiscoveryError
+    {
+        get => discoveryError;
+        private set
+        {
+            if (SetProperty(ref discoveryError, value))
+            {
+                RaisePropertyChanged(nameof(ShowAppsError));
+            }
+        }
+    }
+
+    public bool ShowAppsLoading => IsLoadingApps;
+
+    public bool ShowAppsError => !IsLoadingApps && DiscoveryError != null;
+
+    public bool ShowAppsEmpty => !IsLoadingApps && DiscoveryError == null && !HasApps && !IsPreview;
+
+    public IReadOnlyList<AppGroupView> VisibleAppGroups => visibleAppGroups;
+
+    public DiscoveredAppItem? SelectedApp
+    {
+        get => selectedApp;
+        set
+        {
+            if (SetProperty(ref selectedApp, value))
+            {
+                RaisePropertyChanged(nameof(HasSelection));
+                RaisePropertyChanged(nameof(ShowAppDetail));
+                RaisePropertyChanged(nameof(SelectedAppPublisherLine));
+                RaisePropertyChanged(nameof(SelectedAppSourcesText));
+                RaisePropertyChanged(nameof(SelectedAppPublisherOrUnknown));
+                RaisePropertyChanged(nameof(SelectedAppVersionOrUnknown));
+                RaisePropertyChanged(nameof(SelectedAppScopeText));
+                RaisePropertyChanged(nameof(SelectedAppReasons));
+                CreateCloneFromAppCommand.RaiseCanExecuteChanged();
+            }
+        }
+    }
+
+    public bool ShowAppDetail => SelectedApp != null;
+
+    public bool ShowCloneDetail => SelectedClone != null;
+
+    public string SelectedAppPublisherLine => SelectedApp is { } item
+        ? string.Join(" ·", new[] { item.App.Publisher, item.App.Version }.Where(s => !string.IsNullOrEmpty(s)))
+        : string.Empty;
+
+    public string SelectedAppSourcesText => SelectedApp is { } item
+        ? string.Join(", ", item.App.Sources.Select(SourceText))
+        : string.Empty;
+
+    public string SelectedAppPublisherOrUnknown =>
+        string.IsNullOrEmpty(SelectedApp?.App.Publisher) ? "Unknown" : SelectedApp.App.Publisher;
+
+    public string SelectedAppVersionOrUnknown =>
+        string.IsNullOrEmpty(SelectedApp?.App.Version) ? "Unknown" : SelectedApp.App.Version;
+
+    public string SelectedAppScopeText =>
+        SelectedApp is { } item ? ScopeText(item.App.Scope) : string.Empty;
+
+    public IReadOnlyList<string> SelectedAppReasons =>
+        SelectedApp is { } item ? item.Assessment.Reasons : Array.Empty<string>();
 
     public bool ShowUpdateNotice => SelectedClone?.Status == CloneStatusKind.UpdateAvailable;
 
@@ -178,6 +281,12 @@ public sealed class MainViewModel : ObservableObject
 
     public RelayCommand InstallUpdateCommand { get; }
 
+    public RelayCommand RefreshAppsCommand { get; }
+
+    public RelayCommand ShowPreviewCommand { get; }
+
+    public RelayCommand CreateCloneFromAppCommand { get; }
+
     public static string StatusText(CloneItem clone) => clone.Status switch
     {
         CloneStatusKind.OriginalMissing => "Original missing",
@@ -191,6 +300,84 @@ public sealed class MainViewModel : ObservableObject
         CloneModeKind.Fallback => "Compatibility mode",
         _ => mode.ToString(),
     };
+
+    public static string AssessmentStatusText(CompatibilityStatus status) => status switch
+    {
+        CompatibilityStatus.Supported => "Supported",
+        CompatibilityStatus.NeedsReview => "Needs review",
+        CompatibilityStatus.Unsupported => "Not supported",
+        _ => "Not yet assessed",
+    };
+
+    public static string ScopeText(InstallScope scope) => scope switch
+    {
+        InstallScope.CurrentUser => "Current user",
+        InstallScope.Machine => "This machine",
+        _ => "Unknown scope",
+    };
+
+    public static string SourceText(DiscoverySource source) => source switch
+    {
+        DiscoverySource.CurrentUserUninstall => "Current-user registration",
+        DiscoverySource.LocalMachineUninstall32 => "Machine registration (32-bit)",
+        DiscoverySource.LocalMachineUninstall64 => "Machine registration (64-bit)",
+        DiscoverySource.AppxPackage => "Packaged app registration",
+        _ => source.ToString(),
+    };
+
+    /// <summary>Runs discovery off the UI thread, assesses each result, and publishes the
+    /// grouped list. Failures surface as an actionable error state; cancellation is silent.</summary>
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        if (discovery == null || assessor == null)
+        {
+            return;
+        }
+
+        IsLoadingApps = true;
+        DiscoveryError = null;
+        try
+        {
+            var found = await discovery.DiscoverAsync(cancellationToken).ConfigureAwait(false);
+            var keptId = SelectedApp?.App.Id;
+            appItems = found.Select(a => new DiscoveredAppItem(a, assessor.Assess(a))).ToList();
+            RefreshVisibleGroups();
+            SelectedApp = appItems.FirstOrDefault(i => i.App.Id == keptId);
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            DiscoveryError = $"Couldn't list installed apps ({ex.GetType().Name}). Try again.";
+        }
+        finally
+        {
+            IsLoadingApps = false;
+        }
+    }
+
+    /// <summary>Explicit opt-in fallback: replaces live content with clearly marked preview
+    /// data. Never invoked automatically; see <see cref="ShowPreviewCommand"/>.</summary>
+    private void ShowPreview()
+    {
+        var preview = PreviewData.CreateMain();
+        groups = PreviewData.CreateGroups().ToList();
+        clones = PreviewData.CreateClones().ToList();
+        appItems = new List<DiscoveredAppItem>();
+        selectedApp = null;
+        IsPreview = true;
+        ShowUpdateBanner = preview.ShowUpdateBanner;
+        BannerVersion = preview.BannerVersion;
+        SearchText = string.Empty;
+        RefreshVisibleGroups();
+        RaisePropertyChanged(nameof(HasApps));
+        RaisePropertyChanged(nameof(HasClones));
+        RaisePropertyChanged(nameof(ShowAppsEmpty));
+        RaisePropertyChanged(nameof(HasSelection));
+        RaisePropertyChanged(nameof(ShowAppDetail));
+    }
 
     private void RaiseCanExecute()
     {
@@ -232,8 +419,56 @@ public sealed class MainViewModel : ObservableObject
             SelectedClone = null;
         }
 
+        var appNext = new List<AppGroupView>();
+        foreach (var key in appItems.Select(GroupKey).Distinct().OrderBy(k => k == "#" ? string.Empty : k, StringComparer.Ordinal))
+        {
+            var items = appItems
+                .Where(i => GroupKey(i) == key && MatchesApp(i, query))
+                .OrderBy(i => i.App.DisplayName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(i => i.App.Id, StringComparer.Ordinal)
+                .ToList();
+            if (items.Count > 0)
+            {
+                appNext.Add(new AppGroupView(
+                    new AppGroupItem(key, key == "#" ? "#" : key, key, "#0A84FF"), items));
+            }
+        }
+
+        visibleAppGroups = appNext;
+        if (selectedApp != null && !appNext.SelectMany(g => g.Items).Any(i => i.App.Id == selectedApp.App.Id))
+        {
+            SelectedApp = null;
+        }
+
         RaisePropertyChanged(nameof(VisibleGroups));
+        RaisePropertyChanged(nameof(VisibleAppGroups));
+        RaisePropertyChanged(nameof(HasApps));
+        RaisePropertyChanged(nameof(HasClones));
         RaisePropertyChanged(nameof(HasNoResults));
+        RaisePropertyChanged(nameof(ShowAppsEmpty));
+    }
+
+    private static string GroupKey(DiscoveredAppItem item)
+    {
+        var first = item.App.DisplayName.Trim().FirstOrDefault(char.IsLetterOrDigit);
+        if (first == default || !char.IsLetter(first))
+        {
+            return "#";
+        }
+
+        return char.ToUpperInvariant(first).ToString();
+    }
+
+    private static bool MatchesApp(DiscoveredAppItem item, string query)
+    {
+        if (query.Length == 0)
+        {
+            return true;
+        }
+
+        var compare = CultureInfo.InvariantCulture.CompareInfo;
+        return compare.IndexOf(item.App.DisplayName, query, MatchOptions) >= 0
+            || (item.App.Publisher != null && compare.IndexOf(item.App.Publisher, query, MatchOptions) >= 0);
     }
 
     private static bool Matches(CloneItem clone, AppGroupItem group, string query)

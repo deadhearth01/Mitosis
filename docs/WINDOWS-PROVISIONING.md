@@ -91,4 +91,5 @@ reparse-point and ACL handling at execution; schema for strategy evidence bundle
 UI for strategy selection once multiple strategies exist. All belong to Stage 7+.
 Evidence recording for these dimensions is defined in
 `docs/WINDOWS-EVIDENCE-BUNDLES.md` (Stage 8); verification itself stays unauthorized
-until a dedicated live-testing stage.
+until a dedicated live-testing stage conducted under
+`docs/WINDOWS-ISOLATION-VERIFICATION-PLAN.md` (Stage 9A, plan only).

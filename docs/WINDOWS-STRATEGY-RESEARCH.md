@@ -5,6 +5,10 @@ instance. Researched 2026-10-16 via vendor documentation (no binaries executed,
 no applications modified). Structured records live in
 `ResearchCatalog` (`Mitosis.CloneEngine/Provisioning/ResearchCatalog.cs`).
 
+Live verification, when separately authorized, follows the protocol in
+`docs/WINDOWS-ISOLATION-VERIFICATION-PLAN.md` (Stage 9A, plan only); the
+dispositions below are unchanged by that plan.
+
 ## 1. Candidate categories reviewed
 
 ### A. Documented separate-profile flags — EligibleForImplementation

@@ -5,6 +5,10 @@ application isolation strategy can be approved. This stage verifies nothing live
 it defines the record, the validation, and the evaluation. No candidate has passed
 live verification; no strategy is registered; nothing executes.
 
+The future live-testing protocol — phases, environment spec, authorization and
+abort controls, report template — is specified separately in
+`docs/WINDOWS-ISOLATION-VERIFICATION-PLAN.md` (Stage 9A, plan only).
+
 ## 1. Evidence schema and status semantics
 
 `EvidenceBundle` (`Mitosis.Domain/Evidence.cs`, schema version 1) carries candidate

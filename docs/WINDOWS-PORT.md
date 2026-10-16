@@ -181,6 +181,10 @@ external package and is test-only.
   verified live**: bundle schema with 10 isolation dimensions, deterministic
   validation/evaluation, atomic JSON store with integrity checks, app-detail
   verification summary; 205/205 tests green. See `docs/WINDOWS-EVIDENCE-BUNDLES.md`.
+- Stage 9A: isolation verification planning — **plan only, no live experiments**:
+  seven-phase protocol, ten-dimension matrix, disposable-environment spec,
+  authorization/abort controls, report template. See
+  `docs/WINDOWS-ISOLATION-VERIFICATION-PLAN.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

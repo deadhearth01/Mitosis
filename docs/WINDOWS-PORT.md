@@ -162,8 +162,12 @@ external package and is test-only.
 - Stage 4: independent clone profiles + safe persistence — **implemented**:
   `CloneProfile` metadata with explicit lifecycle (`Planned` default, never shown
   as verified), JSON store with atomic saves and corruption safety, per-app lists
-  plus preserved orphans in the shell; 108/108 tests green. See
+  plus preserved orphans in the shell; 108/108 tests green at the time. See
   `docs/WINDOWS-PROFILES.md`.
+- Stage 5: metadata-only New Clone wizard — **implemented**: five-state wizard
+  (pick/details/review/saving/done/failed) with compatibility gating, name/badge
+  validation, double-submit protection, and honest completion copy; 134/134 tests
+  green. No provisioning. See `docs/WINDOWS-PROFILES.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

@@ -178,3 +178,25 @@ Genuinely implemented and tested in Stage 4 (metadata only; no provisioning):
 - `Planned` is always labeled `Planned — metadata only, not a working clone.`
 - Not implemented: provisioning, `Ready`/`Failed` UI transitions, wizard, badge
   editor, deletion workflows, schema migration, encrypted storage.
+
+## Stage 5 wizard implementation notes
+
+Genuinely implemented and tested in Stage 5 (metadata only; single `Planned` save):
+
+- Five states (Pick → Details → Review → Saving → Done / Failed) with back
+  navigation, state preservation, cancellation without records, and single-instance
+  window hosting from the main window (Ctrl+N / New Clone button).
+- Compatibility gating: `Unsupported` blocks with reasons; `NeedsReview` requires an
+  explicit acknowledgement checkbox; `Unknown` records with an explanatory notice;
+  `Supported` flows directly (reachable only with a validated strategy).
+- Name/badge/color validation mirrors macOS copy and domain rules; duplicates
+  rejected per repository rules; double submission guarded plus repository backstop.
+- Completion is honest: `{name} planned.` plus `The profile was saved. The
+  application has not been copied, launched, or modified — provisioning arrives in
+  a later stage.` The record stays `Planned`; failures keep the wizard open with
+  retry. After save, profiles refresh and the app is selected.
+- macOS elements deliberately deferred: filter segments, Open-after toggle, mode
+  picker, full-copy alert, launch check, compatibility-mode retry, drag-drop onto
+  the wizard, standalone badge editor.
+- Visual runtime comparison still needed: wizard window against
+  `new-clone-pick/details/done.png`, focus order, swatch rings, dialog spacing.

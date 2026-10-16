@@ -100,6 +100,14 @@ only` until the engine provisions them); profiles whose app is missing are kept
 under an `Unavailable` section and rejoin automatically. Nothing is provisioned,
 launched, or deleted. Details: `docs/WINDOWS-PROFILES.md`.
 
+## New Clone wizard (Stage 5, metadata only)
+
+Ctrl+N (or New Clone) opens the wizard: pick an application, enter details with
+live badge preview, review, then save. Saving writes one `Planned` profile record
+— the app is not copied or launched. `Unsupported` apps are blocked with reasons;
+review-required apps need explicit acknowledgement. Unsupported visual states and
+manual screenshot comparison steps are listed in `docs/UI-PARITY-MATRIX.md`.
+
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when
 nothing is selected. Selecting an app shows its detail page with the compatibility

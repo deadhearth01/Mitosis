@@ -8,6 +8,7 @@ using Windows.Graphics;
 using Windows.System;
 using Windows.UI.Core;
 using Mitosis.Windows.ViewModels;
+using Mitosis.Windows.App.Views;
 
 namespace Mitosis.Windows.App;
 
@@ -20,10 +21,12 @@ public sealed partial class MainWindow : Window
         Title = "Mitosis";
         AppWindow.Resize(new SizeInt32(1060, 720));
         ViewModel.DialogRequested += OnDialogRequested;
+        ViewModel.NewCloneRequested += OnNewCloneRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) =>
         {
             ViewModel.DialogRequested -= OnDialogRequested;
+            ViewModel.NewCloneRequested -= OnNewCloneRequested;
             ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         };
         UpdateDetailVisibility();
@@ -62,6 +65,39 @@ public sealed partial class MainWindow : Window
         {
             UpdateDetailVisibility();
         }
+    }
+
+    private NewCloneWindow? wizardWindow;
+
+    private void OnNewCloneRequested(object? sender, EventArgs e)
+    {
+        if (wizardWindow != null)
+        {
+            wizardWindow.Activate();
+            return;
+        }
+
+        var window = new Views.NewCloneWindow(ViewModel.CreateWizard());
+        wizardWindow = window;
+        window.Closed += OnWizardClosed;
+        window.ShowProfileRequested += OnShowProfileRequested;
+        window.Activate();
+    }
+
+    private async void OnWizardClosed(object sender, WindowEventArgs args)
+    {
+        if (sender is Views.NewCloneWindow window)
+        {
+            window.Closed -= OnWizardClosed;
+            window.ShowProfileRequested -= OnShowProfileRequested;
+            wizardWindow = null;
+            await ViewModel.LoadAsync();
+        }
+    }
+
+    private void OnShowProfileRequested(object? sender, string appId)
+    {
+        ViewModel.SelectAppById(appId);
     }
 
     private void UpdateDetailVisibility()

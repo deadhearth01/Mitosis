@@ -14,6 +14,10 @@ internal sealed class FakeProfileRepository : ICloneProfileRepository
 
     public int ListCalls { get; private set; }
 
+    public TaskCompletionSource<CloneProfile>? AddGate { get; set; }
+
+    public int AddCalls { get; private set; }
+
     public async Task<IReadOnlyList<CloneProfile>> ListAsync(CancellationToken cancellationToken = default)
     {
         ListCalls++;
@@ -35,6 +39,12 @@ internal sealed class FakeProfileRepository : ICloneProfileRepository
 
     public Task<CloneProfile> AddAsync(CloneProfile profile, CancellationToken cancellationToken = default)
     {
+        AddCalls++;
+        if (AddGate != null)
+        {
+            return AddGate.Task;
+        }
+
         Store.Add(profile);
         return Task.FromResult(profile);
     }

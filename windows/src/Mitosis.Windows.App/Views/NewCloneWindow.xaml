@@ -1,0 +1,356 @@
+<Window
+    x:Class="Mitosis.Windows.App.Views.NewCloneWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mitosis.Windows.App.Controls"
+    xmlns:viewmodels="using:Mitosis.Windows.ViewModels"
+    Title="New Clone">
+
+    <Grid Padding="24">
+        <!-- Pick -->
+        <StackPanel
+            x:Name="StepPick"
+            Spacing="16"
+            Visibility="Visible">
+            <StackPanel Spacing="4">
+                <TextBlock Style="{StaticResource MitosisTitle2Style}" Text="New Clone" />
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Choose the app you want a separate copy of." />
+            </StackPanel>
+            <AutoSuggestBox
+                x:Name="PickSearch"
+                PlaceholderText="Search apps"
+                QueryIcon="Find"
+                Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                <AutomationProperties.Name>Search apps</AutomationProperties.Name>
+            </AutoSuggestBox>
+            <ListView
+                Height="380"
+                ItemsSource="{x:Bind ViewModel.VisibleApps, Mode=OneWay}"
+                SelectedItem="{x:Bind ViewModel.SelectedApp, Mode=TwoWay}"
+                SelectionMode="Single">
+                <AutomationProperties.Name>Applications</AutomationProperties.Name>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:DiscoveredAppItem">
+                        <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="12">
+                            <controls:CloneBadgeIcon
+                                Grid.Column="0"
+                                IconSize="26"
+                                Initial="{x:Bind Initial, Mode=OneTime}"
+                                InitialFontSize="12"
+                                TintHex="#8E8E93" />
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                                <TextBlock MaxLines="1" Text="{x:Bind App.DisplayName, Mode=OneTime}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    MaxLines="1"
+                                    Text="{x:Bind App.Version, Mode=OneTime, TargetNullValue=''}" />
+                            </StackPanel>
+                            <TextBlock
+                                Grid.Column="2"
+                                VerticalAlignment="Center"
+                                FontSize="12"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind StatusText, Mode=OneTime}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+            <TextBlock
+                x:Name="UnsupportedReasonText"
+                FontSize="12"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="{x:Bind ViewModel.UnsupportedReason, Mode=OneWay}"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
+            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="8">
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    FontSize="13"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Drop an app onto the main window to start here." />
+                <Button
+                    Grid.Column="1"
+                    Click="OnCancelClick"
+                    Content="Cancel" />
+                <Button
+                    Grid.Column="2"
+                    Command="{x:Bind ViewModel.GoToDetailsCommand, Mode=OneWay}"
+                    Content="Continue"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Details -->
+        <StackPanel
+            x:Name="StepDetails"
+            Spacing="16"
+            Visibility="Collapsed">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <controls:CloneBadgeIcon
+                    IconSize="28"
+                    Initial="{x:Bind ViewModel.PreviewBadgeText, Mode=OneWay}"
+                    InitialFontSize="13"
+                    TintHex="{x:Bind ViewModel.SelectedColorHex, Mode=OneWay}" />
+                <TextBlock
+                    VerticalAlignment="Center"
+                    Style="{StaticResource MitosisTitle2Style}"
+                    Text="{x:Bind ViewModel.DetailsTitle, Mode=OneWay}" />
+            </StackPanel>
+            <Grid ColumnDefinitions="180,*" ColumnSpacing="24">
+                <StackPanel Spacing="8">
+                    <controls:CloneBadgeIcon
+                        HorizontalAlignment="Left"
+                        IconSize="128"
+                        Initial="{x:Bind ViewModel.PreviewBadgeText, Mode=OneWay}"
+                        InitialFontSize="44"
+                        TileCornerRadius="26"
+                        TintHex="{x:Bind ViewModel.SelectedColorHex, Mode=OneWay}" />
+                    <TextBlock
+                        FontSize="14"
+                        FontWeight="SemiBold"
+                        Text="{x:Bind ViewModel.ProfileName, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="12">
+                    <StackPanel Spacing="4">
+                        <TextBox
+                            x:Name="NameField"
+                            Header="Name"
+                            PlaceholderText="Slack (Work)"
+                            Text="{x:Bind ViewModel.ProfileName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                            <AutomationProperties.Name>Profile name</AutomationProperties.Name>
+                        </TextBox>
+                        <TextBlock
+                            x:Name="NameHintText"
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Shown in the name, like Slack (Work)." />
+                        <TextBlock
+                            x:Name="NameErrorText"
+                            FontSize="12"
+                            Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                            Text="{x:Bind ViewModel.ValidationMessage, Mode=OneWay}"
+                            TextWrapping="Wrap"
+                            Visibility="Collapsed" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <StackPanel Spacing="4">
+                            <TextBox
+                                Width="120"
+                                Header="Badge"
+                                MaxLength="2"
+                                Text="{x:Bind ViewModel.BadgeText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
+                                <AutomationProperties.Name>Badge text, one or two characters</AutomationProperties.Name>
+                            </TextBox>
+                        </StackPanel>
+                        <StackPanel Spacing="4">
+                            <TextBlock Text="Color" />
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#0A84FF" ToolTipService.ToolTip="Blue">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#0A84FF" /><Ellipse x:Name="Ring0" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#30D158" ToolTipService.ToolTip="Green">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#30D158" /><Ellipse x:Name="Ring1" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF9F0A" ToolTipService.ToolTip="Orange">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#FF9F0A" /><Ellipse x:Name="Ring2" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF453A" ToolTipService.ToolTip="Red">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#FF453A" /><Ellipse x:Name="Ring3" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#BF5AF2" ToolTipService.ToolTip="Purple">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#BF5AF2" /><Ellipse x:Name="Ring4" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF375F" ToolTipService.ToolTip="Pink">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#FF375F" /><Ellipse x:Name="Ring5" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FFD60A" ToolTipService.ToolTip="Yellow">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#FFD60A" /><Ellipse x:Name="Ring6" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#8E8E93" ToolTipService.ToolTip="Gray">
+                                    <Grid><Ellipse Width="20" Height="20" Fill="#8E8E93" /><Ellipse x:Name="Ring7" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind ViewModel.CompatibilityNote, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                    <CheckBox
+                        x:Name="AckCheck"
+                        Content="I understand independent copies are not validated for this app yet."
+                        IsChecked="{x:Bind ViewModel.Acknowledged, Mode=TwoWay}"
+                        Visibility="Collapsed">
+                        <AutomationProperties.Name>Acknowledge unvalidated support</AutomationProperties.Name>
+                    </CheckBox>
+                </StackPanel>
+            </Grid>
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                <Button
+                    Grid.Column="0"
+                    Command="{x:Bind ViewModel.GoBackCommand, Mode=OneWay}"
+                    Content="Back" />
+                <Button
+                    Grid.Column="2"
+                    Click="OnCancelClick"
+                    Content="Cancel" />
+                <Button
+                    Grid.Column="3"
+                    Command="{x:Bind ViewModel.GoToReviewCommand, Mode=OneWay}"
+                    Content="Continue"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Review -->
+        <StackPanel
+            x:Name="StepReview"
+            Spacing="16"
+            Visibility="Collapsed">
+            <StackPanel Spacing="4">
+                <TextBlock Style="{StaticResource MitosisTitle2Style}" Text="Review profile" />
+                <TextBlock
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="Check the details before saving." />
+            </StackPanel>
+            <Border Style="{StaticResource MitosisCardStyle}" Padding="16">
+                <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Application" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SelectedApp.App.DisplayName, Mode=OneWay}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Profile name" />
+                        <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.ProfileName, Mode=OneWay}" />
+                    </Grid>
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Badge" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
+                            <controls:CloneBadgeIcon
+                                IconSize="24"
+                                Initial="{x:Bind ViewModel.PreviewBadgeText, Mode=OneWay}"
+                                InitialFontSize="11"
+                                TintHex="{x:Bind ViewModel.SelectedColorHex, Mode=OneWay}" />
+                            <TextBlock VerticalAlignment="Center" Text="{x:Bind ViewModel.ReviewBadgeText, Mode=OneWay}" />
+                        </StackPanel>
+                    </Grid>
+                    <Grid ColumnDefinitions="140,*">
+                        <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Compatibility" />
+                        <TextBlock
+                            Grid.Column="1"
+                            Text="{x:Bind ViewModel.ReviewCompatibilityText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+            <TextBlock
+                FontSize="13"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="This saves a planned profile record only. The application will not be copied, modified, or launched."
+                TextWrapping="Wrap" />
+            <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
+                <Button
+                    Grid.Column="0"
+                    Command="{x:Bind ViewModel.GoBackCommand, Mode=OneWay}"
+                    Content="Back" />
+                <Button
+                    Grid.Column="2"
+                    Click="OnCancelClick"
+                    Content="Cancel" />
+                <Button
+                    Grid.Column="3"
+                    Command="{x:Bind ViewModel.SaveCommand, Mode=OneWay}"
+                    Content="Save Profile"
+                    Style="{StaticResource AccentButtonStyle}" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Saving -->
+        <StackPanel
+            x:Name="StepSaving"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="16"
+            Visibility="Collapsed">
+            <ProgressRing Width="32" Height="32" IsActive="True" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="Saving profile…" />
+        </StackPanel>
+
+        <!-- Done -->
+        <StackPanel
+            x:Name="StepDone"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            MaxWidth="460"
+            Spacing="16"
+            Visibility="Collapsed">
+            <Image
+                Width="150"
+                Height="150"
+                Source="ms-appx:///Assets/pose-success.png">
+                <AutomationProperties.Name>Success illustration</AutomationProperties.Name>
+            </Image>
+            <TextBlock
+                HorizontalAlignment="Center"
+                Style="{StaticResource MitosisTitle2Style}"
+                Text="{x:Bind ViewModel.DoneTitle, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="{x:Bind ViewModel.DoneMessageText, Mode=OneTime}"
+                TextWrapping="Wrap" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="12">
+                <Button
+                    Click="OnShowProfileClick"
+                    Content="Show Profile"
+                    Style="{StaticResource AccentButtonStyle}" />
+                <Button Click="OnCloseClick" Content="Close" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Failed -->
+        <StackPanel
+            x:Name="StepFailed"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            MaxWidth="460"
+            Spacing="16"
+            Visibility="Collapsed">
+            <SymbolIcon
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource SystemFillColorCriticalBrush}"
+                Symbol="Important" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Style="{StaticResource MitosisTitle2Style}"
+                Text="{x:Bind ViewModel.FailedTitle, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" Spacing="12">
+                <Button
+                    Command="{x:Bind ViewModel.RetryCommand, Mode=OneWay}"
+                    Content="Try Again" />
+                <Button Click="OnCloseClick" Content="Close" />
+            </StackPanel>
+        </StackPanel>
+    </Grid>
+</Window>

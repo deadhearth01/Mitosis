@@ -74,7 +74,19 @@ date, with loading / empty (`No profiles yet.`) / error + retry states.
 
 ## 8. Explicitly deferred
 
-Provisioning and verification (engine sets `Ready`), the New Clone wizard and badge
-editor, refresh/relink/delete of clones, `Ready`/`Failed` transitions in the UI,
+Provisioning and verification (engine sets `Ready`), standalone badge editor,
+refresh/relink/delete of clones, `Ready`/`Failed` transitions in the UI,
 cross-process file locking, migration between schema versions, and encrypted storage
 (nothing stored warrants it).
+
+## 9. New Clone wizard (Stage 5, metadata only)
+
+`NewCloneWizardViewModel` drives Pick → Details → Review → Saving → Done / Failed
+in `NewCloneWindow` (single instance from Ctrl+N / New Clone). Details prefills the
+first unused `App (Label)` name, app-initial badge, and first unused color.
+Compatibility gates (Stage 3 assessments): `Unsupported` blocks with reasons,
+`NeedsReview` needs an acknowledgement checkbox, `Unknown` records with a notice,
+`Supported` flows through. Saving writes exactly one `Planned` record (reentrant
+saves ignored; duplicates and store failures land on Failed with retry; cancel
+leaves nothing). Done reads `{name} planned.` plus the metadata-only notice and
+never transitions to `Ready`; the main list then refreshes and selects the app.

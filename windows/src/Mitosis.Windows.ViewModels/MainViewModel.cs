@@ -43,8 +43,18 @@ public sealed class MainViewModel : ObservableObject
         ShowUpdateBanner = showUpdateBanner;
         BannerVersion = bannerVersion;
 
-        NewCloneCommand = new RelayCommand(() => RaisePlaceholder("New Clone",
-            "Clone creation arrives with the engine in a later stage. This preview shows the shell only."));
+        NewCloneCommand = new RelayCommand(() =>
+        {
+            if (IsPreview)
+            {
+                RaisePlaceholder("New Clone",
+                    "Clone creation arrives with the engine in a later stage. This preview shows the shell only.");
+            }
+            else
+            {
+                NewCloneRequested?.Invoke(this, EventArgs.Empty);
+            }
+        });
         OpenCloneCommand = new RelayCommand(
             () => RaisePlaceholder("Open",
                 SelectedClone == null ? "Select a clone first." : $"Opening {SelectedClone.Name} needs the engine, which is not implemented yet."),
@@ -105,6 +115,9 @@ public sealed class MainViewModel : ObservableObject
     public string BannerVersion { get; private set; }
 
     public event EventHandler<DialogRequest>? DialogRequested;
+
+    /// <summary>Raised when the New Clone action should open the wizard (production only).</summary>
+    public event EventHandler? NewCloneRequested;
 
     public string SearchText
     {
@@ -334,6 +347,41 @@ public sealed class MainViewModel : ObservableObject
             ? "Own login, data, notifications and taskbar icon"
             : $"Own login and data; uses {c.AppName}'s taskbar icon"
         : string.Empty;
+
+    /// <summary>All assessed applications (unfiltered) for wizard handoff.</summary>
+    public IReadOnlyList<DiscoveredAppItem> AllAppItems => appItems.ToList();
+
+    /// <summary>All persisted profiles (unfiltered) for wizard duplicate checks.</summary>
+    public IReadOnlyList<CloneProfile> AllProfiles => profileRecords.ToList();
+
+    /// <summary>Selects an application by stable ID; returns false when absent.</summary>
+    public bool SelectAppById(string appId)
+    {
+        var item = appItems.FirstOrDefault(i => i.App.Id == appId);
+        if (item == null)
+        {
+            return false;
+        }
+
+        SelectedApp = item;
+        return true;
+    }
+
+    /// <summary>Builds a wizard over the current discovery snapshot. Requires the
+    /// discovery-backed constructor; preview mode keeps its placeholder instead.</summary>
+    public NewCloneWizardViewModel CreateWizard()
+    {
+        if (profiles == null)
+        {
+            throw new InvalidOperationException("The wizard needs a profile repository.");
+        }
+
+        return new NewCloneWizardViewModel(
+            appItems.Select(i => new DiscoveredAppItem(i.App, i.Assessment)).ToList(),
+            profileRecords.ToList(),
+            profiles,
+            SelectedApp);
+    }
 
     public string CloneCountSubtitle => clones.Count switch
     {

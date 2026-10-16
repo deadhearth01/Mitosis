@@ -21,10 +21,17 @@ public sealed partial class NewCloneWindow : Window
         Closed += (_, _) => ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         UpdateStepVisibility();
         UpdateDynamicVisibility();
+        Activated += OnFirstActivated;
         if (Content is FrameworkElement root)
         {
             root.KeyDown += OnContentKeyDown;
         }
+    }
+
+    private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+    {
+        Activated -= OnFirstActivated;
+        PickSearch.Focus(FocusState.Programmatic);
     }
 
     public NewCloneWizardViewModel ViewModel { get; }

@@ -46,7 +46,7 @@
     <Style x:Key="MitosisTileValueStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="22" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="FontFamily" Value="Segoe UI Variable Display Semibold" />
+        <Setter Property="FontFamily" Value="Segoe UI Variable Display" />
     </Style>
 
     <!-- Card treatment: control fill + subtle border + 12px continuous-look corners. -->

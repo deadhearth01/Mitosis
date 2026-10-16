@@ -315,7 +315,7 @@
                 Width="150"
                 Height="150"
                 Source="ms-appx:///Assets/pose-success.png">
-                <AutomationProperties.Name>Success illustration</AutomationProperties.Name>
+                <AutomationProperties.AccessibilityView>Raw</AutomationProperties.AccessibilityView>
             </Image>
             <TextBlock
                 HorizontalAlignment="Center"

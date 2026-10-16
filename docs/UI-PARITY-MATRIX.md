@@ -242,5 +242,51 @@ Genuinely done in Stage 8 (framework only; nothing verified live):
   defaulting to `No verification recorded for this application.`
 - Not implemented: live verification runs, evidence gathering automation,
   counsel review, owner approvals, strategy registration.
+
+## Stage 12 parity and accessibility audit (evidence-based statuses)
+
+`Implemented and verified` = code + automated tests and/or launch; behavior
+confirmed without pixels. `Implemented, verification pending` = built and
+launchable, needs the protocol in `docs/WINDOWS-UI-VERIFICATION.md`. No
+pixel-level parity is claimed anywhere.
+
+- Shell/windows: W01 Implemented, verification pending (size/title built;
+  subtitle adapted to sidebar). W02, W03, W04 Missing. W05 Partially (commands
+  without menu bar). W06 Missing (no dock; window drop also absent). W07
+  Partially (close-quit only; no tray mode). W08 Implemented, verification
+  pending. W09 Not applicable (in-memory composition has no load-failure mode).
+  W10 Missing.
+- Sidebar: W11, W12, W14 Implemented, verification pending. W13 Implemented and
+  verified (filter unit tests). W15 Implemented, verification pending (Ctrl+F
+  wired, keypress unobserved). W16 Partially (All/Running not rendered; D8 open).
+  W17 Implemented, verification pending (handlers code-reviewed). W18
+  Implemented, verification pending (10-item menu with macOS enablement).
+- Detail: W19–W24 Implemented, verification pending (static preview values).
+  W25 Implemented and verified (states + ViewModel tests). W26 Implemented and
+  verified (symbol+text rule in code review).
+- Wizard: W27, W28 Implemented, verification pending. W29 Implemented and
+  verified (validation unit tests). W30 Not applicable (no copying in
+  metadata stage). W31–W33 Partially (honest saving step; adapted done copy;
+  retry without compat-mode path). W34 Missing by design. W35 Partially
+  (inline badge editing; no standalone sheet).
+- Settings/help/menus: W36–W39 Missing. W40 Partially (wizard failed state;
+  no standalone report sheet). W41 Partially (honest placeholder dialogs).
+  W42 Missing. W43 Not applicable (macOS lacks it too; correctly omitted).
+  W44 Partially (Ctrl+N/Ctrl+F/Enter/Delete/Esc; no menu bar or F1).
+  W58 Partially (copy reused modulo OS nouns; no string catalog yet).
+  W60 Implemented, verification pending (one mascot per view; decorative art
+  hidden from the tree). W61 Partially (Recycle Bin copy; engine safeguards
+  not applicable). W62 Partially (no launch check; honesty rule kept via
+  planned-profile copy). W63 Implemented and verified (no custom animations
+  exist, so Reduce Motion holds vacuously). W64 Partially (names, tab order,
+  keyboard paths present; Narrator pass pending). W65, W66 Missing (no
+  screenshots or screen-reader runs in this environment).
+- Engine/CLI: W45 Implemented and verified (discovery + smoke counts). W46–W51
+  Missing. W52 Partially (static tiles). W53 Missing. W54 Partially (toggle UI
+  only). W55 Missing. W56, W57 Not applicable (future roadmap items).
+
+Stage 12 fixes: decorative art hidden from the accessibility tree (macOS parity),
+swatch accessible names, wizard initial focus, font-family cleanup. No safety
+model changes; catalog empty; gates closed.
 - Not implemented: any executing strategy, copying, launching, deletion, recovery,
   reparse-point handling, evidence gathering, strategy selection UI.

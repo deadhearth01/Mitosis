@@ -192,6 +192,11 @@ external package and is test-only.
 - Stage 11: Windows CI — **automation only**: `windows-ci.yml` restores, Release
   builds, and tests on `windows-latest` with trx artifacts; 210/210 green locally.
   No remote run observed yet. See `docs/WINDOWS-CI.md`.
+- Stage 12: UI parity and accessibility audit — **audit only**: evidence-based
+  matrix statuses, manual verification protocol, bounded a11y fixes (decorative
+  art hidden, swatch names, wizard focus, font cleanup); 210/210 green. No
+  screenshots or Narrator runs available here. See
+  `docs/WINDOWS-UI-VERIFICATION.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

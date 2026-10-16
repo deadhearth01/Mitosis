@@ -4,7 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:Mitosis.Windows.App"
     Width="{x:Bind IconSize, Mode=OneWay}"
-    Height="{x:Bind IconSize, Mode=OneWay}">
+    Height="{x:Bind IconSize, Mode=OneWay}"
+    AutomationProperties.AccessibilityView="Raw">
     <UserControl.Resources>
         <local:HexToBrushConverter x:Key="HexToBrush" />
     </UserControl.Resources>

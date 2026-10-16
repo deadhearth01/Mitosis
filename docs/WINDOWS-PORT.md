@@ -189,6 +189,9 @@ external package and is test-only.
   findings with bounded fixes (reserved device names, ISO evidence dates, verifier
   charset, swatch accessible names, deterministic retries), release-readiness
   assessment. See `docs/WINDOWS-SECURITY-RELEASE-AUDIT.md`.
+- Stage 11: Windows CI — **automation only**: `windows-ci.yml` restores, Release
+  builds, and tests on `windows-latest` with trx artifacts; 210/210 green locally.
+  No remote run observed yet. See `docs/WINDOWS-CI.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

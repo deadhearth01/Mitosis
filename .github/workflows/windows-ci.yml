@@ -1,0 +1,50 @@
+name: Windows CI
+
+# Validates the Windows port (WinUI 3, .NET 10) without touching macOS workflows.
+# Read-only: no secrets, no signing, no publishing, no deployment.
+
+on:
+  push:
+    branches: [WindowsVersion]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    name: Restore, build, and test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: windows
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          # windows/global.json pins 10.0.100 with latestFeature roll-forward.
+          dotnet-version: 10.0.x
+      - name: Toolchain
+        run: dotnet --info
+      - name: Restore
+        run: dotnet restore Mitosis.sln
+      - name: Build (Release)
+        run: dotnet build Mitosis.sln -c Release --no-restore
+      - name: Test (Release)
+        run: dotnet test --solution Mitosis.sln -c Release --no-build --report-trx
+      - name: Upload test results
+        # defaults.run.working-directory does not apply here: path is repo-rooted.
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-test-results
+          path: windows/TestResults/*.trx
+          retention-days: 14

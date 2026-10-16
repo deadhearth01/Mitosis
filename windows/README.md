@@ -117,6 +117,14 @@ atomic saves, integrity-checked). Recording what must be proven is implemented;
 proving it requires separately authorized live testing. App detail shows a
 verification summary per application. Details: `docs/WINDOWS-EVIDENCE-BUNDLES.md`.
 
+## Continuous integration (Stage 11)
+
+Pushes to `WindowsVersion` and pull requests run `.github/workflows/windows-ci.yml`
+(`windows-latest`): restore, Release build, full test suite with `.trx` artifacts
+(14 days). Reproduce locally with the commands in `docs/WINDOWS-CI.md`. CI covers
+compilation and unit tests only — not UI launch, pixels, Narrator, isolation,
+licensing, or packaging.
+
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when
 nothing is selected. Selecting an app shows its detail page with the compatibility

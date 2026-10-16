@@ -1,5 +1,6 @@
 using Mitosis.Application.Profiles;
 using Mitosis.Application.Profiles;
+using Mitosis.CloneEngine.Provisioning;
 using Mitosis.Domain;
 using Mitosis.Windows.ViewModels;
 
@@ -402,6 +403,47 @@ public sealed class NewCloneWizardTests
             Task.FromResult(profile);
 
         public Task RemoveAsync(Guid id, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    }
+
+    [TestMethod]
+    public void ProvisioningNote_EmptyCatalogIsHonest()
+    {
+        var (_, wizard) = Create();
+
+        Assert.IsTrue(wizard.ProvisioningNote.Contains("No validated provisioning strategy"));
+    }
+
+    [TestMethod]
+    public void ProvisioningNote_NamesAvailableStrategies()
+    {
+        var profiles = new FakeProfileRepository();
+        var wizard = new NewCloneWizardViewModel(
+            new[] { Item("Slack") }, Array.Empty<CloneProfile>(), profiles,
+            catalog: new[] { new WizardFakeStrategy("portable-exe", "1.2") });
+
+        Assert.IsTrue(wizard.ProvisioningNote.Contains("portable-exe"));
+        Assert.IsTrue(wizard.ProvisioningNote.Contains("later stage"));
+    }
+
+    private sealed class WizardFakeStrategy : IProvisioningStrategy
+    {
+        public WizardFakeStrategy(string id, string version)
+        {
+            Id = id;
+            Version = version;
+        }
+
+        public string Id { get; }
+
+        public string Version { get; }
+
+        public bool SupportsExecution => false;
+
+        public bool IsEnabled => true;
+
+        public IReadOnlyList<string> RequiredPrerequisites => Array.Empty<string>();
+
+        public bool AppliesTo(DiscoveredApp app) => true;
     }
 
     public TestContext TestContext { get; set; } = null!;

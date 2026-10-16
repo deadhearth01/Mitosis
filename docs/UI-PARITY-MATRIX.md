@@ -200,3 +200,20 @@ Genuinely implemented and tested in Stage 5 (metadata only; single `Planned` sav
   the wizard, standalone badge editor.
 - Visual runtime comparison still needed: wizard window against
   `new-clone-pick/details/done.png`, focus order, swatch rings, dialog spacing.
+
+## Stage 6 provisioning framework notes
+
+Genuinely implemented and tested in Stage 6 (planning only; execution disabled):
+
+- Strategy contract (`Id`/`Version`/`SupportsExecution`/`IsEnabled`/prerequisites/
+  `AppliesTo`), isolation evidence model (8 flags, unknown stays unknown),
+  deterministic planner (immutable plans, refusal with reasons), execution gate
+  (revalidation, missing-executor refusal, no profile mutation), empty production
+  catalog by evidence.
+- Destination safety: GUID-hex destinations under one absolute normalized root;
+  traversal/absolute/overlong/invalid rejected; collisions refused; no directory
+  creation during planning (verified); registry paths never destinations.
+- Wizard review step states provisioning availability honestly (empty catalog →
+  planned-profile-only notice).
+- Not implemented: any executing strategy, copying, launching, deletion, recovery,
+  reparse-point handling, evidence gathering, strategy selection UI.

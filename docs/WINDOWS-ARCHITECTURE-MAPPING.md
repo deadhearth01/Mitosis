@@ -23,6 +23,12 @@ Stage 4 additions: `CloneProfile` + states in `Mitosis.Domain`; ports
 `Infrastructure` → `Application` edge); store path in `Mitosis.Windows.Platform`;
 `Windows.App` → `Mitosis.Infrastructure` edge added for composition only.
 
+Stage 6 additions: evidence/plan records in `Mitosis.Domain`; strategy, planner,
+gate, and empty production catalog in `Mitosis.CloneEngine`; `Windows.ViewModels`
+→ `Mitosis.CloneEngine` edge added (wizard availability note only). No new
+third-party dependencies. D5 remains open: no application category has validated
+isolation evidence, so no executing strategy was approved.
+
 ## 1. `Mitosis.Domain` — models, contracts, state
 
 | macOS source | Responsibility → mapping |

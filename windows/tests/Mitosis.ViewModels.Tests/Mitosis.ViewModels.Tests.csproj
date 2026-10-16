@@ -5,6 +5,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Mitosis.Windows.ViewModels\Mitosis.Windows.ViewModels.csproj" />
     <ProjectReference Include="..\..\src\Mitosis.Application\Mitosis.Application.csproj" />
+    <ProjectReference Include="..\..\src\Mitosis.CloneEngine\Mitosis.CloneEngine.csproj" />
     <ProjectReference Include="..\..\src\Mitosis.Domain\Mitosis.Domain.csproj" />
   </ItemGroup>
 </Project>

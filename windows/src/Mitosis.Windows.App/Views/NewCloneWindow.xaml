@@ -259,6 +259,11 @@
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 Text="This saves a planned profile record only. The application will not be copied, modified, or launched."
                 TextWrapping="Wrap" />
+            <TextBlock
+                FontSize="13"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="{x:Bind ViewModel.ProvisioningNote, Mode=OneWay}"
+                TextWrapping="Wrap" />
             <Grid ColumnDefinitions="Auto,*,Auto,Auto" ColumnSpacing="8">
                 <Button
                     Grid.Column="0"

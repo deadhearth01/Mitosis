@@ -167,7 +167,11 @@ external package and is test-only.
 - Stage 5: metadata-only New Clone wizard — **implemented**: five-state wizard
   (pick/details/review/saving/done/failed) with compatibility gating, name/badge
   validation, double-submit protection, and honest completion copy; 134/134 tests
-  green. No provisioning. See `docs/WINDOWS-PROFILES.md`.
+  green at the time. No provisioning. See `docs/WINDOWS-PROFILES.md`.
+- Stage 6: provisioning strategy framework — **implemented, execution disabled**:
+  strategy contracts, deterministic planner with destination safety, execution
+  gate, empty production catalog by evidence; 162/162 tests green. No copying,
+  launching, or deletion. See `docs/WINDOWS-PROVISIONING.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Mitosis.Application.Discovery;
 using Mitosis.Application.Profiles;
+using Mitosis.CloneEngine.Provisioning;
 using Mitosis.Domain;
 
 namespace Mitosis.Windows.ViewModels;
@@ -380,7 +381,8 @@ public sealed class MainViewModel : ObservableObject
             appItems.Select(i => new DiscoveredAppItem(i.App, i.Assessment)).ToList(),
             profileRecords.ToList(),
             profiles,
-            SelectedApp);
+            SelectedApp,
+            ProductionCatalog.Strategies);
     }
 
     public string CloneCountSubtitle => clones.Count switch

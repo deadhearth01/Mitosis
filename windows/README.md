@@ -105,8 +105,10 @@ launched, or deleted. Details: `docs/WINDOWS-PROFILES.md`.
 Ctrl+N (or New Clone) opens the wizard: pick an application, enter details with
 live badge preview, review, then save. Saving writes one `Planned` profile record
 — the app is not copied or launched. `Unsupported` apps are blocked with reasons;
-review-required apps need explicit acknowledgement. Unsupported visual states and
-manual screenshot comparison steps are listed in `docs/UI-PARITY-MATRIX.md`.
+review-required apps need explicit acknowledgement. The review step also states
+provisioning availability (none validated yet — see `docs/WINDOWS-PROVISIONING.md`).
+Unsupported visual states and manual screenshot comparison steps are listed in
+`docs/UI-PARITY-MATRIX.md`.
 
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when

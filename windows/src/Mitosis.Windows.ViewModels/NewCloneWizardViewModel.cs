@@ -1,4 +1,5 @@
 using Mitosis.Application.Profiles;
+using Mitosis.CloneEngine.Provisioning;
 using Mitosis.Domain;
 
 namespace Mitosis.Windows.ViewModels;
@@ -24,6 +25,7 @@ public sealed class NewCloneWizardViewModel : ObservableObject
     private readonly List<DiscoveredAppItem> apps;
     private readonly List<CloneProfile> existingProfiles;
     private readonly ICloneProfileRepository profiles;
+    private readonly IReadOnlyList<IProvisioningStrategy> catalog;
 
     private string searchText = string.Empty;
     private DiscoveredAppItem? selectedApp;
@@ -41,11 +43,13 @@ public sealed class NewCloneWizardViewModel : ObservableObject
         IReadOnlyList<DiscoveredAppItem> apps,
         IReadOnlyList<CloneProfile> existingProfiles,
         ICloneProfileRepository profiles,
-        DiscoveredAppItem? preselected = null)
+        DiscoveredAppItem? preselected = null,
+        IEnumerable<IProvisioningStrategy>? catalog = null)
     {
         this.apps = apps.ToList();
         this.existingProfiles = existingProfiles.ToList();
         this.profiles = profiles;
+        this.catalog = (catalog ?? Enumerable.Empty<IProvisioningStrategy>()).ToList();
         selectedApp = preselected != null && this.apps.Any(i => i.App.Id == preselected.App.Id)
             ? preselected
             : null;
@@ -164,6 +168,22 @@ public sealed class NewCloneWizardViewModel : ObservableObject
         ? MainViewModel.AssessmentStatusText(current.Assessment.Status)
             + (current.Assessment.Reasons.Count > 0 ? " — " + current.Assessment.Reasons[0] : string.Empty)
         : string.Empty;
+
+    public string ProvisioningNote
+    {
+        get
+        {
+            var enabled = catalog.Where(s => s.IsEnabled).ToList();
+            if (enabled.Count == 0)
+            {
+                return "No validated provisioning strategy exists yet — this saves a planned profile only.";
+            }
+
+            return "Available planning " + (enabled.Count == 1 ? "strategy" : "strategies") + ": "
+                + string.Join(", ", enabled.Select(s => $"'{s.Id} {s.Version}'"))
+                + ". Execution arrives in a later stage.";
+        }
+    }
 
     public string CompatibilityNote => SelectedApp is { } selected ? selected.Assessment.Status switch
     {

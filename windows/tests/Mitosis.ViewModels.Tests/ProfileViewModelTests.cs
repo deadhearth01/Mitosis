@@ -168,7 +168,10 @@ public sealed class ProfileViewModelTests
 
         profiles.ListFailure = null;
         model.RefreshAppsCommand.Execute(null);
-        await Task.Delay(500, TestContext.CancellationToken);
+        for (var i = 0; i < 100 && model.ShowProfilesError; i++)
+        {
+            await Task.Delay(50, TestContext.CancellationToken);
+        }
 
         Assert.IsNull(model.ProfilesError);
     }

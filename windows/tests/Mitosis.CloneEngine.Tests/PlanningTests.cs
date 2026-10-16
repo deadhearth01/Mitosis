@@ -296,6 +296,19 @@ public sealed class OperationPlanningTests
     }
 
     [TestMethod]
+    public void DestinationSafety_RejectsReservedDeviceNames()
+    {
+        foreach (var name in new[] { "CON", "con", "NUL", "aux", "COM1", "com9", "LPT1", "lpt9", "con.txt", "AUX.log" })
+        {
+            Assert.IsFalse(DestinationSafety.IsValidRelativePath(@"instances\" + name, out _),
+                $"Reserved device name accepted: {name}");
+        }
+
+        Assert.IsTrue(DestinationSafety.IsValidRelativePath(@"instances\console", out _));
+        Assert.IsTrue(DestinationSafety.IsValidRelativePath(@"instances\com10", out _));
+    }
+
+    [TestMethod]
     public void DestinationSafety_RejectsEscapes()
     {
         Assert.IsFalse(DestinationSafety.IsValidRelativePath("../x", out _));

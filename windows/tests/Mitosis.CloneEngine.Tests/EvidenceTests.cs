@@ -82,6 +82,44 @@ public sealed class EvidenceValidationTests
             EvidenceBundles.Valid() with { Verifier = "   " }).Any());
         Assert.IsTrue(EvidenceEvaluator.Validate(
             EvidenceBundles.Valid() with { Verifier = new string('x', 81) }).Any());
+        Assert.IsTrue(EvidenceEvaluator.Validate(
+            EvidenceBundles.Valid() with { Verifier = "lab:7" }).Any());
+        Assert.IsTrue(EvidenceEvaluator.Validate(
+            EvidenceBundles.Valid() with { Verifier = "lab\x007" }).Any());
+    }
+
+    [TestMethod]
+    public void AccessDate_RequiresIsoFormat()
+    {
+        EvidenceBundle WithDate(string date) => EvidenceBundles.Valid() with
+        {
+            Sources = new[] { new EvidenceSourceRef("Doc", "https://example.com/docs", date) },
+        };
+
+        Assert.AreEqual(0, EvidenceEvaluator.Validate(WithDate("2026-10-16")).Count);
+        Assert.IsTrue(EvidenceEvaluator.Validate(WithDate("10/11/2026")).Any(e => e.Contains("yyyy-MM-dd")),
+            "Ambiguous culture-dependent dates must be rejected.");
+        Assert.IsTrue(EvidenceEvaluator.Validate(WithDate("someday")).Any());
+    }
+
+    [TestMethod]
+    public void NullApprovalAndDimensions_AreRejected()
+    {
+        Assert.IsTrue(EvidenceEvaluator.Validate(
+            EvidenceBundles.Valid() with { Approval = null! }).Any(e => e.Contains("Approval")));
+        Assert.IsTrue(EvidenceEvaluator.Validate(
+            EvidenceBundles.Valid() with { Dimensions = null! }).Any(e => e.Contains("missing")));
+    }
+
+    [TestMethod]
+    public void NonHttpUrls_AreRejected()
+    {
+        var bundle = EvidenceBundles.Valid() with
+        {
+            Sources = new[] { new EvidenceSourceRef("Doc", "ftp://example.com/docs", "2026-10-16") },
+        };
+
+        Assert.IsTrue(EvidenceEvaluator.Validate(bundle).Any(e => e.Contains("malformed URL")));
     }
 
     [TestMethod]

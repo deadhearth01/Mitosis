@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Mitosis.Domain;
 
 /// <summary>Per-dimension evaluation outcome. The input status is preserved verbatim:
@@ -68,9 +70,10 @@ public static class EvidenceEvaluator
         }
 
         if (string.IsNullOrWhiteSpace(bundle.Verifier) || bundle.Verifier.Trim().Length > 80
-            || bundle.Verifier.IndexOfAny(new[] { '@', '\\', '/' }) >= 0)
+            || bundle.Verifier.IndexOfAny(new[] { '@', '\\', '/', ':' }) >= 0
+            || bundle.Verifier.Any(char.IsControl))
         {
-            errors.Add("Verifier must be a short non-sensitive label (no emails or paths).");
+            errors.Add("Verifier must be a short non-sensitive label (no emails, paths, or control characters).");
         }
 
         var dimensions = bundle.Dimensions ?? new List<DimensionEvidence>();
@@ -119,9 +122,10 @@ public static class EvidenceEvaluator
             }
 
             if (string.IsNullOrWhiteSpace(source.Accessed)
-                || !DateOnly.TryParse(source.Accessed.Trim(), out _))
+                || !DateOnly.TryParseExact(source.Accessed.Trim(), "yyyy-MM-dd",
+                    CultureInfo.InvariantCulture, DateTimeStyles.None, out _))
             {
-                errors.Add($"Source '{source.Title}' has an invalid access date.");
+                errors.Add($"Source '{source.Title}' has an invalid access date (use yyyy-MM-dd).");
             }
 
             if (!string.IsNullOrWhiteSpace(source.Url)

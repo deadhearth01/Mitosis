@@ -143,7 +143,10 @@ public sealed class DiscoveryViewModelTests
 
         discovery.Returns(new[] { DiscoveredApps.Make("Slack") });
         model.RefreshAppsCommand.Execute(null);
-        await Task.Delay(500, TestContext.CancellationToken);
+        for (var i = 0; i < 100 && !model.HasApps; i++)
+        {
+            await Task.Delay(50, TestContext.CancellationToken);
+        }
 
         Assert.AreEqual(2, discovery.Calls);
         Assert.IsTrue(model.HasApps);

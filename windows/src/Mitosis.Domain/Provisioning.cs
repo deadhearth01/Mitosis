@@ -125,6 +125,12 @@ public static class DestinationSafety
                 failure = $"Destination contains invalid characters: '{segment}'.";
                 return false;
             }
+
+            if (IsReservedDeviceName(segment))
+            {
+                failure = $"Destination uses a reserved device name: '{segment}'.";
+                return false;
+            }
         }
 
         if (relativePath.Length > 200)
@@ -145,5 +151,14 @@ public static class DestinationSafety
         }
 
         return Path.Combine(root, relativePath);
+    }
+
+    private static bool IsReservedDeviceName(string segment)
+    {
+        var bare = segment.Split('.')[0].ToUpperInvariant();
+        return bare is "CON" or "PRN" or "AUX" or "NUL"
+            || (bare.Length == 4 && (bare.StartsWith("COM", StringComparison.Ordinal)
+                || bare.StartsWith("LPT", StringComparison.Ordinal))
+                && bare[3] is >= '1' and <= '9');
     }
 }

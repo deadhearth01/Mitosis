@@ -139,6 +139,16 @@ public sealed class NewCloneWizardTests
     }
 
     [TestMethod]
+    public void GoBack_OutsideFlow_StaysPut()
+    {
+        var (_, wizard) = Create();
+
+        wizard.GoBack();
+        Assert.AreEqual(WizardStep.Pick, wizard.Step);
+        Assert.IsFalse(wizard.SaveCommand.CanExecute(null), "Save is only available on Review.");
+    }
+
+    [TestMethod]
     public void GoToDetails_WithoutApp_StaysPut()
     {
         var (_, wizard) = Create();

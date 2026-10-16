@@ -185,6 +185,10 @@ external package and is test-only.
   seven-phase protocol, ten-dimension matrix, disposable-environment spec,
   authorization/abort controls, report template. See
   `docs/WINDOWS-ISOLATION-VERIFICATION-PLAN.md`.
+- Stage 10: security and release-readiness audit — **audit only, gates stay closed**:
+  findings with bounded fixes (reserved device names, ISO evidence dates, verifier
+  charset, swatch accessible names, deterministic retries), release-readiness
+  assessment. See `docs/WINDOWS-SECURITY-RELEASE-AUDIT.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

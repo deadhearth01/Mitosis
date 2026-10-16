@@ -19,6 +19,7 @@
     <ProjectReference Include="..\Mitosis.Application\Mitosis.Application.csproj" />
     <ProjectReference Include="..\Mitosis.Compatibility\Mitosis.Compatibility.csproj" />
     <ProjectReference Include="..\Mitosis.Domain\Mitosis.Domain.csproj" />
+    <ProjectReference Include="..\Mitosis.Infrastructure\Mitosis.Infrastructure.csproj" />
     <ProjectReference Include="..\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj" />
   </ItemGroup>
   <ItemGroup>

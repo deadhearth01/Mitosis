@@ -104,6 +104,22 @@ public sealed class AppGroupView
     public IReadOnlyList<DiscoveredAppItem> Items { get; }
 }
 
+/// <summary>A persisted profile whose application is not currently discovered.
+/// The record is always preserved; it is surfaced, never deleted.</summary>
+public sealed record OrphanProfileItem(CloneProfile Profile)
+{
+    public string Initial
+    {
+        get
+        {
+            var first = Profile.Name.Trim().FirstOrDefault(char.IsLetterOrDigit);
+            return first == default ? "#" : char.ToUpperInvariant(first).ToString();
+        }
+    }
+
+    public string StateText => MainViewModel.ProfileStateText(Profile.State);
+}
+
 /// <summary>Request for the view to show an explanatory dialog (engine actions are
 /// placeholders in Stage 2 and must never pretend to succeed).</summary>
 public sealed record DialogRequest(string Title, string Message);

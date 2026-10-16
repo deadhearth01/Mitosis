@@ -1,5 +1,6 @@
 using System.Globalization;
 using Mitosis.Application.Discovery;
+using Mitosis.Application.Profiles;
 using Mitosis.Domain;
 
 namespace Mitosis.Windows.ViewModels;
@@ -23,6 +24,12 @@ public sealed class MainViewModel : ObservableObject
     private List<DiscoveredAppItem> appItems = new();
     private List<AppGroupView> visibleAppGroups = new();
     private DiscoveredAppItem? selectedApp;
+    private readonly ICloneProfileRepository? profiles;
+    private List<CloneProfile> profileRecords = new();
+    private List<OrphanProfileItem> orphanProfiles = new();
+    private OrphanProfileItem? selectedOrphan;
+    private bool isLoadingProfiles;
+    private string? profilesError;
     private bool linkRoutingOn;
     private bool isLoadingApps;
     private string? discoveryError;
@@ -81,11 +88,13 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>Production constructor: discovery-backed. Preview data is never used here;
     /// see <see cref="ShowPreviewCommand"/> for the explicit opt-in fallback.</summary>
-    public MainViewModel(IAppDiscoveryService discovery, ICompatibilityAssessor assessor)
+    public MainViewModel(
+        IAppDiscoveryService discovery, ICompatibilityAssessor assessor, ICloneProfileRepository profiles)
         : this(Enumerable.Empty<AppGroupItem>(), Enumerable.Empty<CloneItem>(), isPreview: false)
     {
         this.discovery = discovery;
         this.assessor = assessor;
+        this.profiles = profiles;
     }
 
     /// <summary>True while entries come from <see cref="PreviewData"/> rather than discovery.</summary>
@@ -118,6 +127,12 @@ public sealed class MainViewModel : ObservableObject
         {
             if (SetProperty(ref selectedClone, value))
             {
+                if (value != null)
+                {
+                    SelectedApp = null;
+                    SelectedOrphan = null;
+                }
+
                 RaisePropertyChanged(nameof(HasSelection));
                 RaisePropertyChanged(nameof(ShowUpdateNotice));
                 RaisePropertyChanged(nameof(ShowMissingNotice));
@@ -132,7 +147,7 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
-    public bool HasSelection => SelectedClone != null || SelectedApp != null;
+    public bool HasSelection => SelectedClone != null || SelectedApp != null || SelectedOrphan != null;
 
     public bool HasNoResults => visibleGroups.Count == 0 && visibleAppGroups.Count == 0;
 
@@ -179,6 +194,12 @@ public sealed class MainViewModel : ObservableObject
         {
             if (SetProperty(ref selectedApp, value))
             {
+                if (value != null)
+                {
+                    SelectedClone = null;
+                    SelectedOrphan = null;
+                }
+
                 RaisePropertyChanged(nameof(HasSelection));
                 RaisePropertyChanged(nameof(ShowAppDetail));
                 RaisePropertyChanged(nameof(SelectedAppPublisherLine));
@@ -187,6 +208,8 @@ public sealed class MainViewModel : ObservableObject
                 RaisePropertyChanged(nameof(SelectedAppVersionOrUnknown));
                 RaisePropertyChanged(nameof(SelectedAppScopeText));
                 RaisePropertyChanged(nameof(SelectedAppReasons));
+                RaisePropertyChanged(nameof(ProfilesForSelectedApp));
+                RaisePropertyChanged(nameof(ShowProfilesEmpty));
                 CreateCloneFromAppCommand.RaiseCanExecuteChanged();
             }
         }
@@ -195,6 +218,68 @@ public sealed class MainViewModel : ObservableObject
     public bool ShowAppDetail => SelectedApp != null;
 
     public bool ShowCloneDetail => SelectedClone != null;
+
+    public bool IsLoadingProfiles
+    {
+        get => isLoadingProfiles;
+        private set
+        {
+            if (SetProperty(ref isLoadingProfiles, value))
+            {
+                RaisePropertyChanged(nameof(ShowProfilesLoading));
+            }
+        }
+    }
+
+    public string? ProfilesError
+    {
+        get => profilesError;
+        private set
+        {
+            if (SetProperty(ref profilesError, value))
+            {
+                RaisePropertyChanged(nameof(ShowProfilesError));
+            }
+        }
+    }
+
+    public bool ShowProfilesLoading => IsLoadingProfiles;
+
+    public bool ShowProfilesError => !IsLoadingProfiles && ProfilesError != null;
+
+    public bool ShowProfilesEmpty =>
+        !IsLoadingProfiles && ProfilesError == null && SelectedApp != null && ProfilesForSelectedApp.Count == 0;
+
+    /// <summary>Persisted profiles for the selected application, if any.</summary>
+    public IReadOnlyList<CloneProfile> ProfilesForSelectedApp => SelectedApp is { } selected
+        ? profileRecords.Where(p => p.AppId == selected.App.Id).ToList()
+        : Array.Empty<CloneProfile>();
+
+    /// <summary>Profiles whose application is not currently discovered. Kept, never deleted.</summary>
+    public IReadOnlyList<OrphanProfileItem> OrphanProfiles => orphanProfiles;
+
+    public bool HasOrphans => orphanProfiles.Count > 0;
+
+    public OrphanProfileItem? SelectedOrphan
+    {
+        get => selectedOrphan;
+        set
+        {
+            if (SetProperty(ref selectedOrphan, value))
+            {
+                if (value != null)
+                {
+                    SelectedClone = null;
+                    SelectedApp = null;
+                }
+
+                RaisePropertyChanged(nameof(HasSelection));
+                RaisePropertyChanged(nameof(ShowOrphanDetail));
+            }
+        }
+    }
+
+    public bool ShowOrphanDetail => SelectedOrphan != null;
 
     public string SelectedAppPublisherLine => SelectedApp is { } item
         ? string.Join(" ·", new[] { item.App.Publisher, item.App.Version }.Where(s => !string.IsNullOrEmpty(s)))
@@ -309,6 +394,111 @@ public sealed class MainViewModel : ObservableObject
         _ => "Not yet assessed",
     };
 
+    /// <summary>Runs discovery off the UI thread, assesses each result, loads persisted
+    /// profiles, and publishes the grouped lists. Failures surface as actionable error
+    /// states; cancellation is silent.</summary>
+    public async Task LoadAsync(CancellationToken cancellationToken = default)
+    {
+        if (discovery == null || assessor == null)
+        {
+            return;
+        }
+
+        IsLoadingApps = true;
+        IsLoadingProfiles = profiles != null;
+        DiscoveryError = null;
+        ProfilesError = null;
+        try
+        {
+            var found = await discovery.DiscoverAsync(cancellationToken).ConfigureAwait(false);
+            var keptAppId = SelectedApp?.App.Id;
+            appItems = found.Select(a => new DiscoveredAppItem(a, assessor.Assess(a))).ToList();
+            RefreshVisibleGroups();
+            SelectedApp = appItems.FirstOrDefault(i => i.App.Id == keptAppId);
+
+            if (profiles != null)
+            {
+                try
+                {
+                    var keptOrphanId = SelectedOrphan?.Profile.Id;
+                    profileRecords = (await profiles.ListAsync(cancellationToken).ConfigureAwait(false)).ToList();
+                    RefreshVisibleGroups();
+                    SelectedOrphan = orphanProfiles.FirstOrDefault(o => o.Profile.Id == keptOrphanId);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    ProfilesError = $"Couldn't load profiles ({ex.GetType().Name}). Try again.";
+                }
+                finally
+                {
+                    IsLoadingProfiles = false;
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            DiscoveryError = $"Couldn't list installed apps ({ex.GetType().Name}). Try again.";
+        }
+        finally
+        {
+            IsLoadingApps = false;
+            IsLoadingProfiles = false;
+        }
+    }
+
+    /// <summary>Explicit opt-in fallback: replaces live content with clearly marked preview
+    /// data. Never invoked automatically; see <see cref="ShowPreviewCommand"/>.</summary>
+    private void ShowPreview()
+    {
+        var preview = PreviewData.CreateMain();
+        groups = PreviewData.CreateGroups().ToList();
+        clones = PreviewData.CreateClones().ToList();
+        appItems = new List<DiscoveredAppItem>();
+        profileRecords = new List<CloneProfile>();
+        selectedApp = null;
+        selectedOrphan = null;
+        IsPreview = true;
+        ShowUpdateBanner = preview.ShowUpdateBanner;
+        BannerVersion = preview.BannerVersion;
+        DiscoveryError = null;
+        ProfilesError = null;
+        SearchText = string.Empty;
+        RefreshVisibleGroups();
+        RaisePropertyChanged(nameof(HasApps));
+        RaisePropertyChanged(nameof(HasClones));
+        RaisePropertyChanged(nameof(HasOrphans));
+        RaisePropertyChanged(nameof(ShowAppsEmpty));
+        RaisePropertyChanged(nameof(HasSelection));
+        RaisePropertyChanged(nameof(ShowAppDetail));
+        RaisePropertyChanged(nameof(ShowOrphanDetail));
+    }
+
+    public static string ProfileStateText(CloneProfileState state) => state switch
+    {
+        CloneProfileState.Planned => "Planned",
+        CloneProfileState.Provisioning => "Provisioning",
+        CloneProfileState.Ready => "Ready",
+        CloneProfileState.Failed => "Failed",
+        _ => "Unavailable",
+    };
+
+    public static string ProfileSubtitleText(CloneProfile profile) => profile.State switch
+    {
+        CloneProfileState.Planned => "Planned — metadata only, not a working clone.",
+        _ => ProfileStateText(profile.State),
+    };
+
+    public static string ProfileCreatedText(CloneProfile profile) =>
+        "Created " + profile.CreatedAt.ToLocalTime().ToString("d MMM yyyy", CultureInfo.InvariantCulture);
+
     public static string ScopeText(InstallScope scope) => scope switch
     {
         InstallScope.CurrentUser => "Current user",
@@ -324,60 +514,6 @@ public sealed class MainViewModel : ObservableObject
         DiscoverySource.AppxPackage => "Packaged app registration",
         _ => source.ToString(),
     };
-
-    /// <summary>Runs discovery off the UI thread, assesses each result, and publishes the
-    /// grouped list. Failures surface as an actionable error state; cancellation is silent.</summary>
-    public async Task LoadAsync(CancellationToken cancellationToken = default)
-    {
-        if (discovery == null || assessor == null)
-        {
-            return;
-        }
-
-        IsLoadingApps = true;
-        DiscoveryError = null;
-        try
-        {
-            var found = await discovery.DiscoverAsync(cancellationToken).ConfigureAwait(false);
-            var keptId = SelectedApp?.App.Id;
-            appItems = found.Select(a => new DiscoveredAppItem(a, assessor.Assess(a))).ToList();
-            RefreshVisibleGroups();
-            SelectedApp = appItems.FirstOrDefault(i => i.App.Id == keptId);
-        }
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        catch (Exception ex)
-        {
-            DiscoveryError = $"Couldn't list installed apps ({ex.GetType().Name}). Try again.";
-        }
-        finally
-        {
-            IsLoadingApps = false;
-        }
-    }
-
-    /// <summary>Explicit opt-in fallback: replaces live content with clearly marked preview
-    /// data. Never invoked automatically; see <see cref="ShowPreviewCommand"/>.</summary>
-    private void ShowPreview()
-    {
-        var preview = PreviewData.CreateMain();
-        groups = PreviewData.CreateGroups().ToList();
-        clones = PreviewData.CreateClones().ToList();
-        appItems = new List<DiscoveredAppItem>();
-        selectedApp = null;
-        IsPreview = true;
-        ShowUpdateBanner = preview.ShowUpdateBanner;
-        BannerVersion = preview.BannerVersion;
-        SearchText = string.Empty;
-        RefreshVisibleGroups();
-        RaisePropertyChanged(nameof(HasApps));
-        RaisePropertyChanged(nameof(HasClones));
-        RaisePropertyChanged(nameof(ShowAppsEmpty));
-        RaisePropertyChanged(nameof(HasSelection));
-        RaisePropertyChanged(nameof(ShowAppDetail));
-    }
 
     private void RaiseCanExecute()
     {
@@ -440,12 +576,27 @@ public sealed class MainViewModel : ObservableObject
             SelectedApp = null;
         }
 
+        var knownIds = new HashSet<string>(appItems.Select(i => i.App.Id), StringComparer.Ordinal);
+        orphanProfiles = profileRecords
+            .Where(p => !knownIds.Contains(p.AppId))
+            .OrderBy(p => p.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(p => p.Id)
+            .Select(p => new OrphanProfileItem(p))
+            .ToList();
+        if (selectedOrphan != null && !orphanProfiles.Any(o => o.Profile.Id == selectedOrphan.Profile.Id))
+        {
+            SelectedOrphan = null;
+        }
+
         RaisePropertyChanged(nameof(VisibleGroups));
         RaisePropertyChanged(nameof(VisibleAppGroups));
         RaisePropertyChanged(nameof(HasApps));
         RaisePropertyChanged(nameof(HasClones));
+        RaisePropertyChanged(nameof(HasOrphans));
         RaisePropertyChanged(nameof(HasNoResults));
         RaisePropertyChanged(nameof(ShowAppsEmpty));
+        RaisePropertyChanged(nameof(ShowProfilesEmpty));
+        RaisePropertyChanged(nameof(ProfilesForSelectedApp));
     }
 
     private static string GroupKey(DiscoveredAppItem item)

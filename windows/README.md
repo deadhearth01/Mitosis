@@ -92,6 +92,14 @@ Selecting an app shows its publisher, version, scope, sources, and reasons.
   never mixed with real results.
 - Details: `docs/WINDOWS-DISCOVERY.md`.
 
+## Profiles (Stage 4, metadata only)
+
+Clone profiles persist as metadata in `%LOCALAPPDATA%\Mitosis\Profiles\profiles.json`
+(versioned JSON, atomic saves). Each app shows its profiles (`Planned — metadata
+only` until the engine provisions them); profiles whose app is missing are kept
+under an `Unavailable` section and rejoin automatically. Nothing is provisioned,
+launched, or deleted. Details: `docs/WINDOWS-PROFILES.md`.
+
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when
 nothing is selected. Selecting an app shows its detail page with the compatibility

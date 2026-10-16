@@ -1,0 +1,10 @@
+<Project Sdk="MSTest.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Mitosis.Infrastructure\Mitosis.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Mitosis.Domain\Mitosis.Domain.csproj" />
+    <ProjectReference Include="..\..\src\Mitosis.Application\Mitosis.Application.csproj" />
+  </ItemGroup>
+</Project>

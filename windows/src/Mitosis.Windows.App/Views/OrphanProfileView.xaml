@@ -1,0 +1,44 @@
+<UserControl
+    x:Class="Mitosis.Windows.App.Views.OrphanProfileView"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:Mitosis.Windows.App.Controls">
+
+    <ScrollViewer>
+        <StackPanel
+            MaxWidth="780"
+            Padding="32,28"
+            Spacing="28">
+            <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24">
+                <controls:CloneBadgeIcon
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    IconSize="104"
+                    Initial="?"
+                    InitialFontSize="40"
+                    TileCornerRadius="22"
+                    TintHex="#8E8E93" />
+                <StackPanel Grid.Column="1" Spacing="8">
+                    <TextBlock Style="{StaticResource MitosisDetailNameStyle}" Text="{x:Bind ViewModel.SelectedOrphan.Profile.Name, Mode=OneWay}" />
+                    <TextBlock
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="Unavailable profile" />
+                </StackPanel>
+            </Grid>
+            <Border Style="{StaticResource MitosisCardStyle}" Padding="16,12">
+                <StackPanel Spacing="8">
+                    <TextBlock FontSize="14" FontWeight="Medium" Text="The application for this profile was not found." />
+                    <TextBlock
+                        FontSize="13"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="The record is kept and will reappear if the app returns. Nothing was deleted."
+                        TextWrapping="Wrap" />
+                    <TextBlock
+                        FontSize="12"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Text="{x:Bind ViewModel.SelectedOrphan.StateText, Mode=OneWay}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

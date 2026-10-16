@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
+using Mitosis.Domain;
 using Mitosis.Windows.ViewModels;
 using Windows.UI;
 
@@ -108,8 +109,7 @@ public sealed class StatusToSymbolConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-public sealed class CloneToStatusTextConverter : IValueConverter
-{
+public sealed class CloneToStatusTextConverter : IValueConverter{
     public object Convert(object value, Type targetType, object parameter, string language) =>
         value is CloneItem clone
             ? clone.BusyText ?? MainViewModel.StatusText(clone)
@@ -137,8 +137,7 @@ public sealed class RunningToActionTextConverter : IValueConverter
         throw new NotSupportedException();
 }
 
-public sealed class SupportToSymbolConverter : IValueConverter
-{
+public sealed class SupportToSymbolConverter : IValueConverter{
     public object Convert(object value, Type targetType, object parameter, string language) =>
         value is SupportKind support ? support switch
         {
@@ -146,6 +145,15 @@ public sealed class SupportToSymbolConverter : IValueConverter
             SupportKind.Limited => Symbol.Important,
             _ => Symbol.Clear,
         } : Symbol.Help;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
+public sealed class ProfileSubtitleConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        value is CloneProfile profile ? MainViewModel.ProfileSubtitleText(profile) : string.Empty;
 
     public object ConvertBack(object value, Type targetType, object parameter, string language) =>
         throw new NotSupportedException();

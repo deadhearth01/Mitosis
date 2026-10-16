@@ -67,7 +67,7 @@ internal static class DiscoveredApps
 public sealed class DiscoveryViewModelTests
 {
     private static MainViewModel Create(FakeDiscoveryService discovery, FakeAssessor? assessor = null) =>
-        new(discovery, assessor ?? new FakeAssessor());
+        new(discovery, assessor ?? new FakeAssessor(), new FakeProfileRepository());
 
     [TestMethod]
     public void Production_StartsEmptyAndNeverPreview()

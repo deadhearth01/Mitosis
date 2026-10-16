@@ -163,3 +163,18 @@ Genuinely implemented and tested in Stage 3 (read-only; no cloning):
   with reasons, and an honest not-yet-available notice.
 - Not implemented: W46–W57 engine rows, wizard rows W27–W35, capsules UI,
   doctor/CLI, tray, Settings/Help/onboarding.
+
+## Stage 4 profile implementation notes
+
+Genuinely implemented and tested in Stage 4 (metadata only; no provisioning):
+
+- Profile records (`Id`, `AppId`, name, badge, `Planned` default, UTC timestamps,
+  schema 1) with shared naming validation and explicit state transitions.
+- `ICloneProfileRepository` + versioned JSON store: atomic saves, corruption-safe
+  loads, duplicate rejection, deterministic ordering, serialized writes.
+- App detail profiles section (loading / list / `No profiles yet.` / error + retry);
+  `Unavailable` sidebar section with dedicated detail panel; orphans preserved,
+  never auto-deleted.
+- `Planned` is always labeled `Planned — metadata only, not a working clone.`
+- Not implemented: provisioning, `Ready`/`Failed` UI transitions, wizard, badge
+  editor, deletion workflows, schema migration, encrypted storage.

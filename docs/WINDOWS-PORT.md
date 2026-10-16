@@ -157,8 +157,13 @@ external package and is test-only.
   merge, and ordering; rule-based assessor (`Unknown` by default, `Unsupported`
   for system components, empty strategy catalog by design); sidebar + app detail
   integration with loading/empty/error/retry and explicit preview fallback;
-  71/71 tests green; 180-app non-elevated smoke test clean. See
+  71/71 tests green at the time; 180-app non-elevated smoke test clean. See
   `docs/WINDOWS-DISCOVERY.md`.
+- Stage 4: independent clone profiles + safe persistence — **implemented**:
+  `CloneProfile` metadata with explicit lifecycle (`Planned` default, never shown
+  as verified), JSON store with atomic saves and corruption safety, per-app lists
+  plus preserved orphans in the shell; 108/108 tests green. See
+  `docs/WINDOWS-PROFILES.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

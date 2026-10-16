@@ -17,6 +17,12 @@ Stage 3 additions (documented, minimal): `Windows.Platform` → `Application`
 `Application`/`Compatibility`/`Domain`/`Windows.Platform` (manual composition
 root only). No new third-party dependencies.
 
+Stage 4 additions: `CloneProfile` + states in `Mitosis.Domain`; ports
+(`ICloneProfileRepository`, store exceptions) in `Mitosis.Application`;
+`JsonCloneProfileRepository` in `Mitosis.Infrastructure` (uses its existing
+`Infrastructure` → `Application` edge); store path in `Mitosis.Windows.Platform`;
+`Windows.App` → `Mitosis.Infrastructure` edge added for composition only.
+
 ## 1. `Mitosis.Domain` — models, contracts, state
 
 | macOS source | Responsibility → mapping |

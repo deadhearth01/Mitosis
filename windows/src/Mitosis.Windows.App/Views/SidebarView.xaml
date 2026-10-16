@@ -120,6 +120,53 @@
             </ListView.ItemTemplate>
         </ListView>
 
+        <StackPanel
+            Grid.Row="2"
+            Margin="4,4,4,0"
+            Spacing="2"
+            Visibility="{x:Bind ViewModel.HasOrphans, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+                Margin="12,8,0,2"
+                FontSize="12"
+                FontWeight="SemiBold"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="Unavailable" />
+            <ListView
+                ItemsSource="{x:Bind ViewModel.OrphanProfiles, Mode=OneWay}"
+                SelectedItem="{x:Bind ViewModel.SelectedOrphan, Mode=TwoWay}"
+                SelectionMode="Single">
+                <AutomationProperties.Name>Profiles whose app was not found</AutomationProperties.Name>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:OrphanProfileItem">
+                        <StackPanel
+                            Padding="0,2"
+                            Orientation="Horizontal"
+                            Spacing="10"
+                            ToolTipService.ToolTip="{x:Bind Profile.Name, Mode=OneTime}">
+                            <controls:CloneBadgeIcon
+                                IconSize="30"
+                                Initial="?"
+                                InitialFontSize="13"
+                                TintHex="#8E8E93" />
+                            <StackPanel VerticalAlignment="Center" Spacing="1">
+                                <TextBlock MaxLines="1" Text="{x:Bind Profile.Name, Mode=OneTime}" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    MaxLines="1"
+                                    Text="{x:Bind StateText, Mode=OneTime}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </StackPanel>
+
         <ListView
             Grid.Row="2"
             Margin="4,4,4,0"

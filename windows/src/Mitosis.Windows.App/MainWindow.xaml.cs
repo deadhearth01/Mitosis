@@ -68,6 +68,7 @@ public sealed partial class MainWindow : Window
     {
         DetailView.Visibility = ViewModel.ShowCloneDetail ? Visibility.Visible : Visibility.Collapsed;
         AppView.Visibility = ViewModel.ShowAppDetail ? Visibility.Visible : Visibility.Collapsed;
+        OrphanView.Visibility = ViewModel.ShowOrphanDetail ? Visibility.Visible : Visibility.Collapsed;
         EmptyPanel.Visibility = ViewModel.HasSelection ? Visibility.Collapsed : Visibility.Visible;
     }
 

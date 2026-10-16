@@ -9,3 +9,12 @@ Assets/icon-concepts/
 codex*.log
 codex-summary*.txt
 dist/
+
+# .NET / Windows port build outputs
+[Bb]in/
+[Oo]bj/
+.vs/
+TestResults/
+*.user
+*.suo
+publish/

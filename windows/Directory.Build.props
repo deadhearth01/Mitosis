@@ -1,0 +1,7 @@
+<Project>
+  <!-- Shared settings for every project under windows/. -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>

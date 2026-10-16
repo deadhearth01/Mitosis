@@ -1,0 +1,70 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.Domain", "src\Mitosis.Domain\Mitosis.Domain.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040501}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.Application", "src\Mitosis.Application\Mitosis.Application.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040502}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.Infrastructure", "src\Mitosis.Infrastructure\Mitosis.Infrastructure.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040503}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.Windows.Platform", "src\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040504}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.Compatibility", "src\Mitosis.Compatibility\Mitosis.Compatibility.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040505}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.CloneEngine", "src\Mitosis.CloneEngine\Mitosis.CloneEngine.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040506}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mitosis.Domain.Tests", "tests\Mitosis.Domain.Tests\Mitosis.Domain.Tests.csproj", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040507}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040511}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{7A1F3C5E-1A2B-4C3D-8E4F-010203040512}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040501}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040501}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040501}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040501}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040502}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040502}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040502}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040502}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040503}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040503}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040503}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040503}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040504}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040504}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040504}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040504}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040505}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040505}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040505}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040505}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040506}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040506}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040506}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040506}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040507}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040507}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040507}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040507}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040501} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040511}
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040502} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040511}
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040503} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040511}
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040504} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040511}
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040505} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040511}
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040506} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040511}
+		{7A1F3C5E-1A2B-4C3D-8E4F-010203040507} = {7A1F3C5E-1A2B-4C3D-8E4F-010203040512}
+	EndGlobalSection
+EndGlobal

@@ -15,4 +15,13 @@ public static class WindowsProfilePaths
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Mitosis",
         "Evidence");
+
+    /// <summary>Application root shown by Settings ▸ Storage; profiles and evidence
+    /// live beneath it. The file is created on first save like every other store.</summary>
+    public static string DataDirectory() => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Mitosis");
+
+    /// <summary>Preference store path (onboarded flag, tips flag).</summary>
+    public static string PreferencesDirectory() => DataDirectory();
 }

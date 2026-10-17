@@ -1,0 +1,97 @@
+<Window
+    x:Class="Mitosis.Windows.App.Views.OnboardingWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mitosis.Windows.App"
+    Title="Welcome to Mitosis">
+
+    <Grid x:Name="RootGrid" ColumnDefinitions="24,*,24" RowDefinitions="*,Auto,Auto">
+        <StackPanel
+            Grid.Row="0"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="16">
+            <Image
+                Width="160"
+                Height="160"
+                HorizontalAlignment="Center"
+                AutomationProperties.AccessibilityView="Raw"
+                Source="{Binding PageImage, Converter={StaticResource PoseImage}, Mode=OneWay}" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="28"
+                FontWeight="SemiBold"
+                Text="{Binding PageTitle, Mode=OneWay}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontSize="15"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                MaxWidth="420"
+                Text="{Binding PageText, Mode=OneWay}"
+                TextAlignment="Center"
+                TextWrapping="Wrap" />
+            <TextBlock
+                x:Name="PageCaption"
+                HorizontalAlignment="Center"
+                FontSize="12"
+                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                MaxWidth="420"
+                Text="{Binding PageCaption, Mode=OneWay}"
+                TextAlignment="Center"
+                TextWrapping="Wrap"
+                Visibility="Collapsed" />
+            <InfoBar
+                x:Name="SaveErrorBar"
+                IsOpen="False"
+                Severity="Error"
+                Title="Couldn't record that" />
+        </StackPanel>
+
+        <!-- 7 px dots carrying the macOS "Page 1 of 3" accessibility label
+             (Onboarding.swift:54-62); the label is speech-only, as on macOS. -->
+        <StackPanel
+            x:Name="Dots"
+            Grid.Row="1"
+            Margin="0,8"
+            HorizontalAlignment="Left"
+            Orientation="Horizontal"
+            Spacing="6">
+            <Ellipse x:Name="Dot0" Width="7" Height="7" />
+            <Ellipse x:Name="Dot1" Width="7" Height="7" />
+            <Ellipse x:Name="Dot2" Width="7" Height="7" />
+        </StackPanel>
+
+        <Grid
+            Grid.Row="2"
+            Margin="0,8,0,0"
+            ColumnDefinitions="*,Auto,Auto,Auto"
+            ColumnSpacing="8">
+            <Button
+                x:Name="BackButton"
+                Grid.Column="1"
+                Click="OnBack"
+                Content="Back" />
+            <Button
+                x:Name="NextButton"
+                Grid.Column="2"
+                Click="OnNext"
+                Content="Next"
+                Style="{StaticResource AccentButtonStyle}" />
+            <Button
+                x:Name="LaterButton"
+                Grid.Column="2"
+                Click="OnLater"
+                Content="Later"
+                Visibility="Collapsed" />
+            <Button
+                x:Name="ChooseAppButton"
+                Grid.Column="3"
+                Click="OnChooseApp"
+                Content="Choose an App"
+                Style="{StaticResource AccentButtonStyle}"
+                Visibility="Collapsed" />
+        </Grid>
+    </Grid>
+</Window>

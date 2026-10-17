@@ -1,0 +1,108 @@
+<Window
+    x:Class="Mitosis.Windows.App.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Mitosis Settings">
+
+    <!-- macOS: width 540, two tabs General/Advanced (SettingsView.swift:9-19).
+         Only settings with real, testable effects are shown; captions name the
+         macOS settings that are not implemented on Windows. -->
+    <Grid>
+        <NavigationView
+            PaneDisplayMode="Top"
+            SelectionChanged="OnTabSelected"
+            IsBackButtonVisible="Collapsed"
+            IsSettingsVisible="False">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="General" IsSelected="True" Tag="General">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem Content="Advanced" Tag="Advanced">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE700;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <ScrollViewer>
+                <StackPanel
+                    Margin="24,8,24,24"
+                    MaxWidth="480"
+                    HorizontalAlignment="Left"
+                    Spacing="8">
+
+                    <StackPanel x:Name="GeneralPanel" Spacing="8">
+                        <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Storage" />
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Text="Data folder" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                IsTextSelectionEnabled="True"
+                                Text="{x:Bind ViewModel.DataFolderPath, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <Button
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Grid.RowSpan="2"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.RevealDataFolderCommand, Mode=OneWay}"
+                                Content="Show in File Explorer" />
+                        </Grid>
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Mitosis keeps clone profiles and compatibility evidence here. Clone folders arrive with the cloning engine."
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Update checking, the tray icon, and the command-line installer are not implemented on Windows yet, so they are not listed here."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="AdvancedPanel" Spacing="8" Visibility="Collapsed">
+                        <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Tips and the welcome screen" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock
+                                Grid.Column="0"
+                                Margin="0,0,12,0"
+                                VerticalAlignment="Center"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="Restores the tips shown in the app picker and the welcome screen."
+                                TextWrapping="Wrap" />
+                            <Button
+                                x:Name="TipsButton"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                Command="{x:Bind ViewModel.ShowTipsAgainCommand, Mode=OneWay}"
+                                Content="Show Tips Again" />
+                        </Grid>
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Turns the welcome screen and tips back on for the next launch of Mitosis."
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="The default-clone-mode picker arrives with the cloning engine."
+                            TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <InfoBar
+                        x:Name="SaveErrorBar"
+                        IsOpen="False"
+                        Severity="Error"
+                        Title="Couldn't save settings" />
+                </StackPanel>
+            </ScrollViewer>
+        </NavigationView>
+    </Grid>
+</Window>

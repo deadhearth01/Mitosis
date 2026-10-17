@@ -1,4 +1,4 @@
-# Windows UI verification protocol (Stage 12)
+# Windows UI verification protocol (Stage 12, extended in Stage 13)
 
 Repeatable manual verification for the WinUI 3 shell. Automated tests cover
 ViewModel logic only — nothing here substitutes for eyes and keyboard.
@@ -38,14 +38,43 @@ native adaptation or a parity defect.
 - S9: themes and scaling: Light, Dark, each High-Contrast theme; 100/150/200%
   text scaling watching for clipping (tile values, pills, captions, buttons);
   125/150/200% display scale.
+- S10: Help window (W02/W38): opens at 820×580 via F1 and the sidebar Help
+  button; starts on "Getting started"; each of the 9 topics changes title,
+  paragraphs, mascot pose, and button area; only Permissions and Troubleshooting
+  show an action button; "Open Privacy & Security" launches the Windows privacy
+  page (`ms-settings:privacy`); "Report a Problem…" opens the repository issue
+  chooser in a browser; topic list, scroll, Esc, and title-bar close work;
+  compare against `help-*.png` references (pixel parity pending — W66).
+- S11: Settings window (W03/W36/W37): opens at 540 wide via Ctrl+, and the
+  sidebar Settings button; General tab shows Storage (data folder path shown as
+  text; "Show in File Explorer" opens the folder, creating it if needed);
+  Advanced tab shows "Show Tips Again" enabled; clicking it persists, flips the
+  label to "Tips Are On", and disables for the window; reopening the window
+  re-enables it (macOS window-local state); after clicking, the next launch
+  shows the welcome flow again; no other toggles exist by design (update/tray/
+  CLI/mode rows deferred); compare against `settings-*.png` (pending — W66).
+- S12: Onboarding (W39): first launch after deleting `preferences.json` shows
+  the 580×460 welcome; pages advance via Next/dots, Back works, Back is
+  unavailable on page 1; title-bar close, Esc, and Alt+F4 do nothing while
+  unfinished; "Later" closes and is not re-shown on next launch; "Choose an
+  App" closes, then opens the existing New Clone wizard; completing with a
+  locked/unwritable preference store keeps the window open with the inline
+  store error and allows retry without losing the choice; removing
+  `preferences.json` again re-shows the flow (deterministic).
+- S13: keyboard reach over the new windows (W44): F1 opens Help from the main
+  window; Ctrl+, opens Settings; both sidebar buttons carry accessible names
+  and tooltips; Tab order inside Help (topics → page → button) and Settings
+  (tabs → rows) is sensible with visible focus.
 
 ## 3. Accessibility checks
 
 Names on all icon-only controls (swatches verified in code; re-check with
 Inspect); roles/values on lists, toggles, progress indicators; no duplicate
 announcements from decorative tiles/mascots (hidden via `AccessibilityView=Raw`
-— confirm silence); disabled menu items announced as disabled; validation errors
-exposed as text (confirm reading order); focus never lost after dialog close.
+— confirm silence, including the Help page mascot and every onboarding pose);
+page dots announced with `Page N of M` labels; disabled menu items announced as
+disabled; validation errors exposed as text (confirm reading order); focus
+never lost after dialog close.
 
 ## 4. What this protocol does not cover
 

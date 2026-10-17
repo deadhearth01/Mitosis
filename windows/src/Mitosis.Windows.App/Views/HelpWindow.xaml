@@ -1,0 +1,87 @@
+<Window
+    x:Class="Mitosis.Windows.App.Views.HelpWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Mitosis.Windows.App"
+    xmlns:viewmodels="using:Mitosis.Windows.ViewModels"
+    Title="Mitosis Help">
+
+    <!-- macOS: NavigationSplitView 220 / detail, min 700×500, default 820×580 (HelpView.swift:8-19).
+         Classic Binding is used because WinUI windows cannot host x:Bind converter lookups. -->
+    <Grid x:Name="RootGrid" ColumnDefinitions="220,*">
+        <Border
+            Grid.Column="0"
+            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+            BorderThickness="0,0,1,0">
+            <ListView
+                x:Name="TopicList"
+                Margin="4,8"
+                ItemsSource="{Binding Topics, Mode=OneWay}"
+                SelectedItem="{Binding SelectedTopic, Mode=TwoWay}"
+                SelectionMode="Single">
+                <AutomationProperties.Name>Help topics</AutomationProperties.Name>
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="viewmodels:HelpTopic">
+                        <StackPanel
+                            Padding="4,6"
+                            Orientation="Horizontal"
+                            Spacing="10">
+                            <FontIcon
+                                FontSize="16"
+                                Foreground="{ThemeResource MitosisAccentBrush}"
+                                Glyph="{Binding Converter={StaticResource TopicGlyph}}" />
+                            <TextBlock VerticalAlignment="Center" Text="{Binding Title, Mode=OneTime}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Border>
+
+        <ScrollViewer Grid.Column="1">
+            <StackPanel
+                Margin="24"
+                MaxWidth="640"
+                Spacing="16"
+                HorizontalAlignment="Left">
+                <!-- One mascot per page, decorative (macOS: 72 px MascotView, HelpView.swift:135). -->
+                <StackPanel Orientation="Horizontal" Spacing="16">
+                    <Image
+                        Width="72"
+                        Height="72"
+                        Source="{Binding SelectedTopic.PoseImage, Converter={StaticResource PoseImage}, Mode=OneWay}">
+                        <AutomationProperties.AccessibilityView>Raw</AutomationProperties.AccessibilityView>
+                    </Image>
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontWeight="SemiBold"
+                        Style="{StaticResource MitosisDetailNameStyle}"
+                        Text="{Binding SelectedTopic.Title, Mode=OneWay}"
+                        TextWrapping="Wrap" />
+                </StackPanel>
+
+                <ItemsControl ItemsSource="{Binding SelectedTopic.Paragraphs, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="x:String">
+                            <TextBlock
+                                Margin="0,0,0,4"
+                                LineHeight="21"
+                                LineStackingStrategy="BlockLineHeight"
+                                Text="{x:Bind Mode=OneTime}"
+                                TextWrapping="Wrap" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <Button
+                    Click="OnOpenTopicUrl"
+                    Content="{Binding SelectedTopic.Button.Label, Mode=OneWay}"
+                    Visibility="{Binding SelectedTopic.Button, Converter={StaticResource NullToVisibility}, Mode=OneWay}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

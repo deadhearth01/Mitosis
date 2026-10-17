@@ -197,6 +197,19 @@ external package and is test-only.
   art hidden, swatch names, wizard focus, font cleanup); 210/210 green. No
   screenshots or Narrator runs available here. See
   `docs/WINDOWS-UI-VERIFICATION.md`.
+- Stage 13: Settings, Help, and onboarding parity — **implemented, bounded, no
+  pixels verified**. Help window (820×580, nine macOS topics with honest
+  Windows copy, F1 + sidebar), Settings window (540 wide, General/Advanced;
+  Storage reveal + Show Tips Again only), first-launch welcome flow (580×460,
+  non-dismissable, 3 pages, Later / Choose an App) with versioned
+  `preferences.json` persistence (atomic, corruption-safe, defaults mirroring
+  macOS: onboarding once, tips on); 266/266 tests green (210 legacy + 56 new).
+  Deliberately absent because no Windows component can honor them yet:
+  menu-bar/tray toggle, update checks + Check Now, auto-update clones, the
+  command-line installer, and the default-clone-mode picker. Visual runtime
+  comparison and Narrator pass pending (S10–S13 in
+  `docs/WINDOWS-UI-VERIFICATION.md`). See `docs/UI-PARITY-MATRIX.md` (Stage 13
+  notes).
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

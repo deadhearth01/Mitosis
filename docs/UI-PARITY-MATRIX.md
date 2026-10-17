@@ -290,3 +290,56 @@ swatch accessible names, wizard initial focus, font-family cleanup. No safety
 model changes; catalog empty; gates closed.
 - Not implemented: any executing strategy, copying, launching, deletion, recovery,
   reparse-point handling, evidence gathering, strategy selection UI.
+
+## Stage 13 settings/help/onboarding implementation notes
+
+Implemented in Stage 13 with real persistence (`Application/Preferences` +
+`Infrastructure/Preferences`). Every flag has a real, testable effect; the
+welcome flow shows once. Nothing here is pixel-verified yet — visual runtime
+comparison stays pending (W66, S10–S12 in `docs/WINDOWS-UI-VERIFICATION.md`).
+
+- W02 (Help window): Implemented, verification pending. Secondary `Window` at
+  820×580 sized in code before activation; nine topics with macOS titles, poses,
+  and symbols; content is Windows-honest (planned-only copy, engine gaps named
+  plainly). Opened via F1 and the sidebar Help button. Provisional glyph mapping
+  for SF Symbols (same provisional standing as the Stage 2 mapping).
+- W03 (Settings window): Implemented, verification pending. 540-wide window with
+  Pivot General/Advanced tabs matching macOS metrics. Deliberately bounded:
+  General ▸ Storage shows the application's own data folder (plain text + Show
+  in File Explorer via `Launcher`); Advanced ▸ Show Tips Again matches macOS
+  semantics (persists `ShowTips=true`, `Onboarded=false`; reappears next launch;
+  window-local disabled state like `SettingsView.swift:141`).
+- W36 (Settings General): Partially by design. The macOS rows without any
+  Windows effect remain absent: menu-bar/tray toggle, update check + Check Now +
+  status, auto-update clones, clones location, and the command-line installer
+  (no Windows CLI exists). Toggles are not shown before they can do something.
+- W37 (Settings Advanced): Partially by design. Show Tips Again implemented
+  against the real preference store; the default-clone-mode picker is deferred
+  because no Windows default mode is honored by any code path yet.
+- W38 (Help content): Implemented, verification pending. Nine topics in macOS
+  order (Start…Cli) with pose assets re-linked from the original brand files;
+  two action buttons map to `ms-settings:privacy` and the repository issue
+  chooser. Copy marks everything not-actually-implemented explicitly.
+- W39 (Onboarding): Implemented, verification pending. 580×460 non-dismissable
+  window (closing cancelled until `Finished`), 3 pages with dots, Back/Next,
+  Later / Choose an App; both completion actions persist only the onboarded
+  flag (merged, never clobbering saved flags) and raise a handoff that may open
+  the existing New Clone wizard — no profiles are created, nothing is launched.
+  Persistence failure stays honest: the window does not release, shows the
+  store's message inline, and allows retry.
+- W44 (keyboard): Partially. F1 → Help and Ctrl+, → Settings added alongside
+  Ctrl+N/Ctrl+F/Enter/Delete/Esc. Still no menu bar.
+- W58/W64/W66: unchanged standing (no string catalog; Narrator pass and
+  screenshots still pending for the three new windows).
+
+Persistence guarantee (tested): versioned `preferences.json`
+(`{schemaVersion, onboarded, showTips}`), atomic same-directory replace,
+serialized writes; a missing file yields macOS-mirroring defaults
+(`Onboarded=false, ShowTips=true`, MitosisRootApp.swift:11) without creating
+anything; damaged or wrong-schema stores raise actionable exceptions and are
+never silently overwritten; unreadable stores in the main window are treated
+as onboarded so a damaged file cannot re-show the welcome on every launch.
+266/266 tests green in this environment (210 legacy + 56 new).
+Deferred beyond this stage: menu-bar/tray toggle, update-check controls,
+auto-update clones, CLI installer, default-clone-mode picker, onboarding
+animations/pixels.

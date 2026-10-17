@@ -3,6 +3,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Data;
 using Microsoft.UI.Xaml.Media;
+using Microsoft.UI.Xaml.Media.Imaging;
 using Mitosis.Domain;
 using Mitosis.Windows.ViewModels;
 using Windows.UI;
@@ -154,6 +155,43 @@ public sealed class ProfileSubtitleConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language) =>
         value is CloneProfile profile ? MainViewModel.ProfileSubtitleText(profile) : string.Empty;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Loads decorative mascot content ("ms-appx:///Assets/pose-*.png") into an Image.
+/// Used by Help pages and onboarding; the images stay hidden from the accessibility tree.</summary>
+public sealed class StringToImageSourceConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        value is string uri && uri.StartsWith("ms-appx:///", StringComparison.OrdinalIgnoreCase)
+            ? new BitmapImage(new Uri(uri))
+            : null!;
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Help topic glyph mapping (provisional SF Symbol → Segoe Fluent Icons; the
+/// design spec keeps this provisional until screenshots). Unknown symbols fall back to
+/// Info so a mapping edit can never render an empty control.</summary>
+public sealed class HelpSymbolToGlyphConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        value is HelpSymbol symbol ? symbol switch
+        {
+            HelpSymbol.Sparkles => "\uEA80",        // Lightbulb
+            HelpSymbol.CheckmarkSeal => "\uE73E",   // CheckMark
+            HelpSymbol.LockShield => "\uE72E",      // Lock
+            HelpSymbol.Link => "\uE71E",            // Link
+            HelpSymbol.CyclingArrows => "\uE895",   // Sync
+            HelpSymbol.BarChart => "\uEA9C",        // AreaChart
+            HelpSymbol.Trash => "\uE74D",           // Delete
+            HelpSymbol.WrenchScrewdriver => "\uE90F", // Repair
+            HelpSymbol.Terminal => "\uE756",        // CommandPrompt
+            _ => "\uE946",
+        } : "\uE946";
 
     public object ConvertBack(object value, Type targetType, object parameter, string language) =>
         throw new NotSupportedException();

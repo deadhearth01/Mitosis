@@ -1,6 +1,7 @@
 using System.Globalization;
 using Mitosis.Application.Discovery;
 using Mitosis.Application.Evidence;
+using Mitosis.Application.Preferences;
 using Mitosis.Application.Profiles;
 using Mitosis.CloneEngine.Provisioning;
 using Mitosis.Domain;
@@ -37,6 +38,8 @@ public sealed class MainViewModel : ObservableObject
     private bool linkRoutingOn;
     private bool isLoadingApps;
     private string? discoveryError;
+    private bool needsOnboarding;
+    private readonly IAppPreferencesStore? preferences;
 
     public MainViewModel(IEnumerable<AppGroupItem> groups, IEnumerable<CloneItem> clones, bool isPreview,
         bool showUpdateBanner = false, string bannerVersion = "")
@@ -96,6 +99,8 @@ public sealed class MainViewModel : ObservableObject
         CreateCloneFromAppCommand = new RelayCommand(
             () => RaisePlaceholder("New Clone", "Creating clones from discovered apps arrives with the engine in a later stage."),
             () => SelectedApp != null);
+        ShowHelpCommand = new RelayCommand(() => ShowHelpRequested?.Invoke(this, EventArgs.Empty));
+        ShowSettingsCommand = new RelayCommand(() => ShowSettingsRequested?.Invoke(this, EventArgs.Empty));
 
         RefreshVisibleGroups();
     }
@@ -104,13 +109,14 @@ public sealed class MainViewModel : ObservableObject
     /// see <see cref="ShowPreviewCommand"/> for the explicit opt-in fallback.</summary>
     public MainViewModel(
         IAppDiscoveryService discovery, ICompatibilityAssessor assessor, ICloneProfileRepository profiles,
-        IEvidenceStore? evidenceStore = null)
+        IEvidenceStore? evidenceStore = null, IAppPreferencesStore? preferences = null)
         : this(Enumerable.Empty<AppGroupItem>(), Enumerable.Empty<CloneItem>(), isPreview: false)
     {
         this.discovery = discovery;
         this.assessor = assessor;
         this.profiles = profiles;
         this.evidenceStore = evidenceStore;
+        this.preferences = preferences;
     }
 
     /// <summary>True while entries come from <see cref="PreviewData"/> rather than discovery.</summary>
@@ -124,6 +130,12 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>Raised when the New Clone action should open the wizard (production only).</summary>
     public event EventHandler? NewCloneRequested;
+
+    /// <summary>Raised when Mitosis Help (F1 / sidebar button) should open.</summary>
+    public event EventHandler? ShowHelpRequested;
+
+    /// <summary>Raised when Settings should open (Ctrl+, / sidebar button).</summary>
+    public event EventHandler? ShowSettingsRequested;
 
     public string SearchText
     {
@@ -459,6 +471,27 @@ public sealed class MainViewModel : ObservableObject
 
     public RelayCommand CreateCloneFromAppCommand { get; }
 
+    public RelayCommand ShowHelpCommand { get; }
+
+    public RelayCommand ShowSettingsCommand { get; }
+
+    /// <summary>Preference store shared with the Help/Settings windows and the
+    /// welcome flow; null in preview/tests without persistence.</summary>
+    public IAppPreferencesStore? PreferencesStore => preferences;
+
+    /// <summary>Read from the preference store during <see cref="LoadAsync"/>: the
+    /// welcome window is presented once, before the first onboarding completes.
+    /// Unreadable stores never nag — treated as onboarded so a damaged store cannot
+    /// surface the flow on every launch.</summary>
+    public bool NeedsOnboarding
+    {
+        get => needsOnboarding;
+        private set => SetProperty(ref needsOnboarding, value);
+    }
+
+    /// <summary>The presenting window consumes the request so it is shown one time.</summary>
+    public void ClearOnboardingRequest() => NeedsOnboarding = false;
+
     public static string StatusText(CloneItem clone) => clone.Status switch
     {
         CloneStatusKind.OriginalMissing => "Original missing",
@@ -495,6 +528,23 @@ public sealed class MainViewModel : ObservableObject
         IsLoadingProfiles = profiles != null;
         DiscoveryError = null;
         ProfilesError = null;
+        if (preferences != null)
+        {
+            try
+            {
+                var stored = await preferences.LoadAsync(cancellationToken).ConfigureAwait(false);
+                NeedsOnboarding = !stored.Onboarded;
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                NeedsOnboarding = false;
+            }
+        }
+
         try
         {
             var found = await discovery.DiscoverAsync(cancellationToken).ConfigureAwait(false);

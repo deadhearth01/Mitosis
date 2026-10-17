@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
@@ -23,13 +23,57 @@
     <ProjectReference Include="..\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <!-- Original asset, referenced in place; the Assets tree is never modified. -->
+    <!-- Original assets, referenced in place; the Assets tree is never modified. -->
     <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-empty.png">
       <Link>Assets\pose-empty.png</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-success.png">
       <Link>Assets\pose-success.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-wave.png">
+      <Link>Assets\pose-wave.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-key.png">
+      <Link>Assets\pose-key.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-split.png">
+      <Link>Assets\pose-split.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-guide.png">
+      <Link>Assets\pose-guide.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-search.png">
+      <Link>Assets\pose-search.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-point.png">
+      <Link>Assets\pose-point.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-refresh.png">
+      <Link>Assets\pose-refresh.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-stats.png">
+      <Link>Assets\pose-stats.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-goodbye.png">
+      <Link>Assets\pose-goodbye.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-oops.png">
+      <Link>Assets\pose-oops.png</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-thinking.png">
+      <Link>Assets\pose-thinking.png</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

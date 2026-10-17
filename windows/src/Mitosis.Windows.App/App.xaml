@@ -12,6 +12,9 @@
             <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <local:HexToBrushConverter x:Key="HexToBrush" />
+            <local:NullToVisibilityConverter x:Key="NullToVisibility" />
+            <local:StringToImageSourceConverter x:Key="PoseImage" />
+            <local:HelpSymbolToGlyphConverter x:Key="TopicGlyph" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

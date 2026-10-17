@@ -1,9 +1,11 @@
 using Microsoft.UI.Xaml;
 using Microsoft.Win32;
 using Mitosis.Application.Discovery;
+using Mitosis.Application.Preferences;
 using Mitosis.Compatibility;
 using Mitosis.Domain;
 using Mitosis.Infrastructure.Evidence;
+using Mitosis.Infrastructure.Preferences;
 using Mitosis.Infrastructure.Profiles;
 using Mitosis.Windows.Platform.Discovery;
 using Mitosis.Windows.Platform.Profiles;
@@ -11,8 +13,9 @@ using Mitosis.Windows.ViewModels;
 
 namespace Mitosis.Windows.App;
 
-/// <summary>Application entry point. Composition root: wires read-only discovery plus the
-/// compatibility assessor into the main view model. Stage 3 performs no cloning.</summary>
+/// <summary>Application entry point. Composition root: wires read-only discovery, the
+/// compatibility assessor, the profile/evidence stores, and the user-preference store
+/// (welcome flow + tips) into the main window. No cloning of any kind.</summary>
 public partial class App : Microsoft.UI.Xaml.Application
 {
     private Window? window;
@@ -25,7 +28,7 @@ public partial class App : Microsoft.UI.Xaml.Application
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
         var viewModel = ComposeMainViewModel();
-        window = new MainWindow(viewModel);
+        window = new MainWindow(viewModel, WindowsProfilePaths.DataDirectory());
         window.Closed += (_, _) => Bootstrap.Shutdown();
         window.Activate();
     }
@@ -50,6 +53,7 @@ public partial class App : Microsoft.UI.Xaml.Application
             new WindowsAppDiscoveryService(sources),
             new CompatibilityAssessor(Array.Empty<CompatibilityStrategy>()),
             new JsonCloneProfileRepository(WindowsProfilePaths.ProfileDirectory()),
-            new JsonEvidenceStore(WindowsProfilePaths.EvidenceDirectory()));
+            new JsonEvidenceStore(WindowsProfilePaths.EvidenceDirectory()),
+            new JsonAppPreferencesStore(WindowsProfilePaths.PreferencesDirectory()));
     }
 }

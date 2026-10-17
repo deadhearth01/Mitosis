@@ -292,27 +292,65 @@
             TextWrapping="Wrap"
             Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
 
-        <Button
-            Grid.Row="3"
-            Margin="16,12"
-            Padding="0,4"
-            HorizontalAlignment="Stretch"
-            HorizontalContentAlignment="Left"
-            Background="Transparent"
-            BorderThickness="0"
-            Command="{x:Bind ViewModel.NewCloneCommand, Mode=OneWay}"
-            ToolTipService.ToolTip="Create a clone (Ctrl+N)">
-            <AutomationProperties.Name>New Clone</AutomationProperties.Name>
-            <Button.KeyboardAccelerators>
-                <KeyboardAccelerator Key="N" Modifiers="Control" />
-            </Button.KeyboardAccelerators>
-            <StackPanel Orientation="Horizontal" Spacing="6">
-                <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="Add" />
-                <TextBlock
-                    FontWeight="Medium"
-                    Foreground="{ThemeResource MitosisAccentBrush}"
-                    Text="New Clone" />
+        <StackPanel Grid.Row="3" Margin="16,12">
+            <Button
+                Margin="0,4"
+                Padding="0,4"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind ViewModel.NewCloneCommand, Mode=OneWay}"
+                ToolTipService.ToolTip="Create a clone (Ctrl+N)">
+                <AutomationProperties.Name>New Clone</AutomationProperties.Name>
+                <Button.KeyboardAccelerators>
+                    <KeyboardAccelerator Key="N" Modifiers="Control" />
+                </Button.KeyboardAccelerators>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <SymbolIcon Foreground="{ThemeResource MitosisAccentBrush}" Symbol="Add" />
+                    <TextBlock
+                        FontWeight="Medium"
+                        Foreground="{ThemeResource MitosisAccentBrush}"
+                        Text="New Clone" />
+                </StackPanel>
+            </Button>
+            <!-- Windows adaptation for the missing menu bar (matrix W05): Help and
+                 Settings surface here; F1 opens Help, Ctrl+, opens Settings. -->
+            <StackPanel HorizontalAlignment="Left" Orientation="Horizontal" Spacing="12">
+                <Button
+                    Margin="-4,0,0,0"
+                    Padding="0,4"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.ShowHelpCommand, Mode=OneWay}"
+                    ToolTipService.ToolTip="Mitosis Help (F1)">
+                    <AutomationProperties.Name>Help</AutomationProperties.Name>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Symbol="Help" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Help" />
+                    </StackPanel>
+                </Button>
+                <Button
+                    Padding="0,4"
+                    Background="Transparent"
+                    BorderThickness="0"
+                    Command="{x:Bind ViewModel.ShowSettingsCommand, Mode=OneWay}"
+                    ToolTipService.ToolTip="Settings (Ctrl+,)">
+                    <AutomationProperties.Name>Settings</AutomationProperties.Name>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <SymbolIcon
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Symbol="Setting" />
+                        <TextBlock
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Settings" />
+                    </StackPanel>
+                </Button>
             </StackPanel>
-        </Button>
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -343,7 +343,7 @@ GUIDES += [
         ],
         "faqs": [
             ("Isn't a Chrome profile the same thing?", "For accounts, mostly yes. A copy adds what profiles can't: its own Dock icon, its own entry in Command-Tab, and windows that never mix with your other Chrome."),
-            ("Does it work with other browsers?", "Chrome works as a full copy. Arc and Brave run in compatibility mode (separate data, but they share the original's Dock icon)."),
+            ("Does it work with other browsers?", "Chrome works as a full copy. Arc and Brave work with limits: Mitosis makes a full copy, and if that copy won't start it switches to compatibility mode (separate data, but the original's Dock icon)."),
         ],
         "related": ["open-the-same-app-twice-on-mac", "keep-work-and-personal-apps-separate-on-mac", "two-slack-accounts-on-mac"],
     },
@@ -638,7 +638,7 @@ PARALL = {
     "answer": "Mitosis is a free, source-available app cloner for macOS. It makes copies of your apps, such as <em>Slack (Work)</em>, each with its own login, data, Dock icon, and notifications, and it keeps them updated when the original app updates.",
     "sections": [
         ("What Mitosis does", [
-            "<strong>Real copies.</strong> A clone gets its own app identity, so macOS gives it its own Dock icon, notifications, and permissions. Apps that can't take a new identity run in a compatibility mode instead.",
+            "<strong>Real copies.</strong> A clone gets its own app identity, so macOS gives it its own Dock icon, notifications, and permissions. If an app won't start with a new identity, Mitosis switches to a compatibility mode on its own.",
             "<strong>Checked before it says done.</strong> Every new copy is opened once to make sure it starts; one that doesn't is removed.",
             "<strong>Updates on its own.</strong> When the original app updates, Mitosis rebuilds its copies in the background, even while Mitosis is closed.",
             "<strong>Sign-in links go to the right copy.</strong> When you sign in through the browser, the link back goes to the copy you signed in from.",

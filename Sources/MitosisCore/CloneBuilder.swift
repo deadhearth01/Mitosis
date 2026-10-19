@@ -14,7 +14,7 @@ public struct CloneRequest: Sendable {
     }
 }
 
-public enum CloneError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum CloneError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case invalidName(CloneNameError)
     case unsupported([String])
     case nameTaken(String)
@@ -50,6 +50,7 @@ public enum CloneError: Error, Equatable, CustomStringConvertible, Sendable {
         case "verify": return "checking the clone"
         case "install", "registry": return "saving the clone"
         case "launch check": return "checking that it starts"
+        case "compatibility mode": return "trying compatibility mode"
         default: return step
         }
     }
@@ -251,7 +252,8 @@ public struct CloneBuilder: Sendable {
         try step("icon") { try writeIcon(p, resources: resources) }
         try step("plist") {
             try InfoPlistEditor.apply(InfoPlistEdit(bundleID: p.bundleID, name: p.name, iconFile: IconRenderer.iconFileBaseName,
-                                                    disableSparkle: p.info.frameworks.contains(.sparkle)),
+                                                    disableSparkle: p.info.frameworks.contains(.sparkle),
+                                                    executable: p.info.executableName),
                                       to: infoPlist)
         }
         try step("manifest") { try writeManifest(p, resources: resources) }

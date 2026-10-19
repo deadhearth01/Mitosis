@@ -33,7 +33,7 @@ public struct AppProfile: Codable, Equatable, Sendable {
     }
 }
 
-public enum ProfileValidationError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum ProfileValidationError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case unknownSchema(Int)
     case argNotAllowed(profile: String, arg: String)
     case envNotAllowed(profile: String, key: String)

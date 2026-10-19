@@ -6,7 +6,7 @@ public struct ShellResult: Sendable, Equatable {
     public let stderr: String
 }
 
-public enum ShellError: Error, CustomStringConvertible, Sendable {
+public enum ShellError: Error, LocalizedError, CustomStringConvertible, Sendable {
     case failed(command: String, status: Int32, stderr: String)
 
     public var description: String {

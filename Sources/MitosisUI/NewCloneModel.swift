@@ -200,7 +200,8 @@ final class NewCloneModel: Identifiable {
         } catch {
             let usedMode = form.mode ?? preflight?.decision.mode
             var retry = false
-            if case .failed(let failedStep, _)? = error as? CloneError, failedStep == "launch check", usedMode == .identity { retry = true }
+            // Automatic mode already tried compatibility mode; offer it only after an explicit full clone.
+            if case .failed(let failedStep, _)? = error as? CloneError, failedStep == "launch check", form.mode == .identity { retry = true }
             step = .failed(ErrorReport.make(error: error, appName: chosen.name, appVersion: chosen.version, mode: usedMode),
                            canRetryCompatible: retry)
         }

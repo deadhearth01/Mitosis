@@ -14,6 +14,8 @@ struct FixtureOptions {
     var executable = "Fixture"
     var entitlements: [String: Any] = [:]
     var extraInfo: [String: Any] = [:]
+    /// Info.plist keys to leave out (macOS allows some, e.g. CFBundleExecutable falls back to the bundle name).
+    var omitInfoKeys: [String] = []
     /// Framework names, e.g. ["Electron Framework", "Sparkle"] → Contents/Frameworks/<name>.framework
     var frameworks: [String] = []
     /// Adds Contents/Frameworks/<name> Framework.framework/Versions/A/Helpers/<name> Helper.app (Chromium layout).
@@ -26,6 +28,8 @@ struct FixtureOptions {
     var signed = true
     var behavior: FixtureBehavior = .stayOpen(seconds: 30)
     var logFile: URL? = nil
+    /// Exits at once unless running under its own bundle ID (an app that refuses to start as a full clone).
+    var refusesNewIdentity = false
 }
 
 enum FixtureFactory {
@@ -48,6 +52,7 @@ enum FixtureFactory {
             if line.hasPrefix("log=") { logPath = String(line.dropFirst(4)) }
             if line.hasPrefix("stay=") { stay = Int(line.dropFirst(5)) ?? 30 }
             if line.hasPrefix("exit=") { exitCode = Int32(line.dropFirst(5)) }
+            if line.hasPrefix("only="), Bundle.main.bundleIdentifier != String(line.dropFirst(5)) { exitCode = 1 }
         }
     }
     if let logPath {
@@ -110,6 +115,7 @@ enum FixtureFactory {
             "CFBundlePackageType": "APPL", "CFBundleInfoDictionaryVersion": "6.0", "LSMinimumSystemVersion": "13.0",
         ]
         for (k, v) in o.extraInfo { info[k] = v }
+        for k in o.omitInfoKeys { info.removeValue(forKey: k) }
         try writePlist(info, to: contents.appendingPathComponent("Info.plist"))
 
         var conf = ""
@@ -118,6 +124,7 @@ enum FixtureFactory {
         case .exit(let c): conf += "exit=\(c)\n"
         }
         if let log = o.logFile { conf += "log=\(log.path)\n" }
+        if o.refusesNewIdentity { conf += "only=\(o.bundleID)\n" }
         try conf.write(to: resources.appendingPathComponent("fixture.conf"), atomically: true, encoding: .utf8)
 
         var nested: [URL] = []

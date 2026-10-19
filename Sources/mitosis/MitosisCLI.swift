@@ -12,7 +12,7 @@ struct MitosisCLI: AsyncParsableCommand {
     )
 }
 
-struct CLIError: Error, CustomStringConvertible {
+struct CLIError: Error, LocalizedError, CustomStringConvertible {
     let description: String
 }
 

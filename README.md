@@ -65,24 +65,43 @@
 
 ## Install
 
-Paste this in Terminal:
+Mitosis is a desktop app for macOS 15 or later on Apple silicon Macs. Install it with **Homebrew** or with **one Terminal command**; both take under a minute and need no admin password.
+
+### Step 1: Open Terminal
+
+Press <kbd>⌘</kbd> <kbd>Space</kbd>, type **Terminal**, and press <kbd>Return</kbd>.
+
+### Step 2: Paste one of these commands
+
+**Option A: Homebrew** (if you use [Homebrew](https://brew.sh))
+
+```bash
+brew install --cask deadhearth01/tap/mitosis
+```
+
+**Option B: curl** (no Homebrew needed)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/deadhearth01/Mitosis/main/scripts/install.sh | bash
 ```
 
-The installer downloads the newest release, **verifies its SHA-256 checksum and signature**, puts Mitosis in `/Applications`, links the `mitosis` command into `~/.local/bin`, and opens the app. No admin password needed. Run it again any time to update.
+The curl installer downloads the newest release, **verifies its SHA-256 checksum and signature**, puts Mitosis in `/Applications`, links the `mitosis` command into `~/.local/bin`, and opens the app.
 
-> Requires macOS 15 or later on an Apple silicon Mac.
+### Step 3: Open Mitosis
+
+Mitosis is now in your **Applications** folder (and in Launchpad and Spotlight). Open it and click **New Clone** to make your first copy. See the [Quick start](#quick-start).
+
+### Updating
+
+When a new version is out, Mitosis shows **Update Now**: one click downloads, verifies, and installs it. You can also update from Terminal:
+
+| Installed with | Update command |
+|---|---|
+| Homebrew | `brew upgrade --cask deadhearth01/tap/mitosis` |
+| curl | Run the same curl command again |
 
 <details>
 <summary><b>Other ways to install</b></summary>
-
-**Homebrew:**
-
-```bash
-brew install --cask deadhearth01/tap/mitosis
-```
 
 **Manual download:** get `Mitosis-<version>.zip` from the [latest release](https://github.com/deadhearth01/Mitosis/releases/latest), check it against the `.sha256` file, unzip it, and move `Mitosis.app` to Applications. Mitosis isn't notarized (see the [FAQ](#faq)), so macOS blocks a browser-downloaded copy the first time; clear that once with:
 
@@ -148,7 +167,7 @@ mitosis delete "Slack (Work)"         # move the clone to the Trash (data kept u
 | | Examples | What you get |
 |---|---|---|
 | ✅ **Works great** | Slack, Discord, Signal, VS Code, Obsidian, Notion, Claude, most Electron and Chromium apps | Separate login, data, Dock icon, and notifications |
-| ⚠️ **Works with limits** | Some apps with system extensions or shared keychains | Mitosis explains what won't work before you clone |
+| ⚠️ **Works with limits** | Apps that use features tied to their developer, like Muse (keychain sign-in, push notifications) | Separate data and Dock icon; you may need to sign in again when you open the copy. Mitosis explains this before you clone |
 | ⏳ **Not yet** | Sandboxed apps that need iCloud or shared app data (for example WhatsApp) | A "light mode" for these is planned |
 | 🚫 **Not supported** | Apple's own apps | They're part of macOS and protected by it |
 
@@ -163,7 +182,7 @@ Run `mitosis doctor <App>` to see exactly how an app will be cloned. Tried an ap
 5. **Verified.** The copy is opened once to confirm it starts before Mitosis reports success.
 6. **Kept up to date.** A small background job watches the original apps (no CPU while waiting) and rebuilds their copies after an update. Open copies wait until you quit them.
 
-Apps that can't take a new identity use a compatibility mode that runs the original app with a separate data folder.
+If a copy with a new identity won't start, Mitosis automatically tries a compatibility mode that runs the original app with a separate data folder.
 
 ## FAQ
 

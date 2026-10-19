@@ -44,11 +44,14 @@ import Testing
         #expect(d.reasons.first?.contains("Light mode") == true)
     }
 
-    @Test func restrictedEntitlementsUseFallback() {
+    // Muse: compatibility mode can't help apps that allow one copy per bundle ID or ignore HOME, so these get a
+    // full clone (own bundle ID); the developer-only features may not work in it.
+    @Test func restrictedEntitlementsUseALimitedFullClone() {
         let d = Self.decider.decide(for: Self.info(restricted: ["aps-environment", "keychain-access-groups"]))
-        #expect(d.mode == .fallback)
+        #expect(d.mode == .identity)
         #expect(d.support == .limited)
         #expect(d.reasons.first?.contains("aps-environment, keychain-access-groups") == true)
+        #expect(d.reasons.first?.contains("sign in") == true)
     }
 
     @Test func appStoreAppsAreLimitedIdentity() {

@@ -123,6 +123,47 @@ struct LaunchTests {
         #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().isEmpty)
     }
 
+    // Automatic mode: when a full clone won't start, Mitosis tries compatibility mode before giving up.
+    @Test func automaticModeRetriesInCompatibilityMode() async throws {
+        var o = FixtureOptions(); o.refusesNewIdentity = true
+        var (source, builder) = try Self.setUpSource(o)
+        let recorder = StepRecorder()
+        builder.progress = recorder.callback
+        let entry = try await CloneWorkflow(builder: builder).createVerified(
+            CloneRequest(source: source, name: "Fixture (Retry)", badge: Badge(text: "R", color: "#0A84FF")), window: .seconds(3))
+        defer { CloneLauncher.terminate(entry) }
+        #expect(entry.manifest.mode == .fallback)
+        #expect(recorder.steps.contains("compatibility mode"))
+        let clones = try FileManager.default.contentsOfDirectory(atPath: builder.environment.clonesDir.path).filter { $0.hasSuffix(".app") }
+        #expect(clones == ["Fixture (Retry).app"])
+        #expect(try CloneRegistry(fileURL: builder.environment.registryFile).load().count == 1)
+    }
+
+    // A full clone the user asked for explicitly is not swapped for a different mode behind their back.
+    @Test func explicitFullCloneIsNotRetried() async throws {
+        var o = FixtureOptions(); o.refusesNewIdentity = true
+        let (source, builder) = try Self.setUpSource(o)
+        let err = await #expect(throws: CloneError.self) {
+            _ = try await CloneWorkflow(builder: builder).createVerified(
+                CloneRequest(source: source, name: "Fixture (Strict)", badge: Badge(text: "S", color: "#0A84FF"), modeOverride: .identity),
+                window: .seconds(2))
+        }
+        #expect(err.map { String(describing: $0) }?.contains("Try compatibility") == true)
+    }
+
+    // When neither mode starts, the message says so and doesn't suggest a mode that was already tried.
+    @Test func automaticModeReportsBothAttempts() async throws {
+        var o = FixtureOptions(); o.behavior = .exit(code: 1)
+        let (source, builder) = try Self.setUpSource(o)
+        let err = await #expect(throws: CloneError.self) {
+            _ = try await CloneWorkflow(builder: builder).createVerified(
+                CloneRequest(source: source, name: "Broken (Both)", badge: Badge(text: "B", color: "#FF453A")), window: .seconds(2))
+        }
+        let text = err.map { String(describing: $0) } ?? ""
+        #expect(text.contains("compatibility mode"))
+        #expect(!text.contains("Try compatibility"))
+    }
+
     // A compatibility-mode clone that doesn't start must not suggest compatibility mode again.
     @Test func failedFallbackCloneDoesNotSuggestFallback() async throws {
         var o = FixtureOptions(); o.behavior = .exit(code: 1)

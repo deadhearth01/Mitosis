@@ -1,4 +1,4 @@
-# Windows UI verification protocol (Stage 12, extended in Stages 13–15)
+# Windows UI verification protocol (Stage 12, extended in Stages 13–16)
 
 Repeatable manual verification for the WinUI 3 shell. Automated tests cover
 ViewModel logic only — nothing here substitutes for eyes and keyboard.
@@ -108,6 +108,22 @@ native adaptation or a parity defect.
   in the field); pressing Esc in an empty search box does nothing; Enter and
   list keys behave as before; Ctrl+F focuses the field and another Ctrl+F on
   a selected row leaves selection intact.
+- S22: update banner dismissal (W05/P+R): click (or Tab to) the InfoBar close
+  button and press Space — the banner hides and does not reappear during the
+  session (macOS "Hide until next launch", MainWindow.swift:94-103); relaunch
+  brings a new banner back; the banner's close button is reachable by Tab.
+- S23: initial focus of secondary windows: opening Help puts keyboard focus
+  on the topic list; Settings focuses the General tab item; the welcome
+  window focuses Next; the wizard focuses its search (since Stage 12). Tab
+  from each starting point traverses all controls in a predictable order.
+- S24: screen-reader announcements (W64): with Narrator on, a failed
+  validation in the wizard name field speaks the error; selecting an
+  unsupported app in the picker speaks its reason; a failed profile save
+  speaks the failure; the settings and welcome error bars speak their
+  messages; the selected swatch is announced as "Selected" after its color
+  name (macOS isButton/isSelected traits, BadgeEditing.swift:43) and the
+  others as "Not selected"; keyboard context-menu access on a focused
+  sidebar row (Shift+F10 / the Apps key) opens the 10-item clone menu.
 
 ## 3. Accessibility checks
 

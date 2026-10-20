@@ -267,6 +267,23 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   drift), column-collapse interaction (needs clone counts). 283/283 tests
   green (278 + 5 new + 1 corrected to pin the macOS evidence). See
   `docs/UI-PARITY-MATRIX.md` (Stage 15 notes).
+- Stage 16: keyboard navigation, focus management, and accessibility parity —
+  **implemented, bounded; no desktop session available, so keypress/screen-
+  reader checks are pending (S22–S24)**. Four source-verifiable defects fixed:
+  the update banner's close button now actually dismisses the banner (macOS
+  `updates.dismissed`, `MainWindow.swift:94-103`; the tested
+  `DismissBannerCommand` was wired to the InfoBar); dynamic error/status text
+  gained `AutomationProperties.LiveSetting="Polite"` (wizard validation error,
+  unsupported-app reason, failed-step message, settings/welcome error bars);
+  the wizard's eight color swatches expose their selection state in
+  automation (macOS `.isSelected` trait, `BadgeEditing.swift:43`), which was
+  previously ring-only; Help, Settings, and the welcome window now set
+  initial keyboard focus on open, matching the wizard's Stage 12 pattern
+  (AppKit sheets get a first responder; WinUI has none by default). No new
+  features, no styling changes, no new dependencies; 283/283 tests green
+  (no new unit tests — every change is declarative XAML or view wiring, and
+  the banner logic was already tested). See `docs/UI-PARITY-MATRIX.md`
+  (Stage 16 notes).
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

@@ -28,9 +28,20 @@ public sealed partial class HelpWindow : Window
         AppWindow.ResizeClient(new SizeInt32(
             WindowSizes.HelpDefaultWidth, WindowSizes.HelpDefaultHeight));
         RootGrid.DataContext = ViewModel;
+        Activated += OnFirstActivated;
     }
 
     public HelpViewModel ViewModel { get; }
+
+    /// <summary>Keyboard users start on the topic list (the window's primary working
+    /// control) instead of nowhere; the wizard has used this pattern since Stage 12
+    /// and NewCloneWindow.OnFirstActivated documents the rationale. AppKit gives an
+    /// opened sheet a first responder by default; WinUI does not, so this is explicit.</summary>
+    private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+    {
+        Activated -= OnFirstActivated;
+        TopicList.Focus(FocusState.Programmatic);
+    }
 
     private void OnOpenTopicUrl(object sender, RoutedEventArgs e)
     {

@@ -65,6 +65,7 @@
             </ListView>
             <TextBlock
                 x:Name="UnsupportedReasonText"
+                AutomationProperties.LiveSetting="Polite"
                 FontSize="12"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 Text="{x:Bind ViewModel.UnsupportedReason, Mode=OneWay}"
@@ -136,6 +137,7 @@
                             Text="Shown in the name, like Slack (Work)." />
                         <TextBlock
                             x:Name="NameErrorText"
+                            AutomationProperties.LiveSetting="Polite"
                             FontSize="12"
                             Foreground="{ThemeResource SystemFillColorCriticalBrush}"
                             Text="{x:Bind ViewModel.ValidationMessage, Mode=OneWay}"
@@ -155,35 +157,35 @@
                         <StackPanel Spacing="4">
                             <TextBlock Text="Color" />
                             <StackPanel Orientation="Horizontal" Spacing="8">
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#0A84FF" ToolTipService.ToolTip="Blue">
+                                <Button x:Name="Swatch0" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#0A84FF" ToolTipService.ToolTip="Blue">
                                     <AutomationProperties.Name>Blue</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#0A84FF" /><Ellipse x:Name="Ring0" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#30D158" ToolTipService.ToolTip="Green">
+                                <Button x:Name="Swatch1" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#30D158" ToolTipService.ToolTip="Green">
                                     <AutomationProperties.Name>Green</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#30D158" /><Ellipse x:Name="Ring1" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF9F0A" ToolTipService.ToolTip="Orange">
+                                <Button x:Name="Swatch2" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF9F0A" ToolTipService.ToolTip="Orange">
                                     <AutomationProperties.Name>Orange</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#FF9F0A" /><Ellipse x:Name="Ring2" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF453A" ToolTipService.ToolTip="Red">
+                                <Button x:Name="Swatch3" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF453A" ToolTipService.ToolTip="Red">
                                     <AutomationProperties.Name>Red</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#FF453A" /><Ellipse x:Name="Ring3" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#BF5AF2" ToolTipService.ToolTip="Purple">
+                                <Button x:Name="Swatch4" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#BF5AF2" ToolTipService.ToolTip="Purple">
                                     <AutomationProperties.Name>Purple</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#BF5AF2" /><Ellipse x:Name="Ring4" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF375F" ToolTipService.ToolTip="Pink">
+                                <Button x:Name="Swatch5" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FF375F" ToolTipService.ToolTip="Pink">
                                     <AutomationProperties.Name>Pink</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#FF375F" /><Ellipse x:Name="Ring5" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FFD60A" ToolTipService.ToolTip="Yellow">
+                                <Button x:Name="Swatch6" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#FFD60A" ToolTipService.ToolTip="Yellow">
                                     <AutomationProperties.Name>Yellow</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#FFD60A" /><Ellipse x:Name="Ring6" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
-                                <Button Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#8E8E93" ToolTipService.ToolTip="Gray">
+                                <Button x:Name="Swatch7" Width="28" Height="28" Padding="0" Background="Transparent" BorderThickness="0" Command="{x:Bind ViewModel.SelectColorCommand, Mode=OneWay}" CommandParameter="#8E8E93" ToolTipService.ToolTip="Gray">
                                     <AutomationProperties.Name>Gray</AutomationProperties.Name>
                                     <Grid><Ellipse Width="20" Height="20" Fill="#8E8E93" /><Ellipse x:Name="Ring7" Width="24" Height="24" Stroke="{ThemeResource TextFillColorPrimaryBrush}" StrokeThickness="1.5" Visibility="Collapsed" /></Grid>
                                 </Button>
@@ -355,6 +357,7 @@
                 TextWrapping="Wrap" />
             <TextBlock
                 HorizontalAlignment="Center"
+                AutomationProperties.LiveSetting="Polite"
                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                 Text="{x:Bind ViewModel.ErrorMessage, Mode=OneWay}"
                 TextWrapping="Wrap" />

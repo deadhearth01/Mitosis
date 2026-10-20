@@ -14,7 +14,7 @@
             IsBackButtonVisible="Collapsed"
             IsSettingsVisible="False">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="General" IsSelected="True" Tag="General">
+                <NavigationViewItem x:Name="GeneralTab" Content="General" IsSelected="True" Tag="General">
                     <NavigationViewItem.Icon>
                         <FontIcon Glyph="&#xE713;" />
                     </NavigationViewItem.Icon>
@@ -98,6 +98,7 @@
 
                     <InfoBar
                         x:Name="SaveErrorBar"
+                        AutomationProperties.LiveSetting="Polite"
                         IsOpen="False"
                         Severity="Error"
                         Title="Couldn't save settings" />

@@ -44,6 +44,7 @@
                 Visibility="Collapsed" />
             <InfoBar
                 x:Name="SaveErrorBar"
+                AutomationProperties.LiveSetting="Polite"
                 IsOpen="False"
                 Severity="Error"
                 Title="Couldn't record that" />

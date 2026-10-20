@@ -469,3 +469,56 @@ Tests: 5 new + 1 corrected (kept as strong as before) — total 283/283 green.
 Manual checks (selection persistence while typing, Esc, no-results copy,
 highlight restore) are pending and listed as S19–S21 in
 `docs/WINDOWS-UI-VERIFICATION.md`.
+
+## Stage 16 keyboard/focus/accessibility notes
+
+Scope chosen from a control-inventory audit of every window against the
+macOS source. Four concrete defects fixed; no new features, no styling
+changes, no new dependencies.
+
+- W05 (update banner commands): Implemented and verified where testable.
+  The Windows InfoBar renders a close button, but nothing handled it — the
+  banner only listened to pushes from the view model, so closing it did
+  nothing persistent and any later PropertyChanged reopened it. macOS's
+  banner dismisses for the session (`updates.dismissed = true`,
+  MainWindow.swift:94-103, accessibility label "Hide update message"), and
+  `DismissBannerCommand` + the `DismissBanner_HidesIt` test already
+  implemented exactly that logic. The close button is now wired to it. One
+  limitation recorded: the InfoBar close button keeps its platform "Close"
+  accessible name; the macOS wording ("Hide update message") would need a
+  retemplate, deferred as not worth the fragility.
+- W29/W60/W64 (announcements): Implemented, verification pending. Dynamic
+  status/error text now carries `AutomationProperties.LiveSetting="Polite"`:
+  the wizard's name-validation error, the picker's unsupported-app reason,
+  and the failed-step message; the settings and welcome windows' error
+  InfoBars carry it too. Declarative XAML only; actual Narrator behavior is
+  a pending manual check (S24).
+- Screen-reader-selected colors (spec §6.4 selection ring; macOS
+  `.isSelected` trait, BadgeEditing.swift:43): Implemented, verification
+  pending. The eight swatch buttons expose `AutomationProperties.ItemStatus`
+  "Selected"/"Not selected", updated with the ring in code (no visual
+  change). The ring alone was invisible to assistive tech.
+- W44 (focus on open): Implemented, verification pending. The wizard had
+  first-activation focus since Stage 12; Help (topic list), Settings
+  (General tab item), and the welcome flow (Next / closing actions) now
+  receive initial keyboard focus too, using the same `OnFirstActivated`
+  pattern. AppKit gives a presented sheet a first responder; WinUI does
+  not, so the focus target is explicit.
+- Documented findings needing no code change: keyboard context-menu access
+  on a focused sidebar row is the standard WinUI ContextFlyout contract
+  (Shift+F10 / Apps key; pending manual check, S24); Ctrl+N remains
+  single-path (Stage 14 test pins it); search Esc-clear landed in Stage 15;
+  decorative art and badge tiles are already excluded from the
+  accessibility tree (Stage 12); ListView selection/status/group states
+  come from the platform; no redundant labels were added.
+- Deferred: session "Hide until next launch" wording for the InfoBar close
+  button (retemplate risk); a keyboard-accessible full drop-zone alternative
+  to "drag an app here" (macOS also lacks a button for drag-only entry — the
+  picker button above it is the keyboard path); Narrator/visual passes for
+  everything above (S22–S24, W66 standing).
+
+Tests: none added this stage — every change is declarative XAML or
+view-layer wiring; the one behavior change with testable logic (banner
+dismissal) was already covered by `DismissBanner_HidesIt`. Existing suite
+283/283 green; Release build clean (the pre-existing CS0105 duplicate-using
+warning in `NewCloneWizardTests.cs` remains, untouched).

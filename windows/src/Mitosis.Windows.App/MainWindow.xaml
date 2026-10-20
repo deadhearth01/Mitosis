@@ -10,6 +10,7 @@
         <InfoBar
             Grid.Row="0"
             Title="{x:Bind BannerTitle, Mode=OneTime}"
+            CloseButtonClick="OnUpdateBannerClosed"
             IsOpen="{x:Bind ViewModel.ShowUpdateBanner, Mode=OneWay}"
             Message="A new version of Mitosis is available."
             Severity="Informational">

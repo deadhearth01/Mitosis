@@ -48,9 +48,31 @@ public sealed partial class OnboardingWindow : Window
             this.viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         };
         UpdatePage();
+        Activated += OnFirstActivated;
     }
 
     public OnboardingViewModel ViewModel => viewModel;
+
+    /// <summary>Keyboard users start on the flow's progression button (Next on early
+    /// pages, the closing actions on the last) instead of nowhere; the wizard has
+    /// used this pattern since Stage 12. AppKit gives an opened sheet a first
+    /// responder by default; WinUI does not, so focus is set explicitly.</summary>
+    private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+    {
+        Activated -= OnFirstActivated;
+        if (NextButton.Visibility == Visibility.Visible)
+        {
+            NextButton.Focus(FocusState.Programmatic);
+        }
+        else if (ChooseAppButton.Visibility == Visibility.Visible)
+        {
+            ChooseAppButton.Focus(FocusState.Programmatic);
+        }
+        else
+        {
+            LaterButton.Focus(FocusState.Programmatic);
+        }
+    }
 
     /// <summary>Raised with true when the user chose Choose an App; the owner opens
     /// the New Clone wizard after the window closes.</summary>

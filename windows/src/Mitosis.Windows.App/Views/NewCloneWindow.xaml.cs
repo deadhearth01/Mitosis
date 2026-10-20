@@ -1,6 +1,7 @@
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Windows.Graphics;
@@ -89,13 +90,26 @@ public sealed partial class NewCloneWindow : Window
         NameHintText.Visibility = ViewModel.HasValidationMessage ? Visibility.Collapsed : Visibility.Visible;
         NameErrorText.Visibility = ViewModel.HasValidationMessage ? Visibility.Visible : Visibility.Collapsed;
         AckCheck.Visibility = ViewModel.NeedsAcknowledgement ? Visibility.Visible : Visibility.Collapsed;
+        if (Content is not FrameworkElement root)
+        {
+            return;
+        }
+
         for (var i = 0; i < SwatchHexes.Length; i++)
         {
-            if (Content is FrameworkElement root && root.FindName("Ring" + i) is FrameworkElement ring)
+            var selected = string.Equals(SwatchHexes[i], ViewModel.SelectedColorHex,
+                StringComparison.OrdinalIgnoreCase);
+            if (root.FindName("Ring" + i) is FrameworkElement ring)
             {
-                ring.Visibility = string.Equals(SwatchHexes[i], ViewModel.SelectedColorHex,
-                    StringComparison.OrdinalIgnoreCase)
-                    ? Visibility.Visible : Visibility.Collapsed;
+                ring.Visibility = selected ? Visibility.Visible : Visibility.Collapsed;
+            }
+
+            // macOS exposes .isSelected on the swatches (BadgeEditing.swift:43); the
+            // selection ring alone is invisible to screen readers, so the state is
+            // mirrored into automation (ItemStatus speaks after the color name).
+            if (root.FindName("Swatch" + i) is Microsoft.UI.Xaml.Controls.Button swatch)
+            {
+                AutomationProperties.SetItemStatus(swatch, selected ? "Selected" : "Not selected");
             }
         }
     }

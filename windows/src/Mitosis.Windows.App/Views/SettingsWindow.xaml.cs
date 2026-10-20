@@ -46,9 +46,19 @@ public sealed partial class SettingsWindow : Window
         };
         UpdateSavedState();
         _ = ViewModel.LoadAsync();
+        Activated += OnFirstActivated;
     }
 
     public SettingsViewModel ViewModel { get; }
+
+    /// <summary>Keyboard users start on the General tab item (the already-selected
+    /// tab) instead of nowhere; NewCloneWindow.OnFirstActivated established the
+    /// pattern (AppKit gives an opened sheet a first responder; WinUI does not).</summary>
+    private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
+    {
+        Activated -= OnFirstActivated;
+        GeneralTab.Focus(FocusState.Programmatic);
+    }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {

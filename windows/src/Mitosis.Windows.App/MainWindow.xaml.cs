@@ -72,6 +72,12 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>The update banner's close button promises to hide the message; macOS
+    /// dismisses for the session (`updates.dismissed = true`, MainWindow.swift:94-103)
+    /// and the view model already carries the tested dismissal logic.</summary>
+    private void OnUpdateBannerClosed(InfoBar sender, object args) =>
+        ViewModel.DismissBannerCommand.Execute(null);
+
     private async void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
     {
         Activated -= OnFirstActivated;

@@ -1,4 +1,4 @@
-# Windows UI verification protocol (Stage 12, extended in Stage 13)
+# Windows UI verification protocol (Stage 12, extended in Stages 13–14)
 
 Repeatable manual verification for the WinUI 3 shell. Automated tests cover
 ViewModel logic only — nothing here substitutes for eyes and keyboard.
@@ -65,6 +65,35 @@ native adaptation or a parity defect.
   window; Ctrl+, opens Settings; both sidebar buttons carry accessible names
   and tooltips; Tab order inside Help (topics → page → button) and Settings
   (tabs → rows) is sensible with visible focus.
+- S14: main-window minimum size (W01): launch at 1060×720; try to drag the
+  edge below 820×520 — the window stops at the floor; snap layouts and
+  Aero Snap respect it; 820×520 shows usable sidebar + detail proportions
+  (reference: sidebar 210/240); large sizes (1600×900+) keep the layout
+  composed; maximize on a single display ok.
+- S15: repeated Settings/Help opening (W02/W03/W05/W44): press F1, then F1
+  again while Help is focused — no second Help window appears and the existing
+  one stays put; press Ctrl+, while Settings is already open — same single
+  window; close Help via the title bar and press F1 again — a fresh Help
+  window opens with the "Getting started" selection; close Settings and reopen
+  — buttons reset per window state (no stale "Tips Are On"); closing Help or
+  Settings returns keyboard focus to the main window; Help and Settings open
+  simultaneously without conflict.
+- S16: fixed-size windows (W27/W39 adaptation): the welcome window cannot be
+  resized or maximized (580×460 fixed); the New Clone wizard stays 700×680
+  through every step with maximize disabled; Esc/Enter still navigate within
+  the wizard; the Settings window keeps a fixed width (540) while its height
+  follows the General/Advanced tab (tab switch re-sizes height).
+- S17: keyboard shortcuts and collisions (W05/W44): F1 and Ctrl+, work from
+  the main window with focus anywhere in it; Ctrl+N opens the wizard exactly
+  once per press (no double window from accelerator + router); Ctrl+F focuses
+  the search box; typing F/comma alone never triggers anything; Esc on the
+  main window does nothing unexpected; F1 while Settings/Help is the active
+  window has no route (documented: shortcuts are main-window scoped; revisit
+  in a later stage when a global command surface exists).
+- S18: restoration deferral record (W10): no persistence is expected — resize
+  and move the main window, close and relaunch: the window opens at the
+  1060×720 default again. This is the accepted, documented behavior until a
+  later stage implements restoration with Mac-verified semantics.
 
 ## 3. Accessibility checks
 

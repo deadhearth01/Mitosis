@@ -9,6 +9,8 @@ using Windows.System;
 using Windows.UI.Core;
 using Mitosis.Windows.ViewModels;
 using Mitosis.Windows.App.Views;
+using Mitosis.Windows.Platform.Input;
+using Mitosis.Windows.Platform.Windowing;
 
 namespace Mitosis.Windows.App;
 
@@ -22,7 +24,8 @@ public sealed partial class MainWindow : Window
         this.dataFolderPath = dataFolderPath;
         InitializeComponent();
         Title = "Mitosis";
-        AppWindow.Resize(new SizeInt32(1060, 720));
+        ApplyMainWindowLimits();
+        AppWindow.Resize(new SizeInt32(WindowSizes.MainDefaultWidth, WindowSizes.MainDefaultHeight));
         ViewModel.DialogRequested += OnDialogRequested;
         ViewModel.NewCloneRequested += OnNewCloneRequested;
         ViewModel.ShowHelpRequested += OnShowHelpRequested;
@@ -45,6 +48,30 @@ public sealed partial class MainWindow : Window
         Activated += OnFirstActivated;
     }
 
+    /// <summary>macOS floors the main window at 820×520 (MitosisRootApp.swift:17);
+    /// the overlapped presenter enforces the same bounds natively on Windows. Applied
+    /// best effort: a null or non-overlapped presenter (custom shells) simply keeps
+    /// the default behavior instead of crashing.</summary>
+    private void ApplyMainWindowLimits()
+    {
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            presenter.PreferredMinimumWidth = WindowSizes.MainMinimumWidth;
+            presenter.PreferredMinimumHeight = WindowSizes.MainMinimumHeight;
+        }
+    }
+
+    /// <summary>Returns focus to the main window after a secondary window closes so
+    /// keyboard input does not stay with a dying window handle. macOS closing a sheet
+    /// or secondary window returns focus to the main window (AppKit default).</summary>
+    private void RestoreMainFocus()
+    {
+        if (AppWindow is { IsVisible: true })
+        {
+            Activate();
+        }
+    }
+
     private async void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
     {
         Activated -= OnFirstActivated;
@@ -60,21 +87,20 @@ public sealed partial class MainWindow : Window
     {
         var ctrl = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Control)
             .HasFlag(CoreVirtualKeyStates.Down);
-        if (e.Key == VirtualKey.F1)
+        switch (MainWindowShortcuts.Route(ctrl, e.Key))
         {
-            OnShowHelpRequested(this, EventArgs.Empty);
-            e.Handled = true;
-        }
-        // WinUI's VirtualKey enum lacks an OEM comma member; 188 is its fixed value.
-        else if (ctrl && e.Key == (VirtualKey)188)
-        {
-            OnShowSettingsRequested(this, EventArgs.Empty);
-            e.Handled = true;
-        }
-        else if (ctrl && e.Key == VirtualKey.F)
-        {
-            Sidebar.FocusSearch();
-            e.Handled = true;
+            case MainWindowShortcut.Help:
+                OnShowHelpRequested(this, EventArgs.Empty);
+                e.Handled = true;
+                break;
+            case MainWindowShortcut.Settings:
+                OnShowSettingsRequested(this, EventArgs.Empty);
+                e.Handled = true;
+                break;
+            case MainWindowShortcut.FocusSearch:
+                Sidebar.FocusSearch();
+                e.Handled = true;
+                break;
         }
     }
 
@@ -118,7 +144,11 @@ public sealed partial class MainWindow : Window
         if (helpWindow == null)
         {
             helpWindow = new HelpWindow(new HelpViewModel());
-            helpWindow.Closed += (_, _) => helpWindow = null;
+            helpWindow.Closed += (_, _) =>
+            {
+                helpWindow = null;
+                RestoreMainFocus();
+            };
         }
 
         return helpWindow;
@@ -136,7 +166,11 @@ public sealed partial class MainWindow : Window
                         ?? throw new InvalidOperationException("Settings need the preference store."),
                     dataFolderPath
                         ?? throw new InvalidOperationException("Settings were composed without a data folder.")));
-            settingsWindow.Closed += (_, _) => settingsWindow = null;
+            settingsWindow.Closed += (_, _) =>
+            {
+                settingsWindow = null;
+                RestoreMainFocus();
+            };
         }
 
         return settingsWindow;
@@ -160,6 +194,7 @@ public sealed partial class MainWindow : Window
         window.Closed += (_, _) =>
         {
             onboardingWindow = null;
+            RestoreMainFocus();
         };
         window.Activate();
     }
@@ -184,6 +219,7 @@ public sealed partial class MainWindow : Window
             window.Closed -= OnWizardClosed;
             window.ShowProfileRequested -= OnShowProfileRequested;
             wizardWindow = null;
+            RestoreMainFocus();
             await ViewModel.LoadAsync();
         }
     }

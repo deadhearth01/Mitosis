@@ -3,9 +3,11 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Shapes;
+using Microsoft.UI.Windowing;
 using System.ComponentModel;
 using Windows.Graphics;
 using Mitosis.Windows.ViewModels;
+using Mitosis.Windows.Platform.Windowing;
 
 namespace Mitosis.Windows.App.Views;
 
@@ -24,7 +26,19 @@ public sealed partial class OnboardingWindow : Window
         this.viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         InitializeComponent();
         Title = "Welcome to Mitosis";
-        AppWindow.ResizeClient(new SizeInt32(580, 460));
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            // The macOS onboarding sheet is a fixed 580×460 (spec §2); mirroring that
+            // keeps the three-page flow's layout intent instead of allowing resize.
+            presenter.PreferredMinimumWidth = WindowSizes.OnboardingWidth;
+            presenter.PreferredMinimumHeight = WindowSizes.OnboardingHeight;
+            presenter.PreferredMaximumWidth = WindowSizes.OnboardingWidth;
+            presenter.PreferredMaximumHeight = WindowSizes.OnboardingHeight;
+            presenter.IsMaximizable = false;
+        }
+
+        AppWindow.ResizeClient(new SizeInt32(
+            WindowSizes.OnboardingWidth, WindowSizes.OnboardingHeight));
         RootGrid.DataContext = this.viewModel;
         AppWindow.Closing += OnClosing;
         this.viewModel.PropertyChanged += OnViewModelPropertyChanged;

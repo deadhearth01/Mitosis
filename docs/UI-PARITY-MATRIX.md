@@ -343,3 +343,69 @@ as onboarded so a damaged file cannot re-show the welcome on every launch.
 Deferred beyond this stage: menu-bar/tray toggle, update-check controls,
 auto-update clones, CLI installer, default-clone-mode picker, onboarding
 animations/pixels.
+
+## Stage 14 window lifecycle, navigation, and keyboard notes
+
+Bounded set taken after auditing the macOS window code again: minimum sizes and
+fixed sheet geometry, secondary-window focus handoff, keyboard routing, and a
+tray/menu decision. Window position/size RESTORATION was evaluated and is
+deferred (rationale below). No engine, provisioning, or persistence-semantics
+changes; the preference store is untouched.
+
+- W01 (main window sizing): Implemented, verification pending. Launch size
+  1060×720 preserved (MitosisRootApp.swift:24) and the macOS floor 820×520
+  (MitosisRootApp.swift:17) is now enforced natively by the overlapped presenter
+  (`PreferredMinimumWidth/Height`), so the sidebar and detail panel cannot be
+  squeezed below the reference proportions. Values live in
+  `Mitosis.Windows.Platform.Windowing.WindowSizes` with unit-tested validation
+  (`Mitosis.Windows.Platform.Tests.WindowSizeTests`).
+- W02 (help window sizing): Implemented, verification pending. Same macOS
+  metrics kept (820×580 default) plus the macOS floor 700×500
+  (HelpView.swift:18) enforced by the presenter.
+- W03 (settings window sizing): Implemented, verification pending. Adaptation
+  recorded: macOS fixes the window via `.frame(width: 540)` (SettingsView.swift:16);
+  Windows locks `PreferredMinimumWidth = PreferredMaximumWidth = 540`, leaving
+  height to the per-tab `ResizeClient`, which behaves like the macOS
+  per-content height (470/260 regions). Maximize stays available because
+  height is adjustable; subject to the pending visual pass (W66).
+- W39/W27 (sheet geometry): Implemented, verification pending. The onboarding
+  flow and the New Clone wizard are fixed-size (580×460 and 700×680) with
+  maximize disabled, mirroring macOS sheet behavior (spec §2) — previously
+  they were freely resizable windows, which macOS never had.
+- W10 (window position/size restoration): **Deferred by decision.** The macOS
+  reference contains no restoration code — `.defaultSize` only, no
+  `frameAutosaveName` or `setFrame` anywhere (matrix even marked the behavior
+  itself as "verify on Mac"). Any Windows persistence would therefore be
+  unvalidated platform behavior on both sides. A later stage may add
+  restoration built on the existing preference store only if the macOS
+  behavior is first confirmed (restore on/off, work-area validation rules,
+  debounce policy); until then the app keeps safe defaults.
+- W05/W44 (keyboard): Implemented and verified where testable. The main-window
+  key routing now goes through `Mitosis.Windows.Platform.Input.MainWindowShortcuts`
+  (unit-tested in `MainWindowShortcutTests`): F1 → Help (Windows adaptation of
+  macOS ⌘? — rationale: F1 is the standard Windows help key; ⌘? has no direct
+  equivalent), Ctrl+, → Settings (same key shape as macOS ⌘,), Ctrl+F → search
+  focus (macOS audit found no ⌘F binding; kept deliberate so search stays one
+  keystroke away). Ctrl+N intentionally stays on the sidebar
+  `KeyboardAccelerator` and is not routed — a second path would double-invoke
+  the command on one keypress (test pins this). Esc/Enter remain wizard-scoped;
+  the main window routes nothing on Escape (dialog/OS semantics untouched).
+  Actual keypress observation on a live desktop remains pending (S17).
+- W07 (lifecycle): Unchanged — quit on last window close (matches the macOS
+  default where the menu-bar extra is off, `menuBarKey = false`).
+- Secondary-window lifecycle (Help/Settings/wizard/onboarding): Implemented,
+  verification pending. Single-instance reuse with focus restore already
+  existed; closing any secondary window now re-activates the main window when
+  it is visible (AppKit's close-returns-focus default), stale references are
+  nulled in every `Closed` handler before reuse, and ViewModels are
+  constructed fresh per opening (no cross-opening state carryover).
+- W04/W42 (menu bar / tray): **Deferred by decision** — evidence and
+  constraints recorded in `docs/WINDOWS-PORT.md` (§ Tray and menu decision).
+  No tray icon or menu commands were added; the macOS behaviors that depend on
+  the menu bar (close-to-tray lifetime, quick-open clone list) are called out
+  as follow-up requirements, not faked.
+
+Tests added this stage: 12 (6 keyboard routing, 6 size validation) on top of
+Stage 13's 56; total 278/278 green. Desktop checks (resize below floors,
+repeat-open focus, sheet refuse-resize, restore behavior) are pending and
+listed as scenarios S14–S18 in `docs/WINDOWS-UI-VERIFICATION.md`.

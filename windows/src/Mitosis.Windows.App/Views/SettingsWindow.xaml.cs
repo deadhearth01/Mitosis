@@ -1,11 +1,13 @@
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Windowing;
 using System.ComponentModel;
 using System.IO;
 using Windows.Graphics;
 using Windows.System;
 using Mitosis.Windows.ViewModels;
+using Mitosis.Windows.Platform.Windowing;
 
 namespace Mitosis.Windows.App.Views;
 
@@ -24,7 +26,16 @@ public sealed partial class SettingsWindow : Window
         ViewModel = viewModel;
         InitializeComponent();
         Title = "Mitosis Settings";
-        AppWindow.ResizeClient(new SizeInt32(540, GeneralClientHeight));
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            // macOS fixes the Settings width at 540 (SettingsView.swift:16 .frame(width:));
+            // locking preferred min/max to the same value reproduces that on Windows while
+            // height stays resizable to follow tab content.
+            presenter.PreferredMinimumWidth = WindowSizes.SettingsWidth;
+            presenter.PreferredMaximumWidth = WindowSizes.SettingsWidth;
+        }
+
+        AppWindow.ResizeClient(new SizeInt32(WindowSizes.SettingsWidth, GeneralClientHeight));
 
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         ViewModel.RevealDataFolderRequested += OnRevealDataFolderRequested;
@@ -66,7 +77,8 @@ public sealed partial class SettingsWindow : Window
     {
         GeneralPanel.Visibility = general ? Visibility.Visible : Visibility.Collapsed;
         AdvancedPanel.Visibility = general ? Visibility.Collapsed : Visibility.Visible;
-        AppWindow.ResizeClient(new SizeInt32(540, general ? GeneralClientHeight : AdvancedClientHeight));
+        AppWindow.ResizeClient(new SizeInt32(
+            WindowSizes.SettingsWidth, general ? GeneralClientHeight : AdvancedClientHeight));
     }
 
     private async void OnRevealDataFolderRequested(object? sender, EventArgs e)

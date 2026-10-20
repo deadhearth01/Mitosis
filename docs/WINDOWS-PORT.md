@@ -210,6 +210,47 @@ external package and is test-only.
   comparison and Narrator pass pending (S10–S13 in
   `docs/WINDOWS-UI-VERIFICATION.md`). See `docs/UI-PARITY-MATRIX.md` (Stage 13
   notes).
+- Stage 14: window lifecycle, navigation, and keyboard parity — **implemented,
+  bounded, no pixels verified**. Native minimum-size floors matching the macOS
+  reference (main 820×520, Help 700×500), Settings width locked to the macOS
+  540, onboarding/wizard windows fixed-size non-maximizable like macOS sheets;
+  secondary-window close returns focus to the main window; key routing
+  extracted to unit-tested `MainWindowShortcuts` (F1/Ctrl+,/Ctrl+F preserved,
+  Ctrl+N deliberately not double-routed). Window position/size **restoration is
+  deferred**: the macOS reference contains no restoration code, so persistence
+  would be unverified behavior on both sides — revisit only after confirming
+  the macOS behavior on a Mac, with work-area validation and debounced writes.
+  Tray/menu-bar **deferred** (see below); 278/278 tests green (56 + 12 new
+  on top of 210 legacy). See `docs/UI-PARITY-MATRIX.md` (Stage 14 notes).
+
+### Stage 14 tray and menu decision
+
+The macOS menu-bar extra (`MenuBarExtra`, `MenuBarContent.swift`,
+`Prefs.menuBarKey`, off by default) carries three behaviors the Windows port
+has consciously deferred with W04/W42 still Missing:
+
+1. **Close-to-tray lifetime** — macOS keeps Mitosis running when the last
+   window closes because `applicationShouldTerminateAfterLastWindowClosed`
+   returns `!menuBarKey` (MitosisRootApp.swift:75-77). The Windows app quits on
+   window close, matching the macOS default (menu bar off). A tray lifetime on
+   Windows needs application-lifetime rework: `Bootstrap.Shutdown()` on
+   `Window.Closed` must become conditional, plus WM messaging for
+   reopen/shutdown and a documented single-instance policy.
+2. **Win32 tray icon** — WinUI 3 has no first-party tray affordance; a real
+   implementation means `Shell_NotifyIcon` interop, a custom context flyout
+   (`XamlRoot` hosting across two islands), per-DPI icon variants, and the
+   "show in the taskbar area" Rules (taskbar button behavior is coupled to the
+   AppWindow, not the tray). A third-party NuGet (e.g. H.NotifyIcon) would add
+   a new runtime dependency for a feature that is off by default on macOS.
+3. **Menu contents** — the macOS menu opens any clone quickly and shows the
+   update action; neither has a Windows effect yet (no running clones, no
+   update engine). Shipping tray buttons that call honest no-ops would repeat
+   the anti-pattern Stage 13 removed from Settings.
+
+Prerequisites to revisit (not this stage): tray lifetime architecture, a
+tray icon design (spec §2 notes a redrawn 18 px monochrome template), the
+notification/reopen flow, and a user preference key with the same default-off
+parity. Until then: no fake tray commands; quit-on-close stays.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

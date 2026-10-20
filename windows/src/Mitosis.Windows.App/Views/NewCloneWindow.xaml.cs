@@ -6,6 +6,7 @@ using Microsoft.UI.Xaml.Input;
 using Windows.Graphics;
 using Windows.System;
 using Mitosis.Windows.ViewModels;
+using Mitosis.Windows.Platform.Windowing;
 
 namespace Mitosis.Windows.App.Views;
 
@@ -16,7 +17,19 @@ public sealed partial class NewCloneWindow : Window
         ViewModel = viewModel;
         InitializeComponent();
         Title = "New Clone";
-        AppWindow.Resize(new SizeInt32(700, 680));
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            // The macOS pick details/working/done steps are fixed-size sheets (spec §2:
+            // pick 700×680); the Windows wizard hosts all steps in one non-resizable
+            // window instead of resizing between steps.
+            presenter.PreferredMinimumWidth = WindowSizes.WizardPickWidth;
+            presenter.PreferredMinimumHeight = WindowSizes.WizardPickHeight;
+            presenter.PreferredMaximumWidth = WindowSizes.WizardPickWidth;
+            presenter.PreferredMaximumHeight = WindowSizes.WizardPickHeight;
+            presenter.IsMaximizable = false;
+        }
+
+        AppWindow.Resize(new SizeInt32(WindowSizes.WizardPickWidth, WindowSizes.WizardPickHeight));
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) => ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         UpdateStepVisibility();

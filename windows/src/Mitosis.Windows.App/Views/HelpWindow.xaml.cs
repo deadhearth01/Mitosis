@@ -1,8 +1,10 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Windowing;
 using Windows.Graphics;
 using Windows.System;
 using Mitosis.Windows.ViewModels;
+using Mitosis.Windows.Platform.Windowing;
 
 namespace Mitosis.Windows.App.Views;
 
@@ -16,7 +18,15 @@ public sealed partial class HelpWindow : Window
         ViewModel = viewModel;
         InitializeComponent();
         Title = "Mitosis Help";
-        AppWindow.ResizeClient(new SizeInt32(820, 580));
+        if (AppWindow.Presenter is OverlappedPresenter presenter)
+        {
+            // macOS floors the help window at 700×500 (HelpView.swift:18).
+            presenter.PreferredMinimumWidth = WindowSizes.HelpMinimumWidth;
+            presenter.PreferredMinimumHeight = WindowSizes.HelpMinimumHeight;
+        }
+
+        AppWindow.ResizeClient(new SizeInt32(
+            WindowSizes.HelpDefaultWidth, WindowSizes.HelpDefaultHeight));
         RootGrid.DataContext = ViewModel;
     }
 

@@ -70,12 +70,18 @@ dotnet test --solution Mitosis.sln --no-build
 
 ## Run the app
 
-Unpackaged: build first, then run the exe (needs a Windows App SDK 2.x runtime;
-the app fails fast with a clear message when it is missing):
+Unpackaged: build first, then run the exe (needs a Windows App SDK 2.x runtime
+(2.5+) and the .NET 10 runtime; when the App SDK runtime is missing the app
+shows an error dialog naming the component and the HRESULT — exit code 101 —
+instead of a crash dialog with a stack trace):
 
 ```powershell
 .\src\Mitosis.Windows.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Mitosis.Windows.App.exe
 ```
+
+For release-readiness (deployment model, prerequisites, publish commands,
+release-candidate packaging, checklist, and blockers), see
+[docs/WINDOWS-RELEASE.md](../docs/WINDOWS-RELEASE.md).
 
 ## Discovery (Stage 3, read-only)
 
@@ -121,9 +127,13 @@ verification summary per application. Details: `docs/WINDOWS-EVIDENCE-BUNDLES.md
 
 Pushes to `WindowsVersion` and pull requests run `.github/workflows/windows-ci.yml`
 (`windows-latest`): restore, Release build, full test suite with `.trx` artifacts
-(14 days). Reproduce locally with the commands in `docs/WINDOWS-CI.md`. CI covers
-compilation and unit tests only — not UI launch, pixels, Narrator, isolation,
-licensing, or packaging.
+(14 days). Since Stage 17 a second job publishes the x64 release candidate from
+the same recipe (`windows/scripts/publish-release.ps1`) and uploads it as the
+`windows-release-candidate` artifact (a SHA-named zip, also 14 days) — see
+`docs/WINDOWS-RELEASE.md`. Reproduce locally with the commands in
+`docs/WINDOWS-CI.md`. CI covers compilation, unit tests, and publish
+verification only — not UI launch, pixels, Narrator, isolation, licensing,
+install-time behavior, or clean-machine runs.
 
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when

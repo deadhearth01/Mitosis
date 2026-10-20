@@ -1,10 +1,13 @@
 using System.Runtime.InteropServices;
+using Mitosis.Windows.Platform.Startup;
 
 namespace Mitosis.Windows.App;
 
 /// <summary>Initializes the Windows App SDK runtime for this unpackaged app (dynamic
-/// dependencies). Requires a machine-wide Windows App SDK 2.x runtime; the Stage 2
-/// shell was verified against 2.5.1. Throws a descriptive error when missing.</summary>
+/// dependencies). Requires a machine-wide Windows App SDK 2.x runtime (2.5+); the
+/// Stage 2 shell was verified against 2.5.1. Throws <see cref="PrerequisiteException"/>
+/// with a path-free diagnostic message when missing; the entry point shows that
+/// message instead of letting the CLR crash dialog leak a stack trace.</summary>
 internal static class Bootstrap
 {
     private const uint MajorMinor2_5 = 0x00020005;
@@ -15,9 +18,7 @@ internal static class Bootstrap
         int hr = MddBootstrapInitialize(MajorMinor2_5, null, minVersion);
         if (hr != 0)
         {
-            throw new InvalidOperationException(
-                $"The Windows App SDK runtime could not be initialized (HRESULT 0x{hr:X8}). " +
-                "Install the Windows App SDK 2.x runtime, then relaunch Mitosis. See windows/README.md.");
+            throw new PrerequisiteException(StartupDiagnostics.DescribeMissingAppSdk(hr), hr);
         }
     }
 

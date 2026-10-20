@@ -48,3 +48,33 @@ jobs:
           name: windows-test-results
           path: windows/TestResults/*.trx
           retention-days: 14
+
+  publish-release-candidate:
+    name: Publish x64 release candidate
+    # Separate from build-test so ordinary test results and the release artifact
+    # stay distinguishable. Uses the same pinned recipe as local runs
+    # (windows/scripts/publish-release.ps1, documented in docs/WINDOWS-RELEASE.md).
+    needs: build-test
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: windows
+        shell: powershell
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Publish and package
+        run: powershell -ExecutionPolicy Bypass -File scripts\publish-release.ps1
+      - name: Upload release candidate
+        # Read-only distribution heritage: this produces a named CI artifact for
+        # manual inspection and download — nothing is published externally, signed,
+        # or attached to a release page in this stage.
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-candidate
+          path: windows/artifacts/Mitosis-windows-x64-*.zip
+          retention-days: 14

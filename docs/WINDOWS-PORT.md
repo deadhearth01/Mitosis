@@ -284,6 +284,26 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   (no new unit tests — every change is declarative XAML or view wiring, and
   the banner logic was already tested). See `docs/UI-PARITY-MATRIX.md`
   (Stage 16 notes).
+- Stage 17: release packaging and deployment audit — **audited and instrumented;
+  the app is not release-ready** (the clone engine remains unimplemented, no
+  clean-machine run has been performed). The audited deployment model is
+  unpackaged + framework-dependent + x64 (csproj evidence in
+  `docs/WINDOWS-RELEASE.md`), published to a reproducible, SHA-anchored zipped
+  release candidate (`windows/artifacts/Mitosis-windows-x64-<sha>.zip`,
+  ≈39 MB) via the same pinned recipe CI executes: `publish-release-candidate`
+  in `windows-ci.yml` runs after tests and uploads the artifact with 14-day
+  retention (nothing is published externally or attached to a release page).
+  Startup diagnostics for missing prerequisites were made path-free and
+  testable: `Bootstrap.Initialize` failure now surfaces as a Win32 MessageBox
+  naming the component and HRESULT (exit 101) instead of the .NET
+  unhandled-exception dialog whose stack trace leaked local install paths.
+  Release checklist, prerequisite table, reproducibility findings (identical
+  file sets + stable SHA-256 hashes across back-to-back publishes), and
+  outstanding blockers (no icon, no signing, placeholder version, engine
+  unimplemented, all Windows versions other than 11 25H2 untested) live in
+  `docs/WINDOWS-RELEASE.md`. 287/287 tests green (283 + 4 new
+  `StartupDiagnosticsTests`). macOS sources and the macOS `release.yml`
+  workflow untouched.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

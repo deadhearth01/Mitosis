@@ -211,6 +211,7 @@ Yes. Mitosis is free for any use, including at work. What you can't do is sell i
 - [x] Native Mac app: guided New Clone flow, clone pages with stats, help guide, menu bar
 - [x] Automatic clone updates when the original app updates
 - [x] `mitosis` command, one-line installer, Homebrew tap
+- [ ] Native Windows port (in progress on the `WindowsVersion` branch — the Windows UI exists, the clone engine is not ported yet; see [docs/WINDOWS-PORT.md](docs/WINDOWS-PORT.md) and [docs/WINDOWS-RELEASE.md](docs/WINDOWS-RELEASE.md))
 - [ ] Workspaces: open a set of clones together
 - [x] Sign-in links go to the copy that started the sign-in
 - [ ] Light mode for sandboxed apps (WhatsApp and similar)

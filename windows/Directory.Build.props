@@ -1,7 +1,28 @@
 <Project>
-  <!-- Shared settings for every project under windows/. -->
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+
+    <!-- ============ Windows port version (Stage 18) ============
+         Single source of the Windows port's release version: a SemVer
+         MAJOR.MINOR.PATCH string, currently mirroring the product's release
+         line (git tag v0.2.2). Release builds stamp it with
+         -p:WindowsPortVersion=x.y.z; every ordinary build resolves the
+         default below. Mapping onto the assembly:
+           AssemblyVersion / FileVersion  -> "x.y.z.0"
+           InformationalVersion/Product   -> "x.y.z" plus "+<git-sha>" THE SDK
+         EMBEDS ITSELF where a git repository is available — without git the
+         suffix is absent (a hash is never fabricated). Keep this file in sync
+         with windows/scripts/publish-release.ps1, which reads the built
+         metadata back and names the artifact from it; details in
+         docs/WINDOWS-RELEASE.md -->
+    <WindowsPortVersion Condition="'$(WindowsPortVersion)' == ''">0.2.2</WindowsPortVersion>
+    <Version>$(WindowsPortVersion)</Version>
+    <AssemblyVersion>$(WindowsPortVersion).0</AssemblyVersion>
+    <FileVersion>$(WindowsPortVersion).0</FileVersion>
   </PropertyGroup>
+  <Target Name="ValidateWindowsPortVersion" BeforeTargets="BeforeBuild">
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(WindowsPortVersion)', '^\d+\.\d+\.\d+$'))"
+           Text="WindowsPortVersion '$(WindowsPortVersion)' is not MAJOR.MINOR.PATCH; use -p:WindowsPortVersion=x.y.z (Stage 18 scheme, docs/WINDOWS-RELEASE.md)." />
+  </Target>
 </Project>

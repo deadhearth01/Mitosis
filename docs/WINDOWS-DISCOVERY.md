@@ -100,7 +100,7 @@ path to sample data, never automatic, never mixed.
 
 1. `cd windows; dotnet build Mitosis.sln --no-restore` — 0 warnings, 0 errors.
 2. `dotnet test --solution Mitosis.sln --no-build` — all suites green.
-3. Launch `Mitosis.Windows.App.exe` non-elevated: sidebar fills with installed apps
+3. Launch `Mitosis.exe` non-elevated: sidebar fills with installed apps
    grouped by initial within ~1 s; selecting one shows publisher, version, scope,
    sources, and the `Not yet assessed` verdict with its reason.
 4. Search filters by name and publisher; clearing restores the full list.

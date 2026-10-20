@@ -76,5 +76,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-release-candidate
-          path: windows/artifacts/Mitosis-windows-x64-*.zip
+          path: windows/artifacts/Mitosis-windows-*.zip
           retention-days: 14

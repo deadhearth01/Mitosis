@@ -4,6 +4,13 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <RootNamespace>Mitosis.Windows.App</RootNamespace>
+    <!-- Distributed identity: the shipped executable is Mitosis.exe (this stage's
+         identity work); the project file and RootNamespace keep the historical
+         Mitosis.Windows.App names. -->
+    <AssemblyName>Mitosis</AssemblyName>
+    <!-- Derived (read-only) from Assets/Brand/AppIcon.icon/Assets/mito.png via
+         windows/scripts/make-icon.ps1; see docs/WINDOWS-RELEASE.md. -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <Platforms>x64</Platforms>
     <UseWinUI>true</UseWinUI>

@@ -70,13 +70,14 @@ dotnet test --solution Mitosis.sln --no-build
 
 ## Run the app
 
-Unpackaged: build first, then run the exe (needs a Windows App SDK 2.x runtime
-(2.5+) and the .NET 10 runtime; when the App SDK runtime is missing the app
-shows an error dialog naming the component and the HRESULT — exit code 101 —
-instead of a crash dialog with a stack trace):
+Unpackaged: build first, then run the exe (`Mitosis.exe`, `FileVersion`
+metadata from `windows/Directory.Build.props`; needs a Windows App SDK 2.x
+runtime (2.5+) and the .NET 10 runtime; when the App SDK runtime is missing
+the app shows an error dialog naming the component and the HRESULT — exit
+code 101 — instead of a crash dialog with a stack trace):
 
 ```powershell
-.\src\Mitosis.Windows.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Mitosis.Windows.App.exe
+.\src\Mitosis.Windows.App\bin\x64\Debug\net10.0-windows10.0.19041.0\Mitosis.exe
 ```
 
 For release-readiness (deployment model, prerequisites, publish commands,

@@ -14,12 +14,56 @@ tied to build evidence from this stage; untested items are marked.
 | x64 only | csproj `<Platforms>x64</Platforms>` |
 | Target `net10.0-windows10.0.19041.0`; platform floor 10.0.17763.0 (1809) | csproj lines 4–5. Windows 11 25H2 is the only OS this was ever run on (Stage 2); all other OS versions are unverified |
 | Manual App SDK bootstrap | `DISABLE_XAML_GENERATED_MAIN` + `Program.cs`/`Bootstrap.cs` (`MddBootstrapInitialize`, min 2.5) |
-| Version metadata | `FileVersion 1.0.0.0` (placeholder); `ProductVersion 1.0.0+<git-sha>` (commit is embedded — verified with `FileVersionInfo`) |
+| Version metadata | Stage 18: `windows/Directory.Build.props` is the single version source; see the section below |
 | Writable data | Everything resolves at runtime under `%LOCALAPPDATA%\Mitosis` (`WindowsProfilePaths.cs`); nothing is baked into the artifact |
 
 Deliberately **not** changed this stage (no evidence justifying it, and each
 would be a real architecture decision for a later stage): MSIX packaging,
 self-contained .NET, ARM64, a different minimum OS.
+
+## Versioning and application identity (Stage 18)
+
+**Version source.** `WindowsPortVersion` in `windows/Directory.Build.props` is
+the single source of the Windows port's release version — a SemVer
+MAJOR.MINOR.PATCH string currently mirroring the product's release line (the
+repo's latest tag is `v0.2.2`; the changelog is `[Unreleased]`, so the tag line
+is the reference). Release commands may override one-off with
+`-p:WindowsPortVersion=x.y.z`; every ordinary build resolves the file default.
+An msbuild `ValidateWindowsPortVersion` target before every build rejects
+anything that is not MAJOR.MINOR.PATCH (verified once during Stage 18 by
+building with `-p:WindowsPortVersion=1.2`, which fails with the explanatory
+error). The pins are structural unit tests in
+`WindowsReleaseIdentityTests.cs`.
+
+**Metadata mapping** (verified with `FileVersionInfo` on published outputs):
+
+| Property | Value |
+|---|---|
+| `AssemblyVersion` | `0.2.2.0` |
+| `FileVersion` (Explorer "File version") | `0.2.2.0` |
+| `InformationalVersion` / `ProductVersion` (Explorer "Product version") | `0.2.2+<full-git-sha>` |
+
+**No-git fallback** (verified in a repo copy without `.git`): the SDK omits the
+`+sha` suffix entirely — the exe reads `Product '0.2.2'`. A hash is never
+fabricated in automated builds.
+
+**Executable identity.** The app project's `AssemblyName` is `Mitosis`, so the
+distributed files are `Mitosis.exe` / `Mitosis.dll` (project folder and
+`RootNamespace` keep the historical `Mitosis.Windows.App` names; no runtime
+code depends on the old output names — checked). The exe embeds the
+application icon (below).
+
+**Icon.** `src/Mitosis.Windows.App/app.ico` is derived from the product's icon
+artwork `Assets/Brand/AppIcon.icon/Assets/mito.png` (read-only source) by
+`windows/scripts/make-icon.ps1` (classic all-BMP 32-bpp entries: 16, 24, 32,
+48, 64, 128, 256). The repository is Mitosis itself rather than a fork, so
+reusing the product artwork is the established permission per
+`docs/WINDOWS-PORT.md` section 8; no macOS asset was modified, no publisher
+identity is claimed, and nothing is signed. Outstanding design work — a
+purpose-drawn 16/24 px glyph for small sizes (a downscaled mascot is legible
+down to about 32 px) and an installer shell icon — is tracked in the checklist.
+The mascot derivation was chosen because it can come from existing assets
+without new artwork decisions.
 
 ## Runtime prerequisites
 
@@ -60,16 +104,18 @@ powershell -ExecutionPolicy Bypass -File scripts\publish-release.ps1
 
 The script pins the exact recipe (Release, `win-x64`, `--self-contained false`)
 and refuses to produce a zip unless it contains the exe, the App SDK bootstrap
-DLL, `deps.json`/`runtimeconfig.json`, all 13 brand pose assets, and no
-source/tooling/user-data files. It is the same command CI runs.
+DLL, `deps.json`/`runtimeconfig.json`, all 13 brand pose assets, no
+source/tooling/user-data files, and `FileVersion`/`ProductVersion` metadata
+that agrees with itself and the version scheme (a `ProductVersion` that
+carries a `+` suffix must carry a hex hash). It is the same command CI runs.
 
 ## Artifact
 
 | Property | Value (verified this stage) |
 |---|---|
 | Publish tree | `windows/artifacts/release/` (gitignored) |
-| Archive | `windows/artifacts/Mitosis-windows-x64-<short-sha>.zip` — name and `ProductVersion` share the commit hash, so an artifact identifies its source revision |
-| Contents | 75 files: `Mitosis.Windows.App.exe/.dll`, 7 project DLLs, WinAppSDK payload (`Microsoft.WinUI.dll`, `WinRT.Runtime.dll`, `Microsoft.Windows.SDK.NET.dll`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, WebView2Loader, ONNX/DirectML components included by the App SDK package), and `Assets/` with the 13 pose PNGs. No `.cs`/`.csproj`/`.swift`, no test results, no git metadata, no user data (verified by scanning the zip) |
+| Archive | `windows/artifacts/Mitosis-windows-<version>-x64-<sha>.zip` — the version is read back from the built exe's `FileVersion` and the suffix is the commit hash, so an artifact identifies its exact source revision and built version; without git access the suffix is `nogit` (verified both ways) |
+| Contents | 75 files: `Mitosis.exe/.dll` (7 project DLLs), WinAppSDK payload (`Microsoft.WinUI.dll`, `WinRT.Runtime.dll`, `Microsoft.Windows.SDK.NET.dll`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, WebView2Loader, ONNX/DirectML components included by the App SDK package), and `Assets/` with the 13 pose PNGs. No `.cs`/`.csproj`/`.swift`, no test results, no git metadata, no user data (verified by scanning the zip); the exe icon is embedded |
 | Size | ≈ 39 MB compressed, ≈ 113 MB unpacked (dominated by the App SDK AI/ML payload shipped with `Microsoft.WindowsAppSDK 2.5.1`) |
 | PDBs | Included on purpose for diagnosable releases; strip only via a later change to the script + this doc |
 | Reproducibility | Two consecutive publishes of the same commit produced identical file sets, byte-identical sizes, and matching SHA-256 hashes for `Mitosis.Windows.App.dll` and `deps.json`. Not a formal reproducibility program: archive bytes are not compared, NuGet cache state and VS/SDK drift may change payload components, and the XAML compiler embeds a comment cache — treat "same SHA ⇒ same artifact" as reliable-but-unproven |
@@ -83,21 +129,31 @@ but would extract oddly under non-Windows tools.
 - `build-test` (existing, unchanged): restore, Release build, full suite, TRX.
 - `publish-release-candidate` (Stage 17): runs after tests pass on the same
   `windows-latest` image, runs `scripts/publish-release.ps1`, and uploads
-  `windows-release-candidate` = `Mitosis-windows-x64-<sha>.zip` (14-day
-  retention). Nothing is published externally, signed, or attached to a release
-  page; the macOS `release.yml` workflow is untouched.
+  `windows-release-candidate` = `Mitosis-windows-<version>-x64-<sha>.zip`
+  (14-day retention; since Stage 18 the
+  `publish-release-candidate` job runs the same version-checked script, so the
+  name carries the built version). Nothing is published externally, signed, or
+  attached to a release page; the macOS `release.yml` workflow is untouched.
 
 ## Release checklist (current truth)
 
 Before anything could be called 1.0 for Windows:
 
+- [x] A documented version source with validation and no-git fallback (Stage 18:
+      `WindowsPortVersion` in `windows/Directory.Build.props`, structural tests
+      pin it; overriding wrong formats fails the build).
+- [x] The exe carries real `FileVersion` metadata plus a commit hash where git
+      is available (Stage 18, verified on published output).
+- [x] The exe has an application icon (Stage 18, derived from existing product
+      artwork; a purpose-drawn 16/24 px small-size glyph remains open — a
+      downscaled 1024 px mascot stays legible to about 32 px).
 - [ ] Merge `WindowsVersion` after all stages; CI green including the
       `windows-release-candidate` artifact (automated; working).
-- [ ] Decide and stamp a real `FileVersion`/`ProductVersion` (currently
-      `1.0.0.0` placeholder — `ProductVersion` at least carries the commit).
-- [ ] App icon: the exe has no `.ico` (csproj has no `ApplicationIcon`; the
-      macOS branding in `Assets/` must not be modified — drawing a Windows icon
-      is an outstanding design decision).
+- [ ] Decide and stamp a real `FileVersion`/`ProductVersion` at release time by
+      overriding `-p:WindowsPortVersion` (the scheme is in place since Stage 18;
+      the shipping number is a release decision, not a build artifact).
+- [ ] Purpose-drawn 16/24 px icon sizes (see the icon paragraph above) and, if
+      an installer is introduced, an installer shell icon.
 - [ ] Code signing: none. Windows SmartScreen blocks unsigned exes; decide
       Authenticode strategy before any public distribution.
 - [ ] Clean-machine runs of the published zip with .NET 10 runtime + App SDK

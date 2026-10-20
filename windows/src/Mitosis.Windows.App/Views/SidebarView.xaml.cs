@@ -44,6 +44,51 @@ public sealed partial class SidebarView : UserControl
 
     public void FocusSearch() => SearchBox.Focus(FocusState.Programmatic);
 
+    /// <summary>macOS .searchable (CloneList.swift:26) clears the query on Esc; the search
+    /// box adopts that here when there is actually text to clear. An empty box's Esc is
+    /// left to the platform. Selection keys stay with the focused list.</summary>
+    private void OnSearchKeyDown(object sender, KeyRoutedEventArgs e)
+    {
+        if (e.Key == VirtualKey.Escape && ViewModel is { } viewModel && viewModel.ClearSearch())
+        {
+            e.Handled = true;
+        }
+    }
+
+    // macOS clears a selection only when the entry leaves the model (AppModel.swift:112);
+    // a search filter that hides a row must not clear the detail page. The list views
+    // therefore keep their selection out of the view model (OneWay bindings): these
+    // handlers forward real user clicks, and the view model re-announces its selection
+    // after every refresh so a hidden row regains its highlight when it reappears.
+    private void OnClonesSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ViewModel != null && e.AddedItems.Count > 0
+            && e.AddedItems[0] is CloneItem clone && !ReferenceEquals(clone, ViewModel.SelectedClone))
+        {
+            ViewModel.SelectedClone = clone;
+        }
+    }
+
+    private void OnOrphansSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ViewModel != null && e.AddedItems.Count > 0
+            && e.AddedItems[0] is OrphanProfileItem orphan
+            && !ReferenceEquals(orphan.Profile, ViewModel.SelectedOrphan?.Profile))
+        {
+            ViewModel.SelectedOrphan = orphan;
+        }
+    }
+
+    private void OnAppsSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (ViewModel != null && e.AddedItems.Count > 0
+            && e.AddedItems[0] is DiscoveredAppItem app
+            && !ReferenceEquals(app.App, ViewModel.SelectedApp?.App))
+        {
+            ViewModel.SelectedApp = app;
+        }
+    }
+
     private void OnAppsKeyDown(object sender, KeyRoutedEventArgs e)
     {
         if (e.Key == VirtualKey.Enter

@@ -1,4 +1,4 @@
-# Windows UI verification protocol (Stage 12, extended in Stages 13–14)
+# Windows UI verification protocol (Stage 12, extended in Stages 13–15)
 
 Repeatable manual verification for the WinUI 3 shell. Automated tests cover
 ViewModel logic only — nothing here substitutes for eyes and keyboard.
@@ -94,6 +94,20 @@ native adaptation or a parity defect.
   and move the main window, close and relaunch: the window opens at the
   1060×720 default again. This is the accepted, documented behavior until a
   later stage implements restoration with Mac-verified semantics.
+- S19: selection survives search (W13/W25): select an app (or a preview
+  clone), then type a query that filters its row out — the detail page keeps
+  showing the selection, no empty-state flash; clear the query (or press Esc
+  in the search box) — the hidden row comes back already highlighted.
+- S20: no-results honesty (W25): with no query and an empty discovery
+  result, the sidebar shows the applications empty state only (never the
+  "no results" phrase); type a query matching nothing — the sidebar shows
+  'No results for "{query}"' with the spelling hint, and the empty state
+  yields; clear — empty state returns.
+- S21: Esc in search (W13): typing text then pressing Esc clears the query
+  (focus treatment to be recorded during the manual pass: macOS keeps focus
+  in the field); pressing Esc in an empty search box does nothing; Enter and
+  list keys behave as before; Ctrl+F focuses the field and another Ctrl+F on
+  a selected row leaves selection intact.
 
 ## 3. Accessibility checks
 

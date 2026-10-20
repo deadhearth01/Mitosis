@@ -34,6 +34,7 @@
             x:Name="SearchBox"
             Grid.Row="1"
             Margin="12,4,12,4"
+            KeyDown="OnSearchKeyDown"
             PlaceholderText="Search"
             QueryIcon="Find"
             Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
@@ -46,7 +47,8 @@
             ItemsSource="{x:Bind GroupedClones.View, Mode=OneWay}"
             KeyDown="OnListKeyDown"
             RightTapped="OnListRightTapped"
-            SelectedItem="{x:Bind ViewModel.SelectedClone, Mode=TwoWay}"
+            SelectedItem="{x:Bind ViewModel.SelectedClone, Mode=OneWay}"
+            SelectionChanged="OnClonesSelectionChanged"
             SelectionMode="Single"
             Visibility="{x:Bind ViewModel.HasClones, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
             <AutomationProperties.Name>Clones grouped by app</AutomationProperties.Name>
@@ -133,7 +135,8 @@
                 Text="Unavailable" />
             <ListView
                 ItemsSource="{x:Bind ViewModel.OrphanProfiles, Mode=OneWay}"
-                SelectedItem="{x:Bind ViewModel.SelectedOrphan, Mode=TwoWay}"
+                SelectedItem="{x:Bind ViewModel.SelectedOrphan, Mode=OneWay}"
+                SelectionChanged="OnOrphansSelectionChanged"
                 SelectionMode="Single">
                 <AutomationProperties.Name>Profiles whose app was not found</AutomationProperties.Name>
                 <ListView.ItemContainerStyle>
@@ -172,7 +175,8 @@
             Margin="4,4,4,0"
             ItemsSource="{x:Bind GroupedApps.View, Mode=OneWay}"
             KeyDown="OnAppsKeyDown"
-            SelectedItem="{x:Bind ViewModel.SelectedApp, Mode=TwoWay}"
+            SelectedItem="{x:Bind ViewModel.SelectedApp, Mode=OneWay}"
+            SelectionChanged="OnAppsSelectionChanged"
             SelectionMode="Single"
             Visibility="{x:Bind ViewModel.HasApps, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
             <AutomationProperties.Name>Installed applications</AutomationProperties.Name>
@@ -282,15 +286,23 @@
                 Content="Show preview instead" />
         </StackPanel>
 
-        <TextBlock
+        <StackPanel
             Grid.Row="2"
             Margin="16"
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
-            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-            Text="No clones match your search."
-            TextWrapping="Wrap"
-            Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
+            Spacing="4"
+            Visibility="{x:Bind ViewModel.HasNoResults, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                Text="{x:Bind ViewModel.NoResultsText, Mode=OneWay}"
+                TextWrapping="Wrap" />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="Check the spelling or try looking for something else."
+                TextWrapping="Wrap" />
+        </StackPanel>
 
         <StackPanel Grid.Row="3" Margin="16,12">
             <Button

@@ -195,6 +195,50 @@ public sealed class DiscoveryViewModelTests
     }
 
     [TestMethod]
+    public async Task Search_KeepsSelectedAppDetail()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("Slack"), DiscoveredApps.Make("Signal") });
+        var model = Create(discovery);
+        await model.LoadAsync(TestContext.CancellationToken);
+        var slack = model.VisibleAppGroups.SelectMany(g => g.Items)
+            .First(i => i.App.DisplayName == "Slack");
+        model.SelectedApp = slack;
+
+        model.SearchText = "zzz-no-match";
+        Assert.AreSame(slack, model.SelectedApp,
+            "macOS keeps a selection whose row the search merely hides (AppModel.swift:112).");
+        Assert.IsTrue(model.ShowAppDetail, "The detail page stays with the hidden selection.");
+        Assert.IsFalse(model.HasApps, "The query filtered every row.");
+
+        model.SearchText = "slack";
+        CollectionAssert.Contains(
+            model.VisibleAppGroups.SelectMany(g => g.Items).ToList(), slack,
+            "The row the query had hidden is back in the list.");
+        Assert.AreSame(slack, model.SelectedApp);
+    }
+
+    [TestMethod]
+    public async Task EmptyState_YieldsToNoResultsWhileSearching()
+    {
+        var model = Create(new FakeDiscoveryService());
+        await model.LoadAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(model.ShowAppsEmpty,
+            "With no query, the discovery empty state explains the sidebar.");
+        Assert.IsFalse(model.HasNoResults);
+
+        model.SearchText = "zzz-no-match";
+        Assert.IsFalse(model.ShowAppsEmpty,
+            "With a query, the no-results view explains the sidebar instead.");
+        Assert.IsTrue(model.HasNoResults);
+
+        model.SearchText = string.Empty;
+        Assert.IsTrue(model.ShowAppsEmpty);
+        Assert.IsFalse(model.HasNoResults);
+    }
+
+    [TestMethod]
     public async Task Assessment_IsAttachedToEachItem()
     {
         var discovery = new FakeDiscoveryService();

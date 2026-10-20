@@ -251,6 +251,22 @@ Prerequisites to revisit (not this stage): tray lifetime architecture, a
 tray icon design (spec §2 notes a redrawn 18 px monochrome template), the
 notification/reopen flow, and a user preference key with the same default-off
 parity. Until then: no fake tray commands; quit-on-close stays.
+- Stage 15: main-window interaction parity — **implemented, bounded scope; no
+  desktop session available here, so interaction checks are pending
+  (S19–S21)**. Corrections against the macOS reference: a search filter no
+  longer clears the selection/detail page (macOS clears only when the entry
+  leaves the model, `AppModel.swift:112` — implemented via OneWay list
+  selection, existence-based clearing, and re-announcement on refresh); the
+  no-results view is gated on an active query and echoes the typed text
+  (macOS `ContentUnavailableView.search` semantics), so an empty library
+  never claims "no matching clones"; Esc clears the search query like macOS
+  `.searchable`. The discovery empty/loading/error states, context menu
+  (10 items, availability rules), compatibility explanations, and preview-vs-
+  production separation were audited and stand unchanged. Deferred: auto-select
+  first entry (needs the real clone list), All/Running rows (W16, macOS spec
+  drift), column-collapse interaction (needs clone counts). 283/283 tests
+  green (278 + 5 new + 1 corrected to pin the macOS evidence). See
+  `docs/UI-PARITY-MATRIX.md` (Stage 15 notes).
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

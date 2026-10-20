@@ -149,6 +149,20 @@ public sealed class MainViewModel : ObservableObject
         }
     }
 
+    /// <summary>Clears the search query. Esc in the search box uses this to mirror macOS's
+    /// .searchable behavior (CloneList.swift:26). Returns whether anything changed, so the
+    /// view can pass an already-empty box's Esc through untouched.</summary>
+    public bool ClearSearch()
+    {
+        if (searchText.Length == 0)
+        {
+            return false;
+        }
+
+        SearchText = string.Empty;
+        return true;
+    }
+
     public IReadOnlyList<CloneGroupView> VisibleGroups => visibleGroups;
 
     public CloneItem? SelectedClone
@@ -180,7 +194,19 @@ public sealed class MainViewModel : ObservableObject
 
     public bool HasSelection => SelectedClone != null || SelectedApp != null || SelectedOrphan != null;
 
-    public bool HasNoResults => visibleGroups.Count == 0 && visibleAppGroups.Count == 0;
+    /// <summary>True while the search field carries a query. macOS gates its no-results
+    /// view on the search text the same way (MainWindow.swift:80 uses
+    /// ContentUnavailableView.search, which only appears for a typed query).</summary>
+    public bool HasActiveQuery => searchText.Trim().Length > 0;
+
+    /// <summary>No-results state, but only while a query is active: with an empty search
+    /// the plain empty/discovery states explain the sidebar; a "no results" phrase would
+    /// be dishonest there because nothing is being searched yet.</summary>
+    public bool HasNoResults => HasActiveQuery && visibleGroups.Count == 0 && visibleAppGroups.Count == 0;
+
+    /// <summary>Windows copy for macOS's ContentUnavailableView.search title
+    /// ("No Results for {query}"); the typed text is echoed exactly.</summary>
+    public string NoResultsText => $"No results for \"{searchText.Trim()}\"";
 
     public bool HasApps => visibleAppGroups.Count > 0;
 
@@ -214,7 +240,7 @@ public sealed class MainViewModel : ObservableObject
 
     public bool ShowAppsError => !IsLoadingApps && DiscoveryError != null;
 
-    public bool ShowAppsEmpty => !IsLoadingApps && DiscoveryError == null && !HasApps && !IsPreview;
+    public bool ShowAppsEmpty => !IsLoadingApps && DiscoveryError == null && !HasApps && !IsPreview && !HasActiveQuery;
 
     public IReadOnlyList<AppGroupView> VisibleAppGroups => visibleAppGroups;
 
@@ -708,7 +734,11 @@ public sealed class MainViewModel : ObservableObject
         }
 
         visibleGroups = next;
-        if (selectedClone != null && !next.SelectMany(g => g.Items).Any(c => c.Id == selectedClone.Id))
+        // macOS clears a selection only when the entry left the model (AppModel.swift:112).
+        // A search filter merely hides the row, so the selection — and the detail page —
+        // must survive; the list views keep their UI selection out of the view model
+        // (OneWay bindings), and the re-announcements below restore the highlight.
+        if (selectedClone != null && clones.All(c => c.Id != selectedClone.Id))
         {
             SelectedClone = null;
         }
@@ -729,7 +759,7 @@ public sealed class MainViewModel : ObservableObject
         }
 
         visibleAppGroups = appNext;
-        if (selectedApp != null && !appNext.SelectMany(g => g.Items).Any(i => i.App.Id == selectedApp.App.Id))
+        if (selectedApp != null && appItems.All(i => i.App.Id != selectedApp.App.Id))
         {
             SelectedApp = null;
         }
@@ -741,17 +771,24 @@ public sealed class MainViewModel : ObservableObject
             .ThenBy(p => p.Id)
             .Select(p => new OrphanProfileItem(p))
             .ToList();
-        if (selectedOrphan != null && !orphanProfiles.Any(o => o.Profile.Id == selectedOrphan.Profile.Id))
+        if (selectedOrphan != null && orphanProfiles.All(o => o.Profile.Id != selectedOrphan.Profile.Id))
         {
             SelectedOrphan = null;
         }
 
         RaisePropertyChanged(nameof(VisibleGroups));
         RaisePropertyChanged(nameof(VisibleAppGroups));
+        // Re-announce the selections so a row the query had hidden regains its highlight
+        // (and stale list state is replaced by the model's source of truth).
+        RaisePropertyChanged(nameof(SelectedClone));
+        RaisePropertyChanged(nameof(SelectedApp));
+        RaisePropertyChanged(nameof(SelectedOrphan));
+        RaisePropertyChanged(nameof(HasActiveQuery));
         RaisePropertyChanged(nameof(HasApps));
         RaisePropertyChanged(nameof(HasClones));
         RaisePropertyChanged(nameof(HasOrphans));
         RaisePropertyChanged(nameof(HasNoResults));
+        RaisePropertyChanged(nameof(NoResultsText));
         RaisePropertyChanged(nameof(ShowAppsEmpty));
         RaisePropertyChanged(nameof(ShowProfilesEmpty));
         RaisePropertyChanged(nameof(ProfilesForSelectedApp));

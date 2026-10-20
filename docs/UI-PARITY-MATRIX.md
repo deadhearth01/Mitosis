@@ -409,3 +409,63 @@ Tests added this stage: 12 (6 keyboard routing, 6 size validation) on top of
 Stage 13's 56; total 278/278 green. Desktop checks (resize below floors,
 repeat-open focus, sheet refuse-resize, restore behavior) are pending and
 listed as scenarios S14–S18 in `docs/WINDOWS-UI-VERIFICATION.md`.
+
+## Stage 15 main-window interaction notes
+
+Scope chosen after re-auditing the macOS sidebar/detail interaction model
+(`CloneList.swift`, `AppModel.swift`, `MainWindow.swift:71-85`) against the
+Windows shell. Every change below is main-window interaction only — no engine,
+provisioning, or persistence-semantics changes.
+
+- W13/W25 (search filtering and no-match state): Implemented and verified
+  (unit tests). Three corrections against the macOS reference:
+  1. Selection now survives search filtering. macOS clears a selection only
+     when the entry leaves the model (`AppModel.swift:112` — the guard is
+     "entry(selection) == nil", not "hidden by search"); the Windows view
+     model previously cleared the selection (and the whole detail page with
+     it) as soon as a query filtered the selected row, which in production
+     meant selecting an app and then searching always destroyed the detail
+     page. The list views now keep selection state out of the view model
+     (OneWay `SelectedItem` + explicit selection-changed forwarding), an
+     existence-based guard clears the selection only on genuine removals,
+     and the view model re-announces selections after every refresh so a
+     highlighted row reappears when the query clears. A former test pinning
+     the wrong behavior was corrected, not weakened — its replacement pins
+     the macOS evidence.
+  2. The no-results view is gated on an active query. macOS's
+     `ContentUnavailableView.search` (`MainWindow.swift:80`) only exists for
+     typed text; the Windows sidebar previously showed "No clones match your
+     search." even on a fresh empty library — overlapping the honest
+     discovery empty state. `HasNoResults` now requires
+     `HasActiveQuery`, and the discovery empty state yields while searching.
+     The copy mirrors macOS's system strings honestly: "No results for
+     "{query}"" plus a spelling hint.
+  3. Esc clears the search query, mirroring macOS `.searchable`
+     (CloneList.swift:26) via `MainViewModel.ClearSearch()`; an empty box's
+     Esc passes through untouched. No other keys are touched.
+- Selection preservation across discovery refresh (keptAppId / keptOrphanId)
+  was already implemented and tested in earlier stages and is unchanged.
+- W18 (context menu): unchanged — 10 items matching `CloneMenu`
+  availability semantics; one minor documented adaptation: macOS *hides*
+  "Find App…" for clones whose original exists while Windows *disables* it
+  (same information, consistent menu shape). Left as-is intentionally.
+- W16 (All-Clones/Running sidebar rows): still open (spec drift on the macOS
+  side too — the enum exists but macOS does not render it either); unchanged.
+
+Deferred from the candidate set, with reasons:
+- Auto-selecting the first visible entry on load (macOS AppModel.swift:85,113):
+  macOS auto-selects the first *clone*; Windows production has no clone list
+  yet (sidebar clones are explicit preview data), and auto-selecting a
+  discovered app would open a detail page macOS never opens on launch.
+  Revisit when the real clone list lands.
+- macOS column-collapse behavior (`entries.isEmpty → detail-only`, 
+  MainWindow.swift:62-65): a layout interaction coupled to real clone counts;
+  deferred with W16.
+- Search focus/text selection, arrow-key list navigation beyond WinUI list
+  defaults: no macOS source behavior found for these (audit §6 marks them
+  P+R/unverifiable); WinUI's native defaults stand.
+
+Tests: 5 new + 1 corrected (kept as strong as before) — total 283/283 green.
+Manual checks (selection persistence while typing, Esc, no-results copy,
+highlight restore) are pending and listed as S19–S21 in
+`docs/WINDOWS-UI-VERIFICATION.md`.

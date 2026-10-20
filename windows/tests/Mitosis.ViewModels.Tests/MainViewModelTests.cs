@@ -113,15 +113,70 @@ public sealed class MainViewModelTests
     }
 
     [TestMethod]
-    public void Search_NoMatch_ShowsNoResultsAndClearsSelection()
+    public void Search_NoMatch_ShowsNoResultsButKeepsSelection()
     {
         var model = Create();
-        model.SelectedClone = PreviewData.CreateClones().First();
+        var selected = PreviewData.CreateClones().First();
+        model.SelectedClone = selected;
 
         model.SearchText = "zzz-no-such-app";
 
         Assert.IsTrue(model.HasNoResults);
-        Assert.IsFalse(model.HasSelection, "Selected clone left the visible set.");
+        Assert.AreSame(selected, model.SelectedClone,
+            "macOS keeps a selection whose row the search merely hides (AppModel.swift:112).");
+        Assert.IsTrue(model.ShowCloneDetail, "The detail page stays with the hidden selection.");
+        Assert.AreEqual("No results for \"zzz-no-such-app\"", model.NoResultsText);
+    }
+
+    [TestMethod]
+    public void Search_Clear_RestoresSelectionHighlight()
+    {
+        var model = Create();
+        var signal = PreviewData.CreateClones().First(c => c.Name == "Signal (Work)");
+        model.SelectedClone = signal;
+
+        model.SearchText = "zzz-no-such-app";
+        Assert.IsFalse(model.VisibleGroups.SelectMany(g => g.Items).Any(c => c.Id == signal.Id));
+
+        model.SearchText = string.Empty;
+
+        Assert.AreSame(signal, model.SelectedClone);
+        CollectionAssert.Contains(
+            model.VisibleGroups.SelectMany(g => g.Items).ToList(), signal,
+            "The row the query had hidden is selected again once the query clears.");
+    }
+
+    [TestMethod]
+    public void NoResults_RequiresAnActiveQuery()
+    {
+        var model = new MainViewModel(
+            Array.Empty<AppGroupItem>(), Array.Empty<CloneItem>(), isPreview: true);
+
+        Assert.IsFalse(model.HasActiveQuery);
+        Assert.IsFalse(model.HasNoResults,
+            "An empty library is an empty state, not a search miss — macOS only shows "
+            + "ContentUnavailableView.search for a typed query (MainWindow.swift:80).");
+
+        model.SearchText = "   ";
+        Assert.IsFalse(model.HasActiveQuery, "Whitespace-only text is not a query.");
+        Assert.IsFalse(model.HasNoResults);
+
+        model.SearchText = "anything";
+        Assert.IsTrue(model.HasActiveQuery);
+        Assert.IsTrue(model.HasNoResults);
+        Assert.AreEqual("No results for \"anything\"", model.NoResultsText);
+    }
+
+    [TestMethod]
+    public void ClearSearch_ClearsQueryAndReportsWhenThereIsNothingToClear()
+    {
+        var model = Create();
+        Assert.IsFalse(model.ClearSearch(), "Nothing typed — an empty box's Esc must pass through.");
+
+        model.SearchText = "sig";
+        Assert.IsTrue(model.ClearSearch());
+        Assert.AreEqual(string.Empty, model.SearchText);
+        Assert.AreEqual(5, model.VisibleGroups.Count);
     }
 
     [TestMethod]

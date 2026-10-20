@@ -326,6 +326,39 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   `WindowsReleaseIdentityTests`). Open items: purpose-drawn 16/24 px icon
   sizes, a shipping version stamp decision, code signing. See
   `docs/WINDOWS-RELEASE.md` (Stage 18 sections).
+- Stage 19: published-artifact integrity and release verification —
+  **implemented, verified end-to-end on the real artifact**. The publish script
+  was decoupled from trust: it now deletes previous `Mitosis-windows-*.zip`s
+  before packaging (a stale RC cannot be uploaded by mistake), fixes a latent
+  denylist bug (`.json.user` never matched because `Extension` reports only the
+  last dot; `.user` now matches all editor-state files), and writes a
+  `.sha256` sidecar next to the archive. A new, independent verifier —
+  `windows/tools/ReleaseVerifier`, a plain .NET console project in the solution
+  that is also the CI step's executable — takes a ZIP path and judges the
+  artifact itself: it recomputes and prints the SHA-256, compares the sidecar,
+  opens and fully enumerates the archive, rejects traversal and duplicate
+  entries and any source/project/git-metadata content, extracts into a fresh
+  temp directory, re-checks the required runtime files and the 13 pose assets
+  inside the *extracted* tree, reads the exe's COFF header (x64 enforced) and
+  PE resource directory (application icon enforced), and checks that
+  `FileVersion`/`ProductVersion` agree with the archive name including the
+  nogit-vs-hash rule. CI runs this same command between packaging and upload in
+  the `publish-release-candidate` job, so a failing verification now blocks the
+  artifact upload, and the uploaded CI artifact includes the `.sha256`
+  sidecar. 16 failure-case fixture tests (`ReleaseVerifierTests`, synthetic
+  hand-built PE images and fixture zips — consistent, missing file, missing
+  pose, source entry, git metadata, traversal, corrupt zip, sidecar mismatch,
+  missing sidecar, bad name, version mismatch, revision mismatch, nogit
+  violation, ARM64, icon-free exe, non-exe) took the suite to 307/307 green;
+  the real pipeline was run end-to-end
+  (`Mitosis-windows-0.2.2-x64-2308fd9.zip`, SHA-256
+  `e710f35e41c8e64cf8eb81b1dc8f3ee23634c010d0c77581ed8e1431f7028c86`,
+  "verified") plus negative demos (tampered bytes, wrong sidecar, injected
+  `Assets/Rogue.cs`) that all exited nonzero with a single precise finding.
+  Archive bytes remain non-reproducible (Compress-Archive timestamps); the
+  sidecar pins the hash per artifact. Verification remains structural only —
+  it provides no clean-machine launch, OS-compatibility, or signing evidence.
+  See `docs/WINDOWS-RELEASE.md` (Stage 19 section).
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

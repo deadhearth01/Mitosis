@@ -69,12 +69,22 @@ jobs:
           dotnet-version: 10.0.x
       - name: Publish and package
         run: powershell -ExecutionPolicy Bypass -File scripts\publish-release.ps1
+      - name: Verify release candidate
+        # Stage 19: the archive that is about to be uploaded is verified
+        # independently (ZIP enumeration + extraction, required runtime files,
+        # pose assets, x64 architecture, embedded icon, version coherence,
+        # .sha256 sidecar). A failing exit code aborts before upload, so an
+        # invalid artifact is never attached to the CI result.
+        run: dotnet run --project tools\ReleaseVerifier -c Release -- --archive (Get-Item artifacts\Mitosis-windows-*.zip).FullName
       - name: Upload release candidate
         # Read-only distribution heritage: this produces a named CI artifact for
         # manual inspection and download — nothing is published externally, signed,
-        # or attached to a release page in this stage.
+        # or attached to a release page in this stage. The verification sidecar
+        # ships alongside the archive so its SHA-256 is downloadable too.
         uses: actions/upload-artifact@v4
         with:
           name: windows-release-candidate
-          path: windows/artifacts/Mitosis-windows-*.zip
+          path: |
+            windows/artifacts/Mitosis-windows-*.zip
+            windows/artifacts/Mitosis-windows-*.zip.sha256
           retention-days: 14

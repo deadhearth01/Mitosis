@@ -52,6 +52,8 @@ windows/
   tests/
     Mitosis.Domain.Tests/     MSTest suite for the domain layer
     Mitosis.ViewModels.Tests/ MSTest suite for shell view models (selection, filtering, states, placeholders)
+  tools/
+    ReleaseVerifier/          release-candidate archive verification console tool (Stage 19)
 ```
 
 Only `Mitosis.Domain` carries code so far: `CloneName`, a direct port of the
@@ -129,10 +131,13 @@ verification summary per application. Details: `docs/WINDOWS-EVIDENCE-BUNDLES.md
 Pushes to `WindowsVersion` and pull requests run `.github/workflows/windows-ci.yml`
 (`windows-latest`): restore, Release build, full test suite with `.trx` artifacts
 (14 days). Since Stage 17 a second job publishes the x64 release candidate from
-the same recipe (`windows/scripts/publish-release.ps1`) and uploads it as the
-`windows-release-candidate` artifact (a SHA-named zip, also 14 days) — see
-`docs/WINDOWS-RELEASE.md`. Reproduce locally with the commands in
-`docs/WINDOWS-CI.md`. CI covers compilation, unit tests, and publish
+the same recipe (`windows/scripts/publish-release.ps1`); since Stage 19 it then
+verifies the actual archive with `windows/tools/ReleaseVerifier` (ZIP
+enumeration + extraction, required files, x64 executable, embedded icon,
+version coherence, `SHA-256` sidecar) before uploading the
+`windows-release-candidate` artifact (the zip plus its `.sha256` sidecar, both
+14 days) — see `docs/WINDOWS-RELEASE.md`. Reproduce locally with the commands in
+`docs/WINDOWS-CI.md`. CI covers compilation, unit tests, and artifact
 verification only — not UI launch, pixels, Narrator, isolation, licensing,
 install-time behavior, or clean-machine runs.
 

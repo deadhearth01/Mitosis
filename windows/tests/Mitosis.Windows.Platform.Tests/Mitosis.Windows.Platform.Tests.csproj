@@ -6,5 +6,8 @@
     <ProjectReference Include="..\..\src\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj" />
     <ProjectReference Include="..\..\src\Mitosis.Domain\Mitosis.Domain.csproj" />
     <ProjectReference Include="..\..\src\Mitosis.Application\Mitosis.Application.csproj" />
+    <!-- The release-candidate verifier under test (Stage 19) is the same console
+         tool CI runs after publishing. -->
+    <ProjectReference Include="..\..\tools\ReleaseVerifier\ReleaseVerifier.csproj" />
   </ItemGroup>
 </Project>

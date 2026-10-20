@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- Plain .NET: the verifier inspects bytes (PE headers, ZIP) only, so it does
+         not target the Windows SDK or reference any app library — it must stay an
+         independent judge of the artifact, not a consumer of its types. -->
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Mitosis.ReleaseVerifier</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- Not distributed and not referenced by the app: developer/CI tool only. -->
+    <SelfContained>false</SelfContained>
+  </PropertyGroup>
+</Project>

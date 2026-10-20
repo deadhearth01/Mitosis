@@ -98,23 +98,89 @@ dotnet restore Mitosis.sln
 dotnet build Mitosis.sln -c Release --no-restore
 dotnet test --solution Mitosis.sln -c Release --no-build
 
-# Release candidate: publish + content sanity checks + SHA-named zip
+# Release candidate: publish + content sanity checks + SHA-named zip + .sha256
 powershell -ExecutionPolicy Bypass -File scripts\publish-release.ps1
+
+# Independent verification of the artifact (Stage 19)
+dotnet run --project tools\ReleaseVerifier -c Release --no-build -- `
+    --archive (Get-Item artifacts\Mitosis-windows-*.zip).FullName
 ```
 
-The script pins the exact recipe (Release, `win-x64`, `--self-contained false`)
-and refuses to produce a zip unless it contains the exe, the App SDK bootstrap
-DLL, `deps.json`/`runtimeconfig.json`, all 13 brand pose assets, no
-source/tooling/user-data files, and `FileVersion`/`ProductVersion` metadata
-that agrees with itself and the version scheme (a `ProductVersion` that
-carries a `+` suffix must carry a hex hash). It is the same command CI runs.
+The publish script pins the exact recipe (Release, `win-x64`,
+`--self-contained false`) and refuses to produce a zip unless it contains the
+exe, the App SDK bootstrap DLL, `deps.json`/`runtimeconfig.json`, all 13 brand
+pose assets, no source/tooling/user-data files, and
+`FileVersion`/`ProductVersion` metadata that agrees with itself and the version
+scheme (a `ProductVersion` that carries a `+` suffix must carry a hex hash). It
+also removes any previous `Mitosis-windows-*.zip` from the artifacts directory
+before packaging, so a stale RC can never sit next to the current one and be
+uploaded by mistake, and writes `<archive>.sha256` — the artifact's SHA-256, in
+`<64 hex hash>  <archive name>` form. The script and the verifier are the same
+commands CI runs.
+
+## Release-candidate verification (Stage 19)
+
+Publishing and verifying are deliberately separate: the verifier
+(`windows/tools/ReleaseVerifier`, a plain .NET console project inside the
+solution — also unit-tested via fixture archives in
+`Mitosis.Windows.Platform.Tests/ReleaseVerifierTests.cs`) takes only the ZIP
+path and judges the artifact itself rather than reusing the publishing state.
+A verification failure prints numbered findings and exits nonzero; CI
+therefore cannot upload a failing artifact.
+
+The verifier recomputes the SHA-256 of the archive itself, always (streaming
+read), and prints it — this hash is the value to paste into any handoff or bug
+report. When a `<archive>.sha256` sidecar is present it must match exactly, so
+the hash cannot quietly drift from the bytes; a missing sidecar is reported as
+a finding, because every RC must ship with its integrity file.
+
+What each check proves:
+
+| Check | What it proves |
+|---|---|
+| Archive name parse (`Mitosis-windows-<version>-x64-<revision>.zip`) | The artifact identifies its built version and source revision; anything else is unidentifiable and rejected |
+| ZIP opens and entry list is fully enumerated | The archive is structurally sound, not just a file with the right name |
+| Path-traversal and duplicate entry rejection | Extraction cannot write outside the extraction root or silently overwrite itself (`.git/...` or `.../..` names are refused) |
+| Denylist scan of the *archive entries* (`.cs`, `.csproj`, `.swift`, `.sln`, `.user`, `.log`, `.bak`, git metadata) | No source, project, editor-state, or repository files ride along in the shipped artifact |
+| Extraction into a fresh temporary directory; delete afterwards | The ZIP extracts on a real filesystem; nothing else on the machine is touched |
+| Required files (`Mitosis.exe`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, `Mitosis.deps.json`, `Mitosis.runtimeconfig.json`) + 13 `Assets/pose-*.png` | The pieces a clean machine cannot start without are inside the *archive*, not just in the publish tree |
+| PE header machine = 0x8664 | The executable is x64 — read directly from the COFF header, no tool environment needed |
+| Icon resource present (RT_ICON/RT_GROUP_ICON in the PE resource directory) | The application icon is embedded in the exe itself; Explorer/taskbar/shortcuts show the product glyph |
+| `FileVersionInfo` coherence with the archive name | The version Explorer shows, the metadata-derived archive name, and the embedded git revision all agree (nogit archives must not carry an embedded hash) |
+
+Failure investigation: run the verify command above and read the `[FAIL]`
+lines — each names the exact disproven property (file, entry, or metadata).
+For a mismatch between sidecar and archive, compare the printed SHA-256 with
+the `.sha256` file; if the archive is intact but wrongly hashed, regenerate the
+sidecar from the printed hash. If required files or the icon are missing, the
+publish step produced a bad tree — re-publish. The fixture tests listed above
+document the failure signatures.
+
+Evidence categories (do not substitute one for another):
+
+1. **Source build and automated tests** — `dotnet build`/`dotnet test` on a dev
+   machine or CI.
+2. **Published artifact structural and integrity checks** — the verifier: the
+   ZIP enumerates, extracts, contains the required files, x64 exe, embedded
+   icon, coherent metadata, matching SHA-256. This stage's evidence.
+3. **Actual launch testing on a clean Windows machine** — still pending; NOT
+   provided by category 2. Passing verification says the archive *can* install
+   nowhere more than "archive contents are sound".
+4. **Code-signing and trust validation** — none; unsigned. SmartScreen warning
+   expected for all consumers.
+
+Reproducibility remains as documented in the artifact table below: file sets
+and assembly hashes are stable for one commit, but archive *bytes* depend on
+`Compress-Archive` timestamps and are not byte-for-byte reproducible — the
+sidecar pins the hash per archive, not a build recipe property.
 
 ## Artifact
 
 | Property | Value (verified this stage) |
 |---|---|
 | Publish tree | `windows/artifacts/release/` (gitignored) |
-| Archive | `windows/artifacts/Mitosis-windows-<version>-x64-<sha>.zip` — the version is read back from the built exe's `FileVersion` and the suffix is the commit hash, so an artifact identifies its exact source revision and built version; without git access the suffix is `nogit` (verified both ways) |
+| Archive | `windows/artifacts/Mitosis-windows-<version>-x64-<revision>.zip` — the version is read back from the built exe's `FileVersion` and the suffix is the commit hash, so an artifact identifies its exact source revision and built version; without git access the suffix is `nogit` (verified both ways). Stale candidate zips are removed before packaging (only the current RC is ever present) |
+| Sidecar | `windows/artifacts/Mitosis-windows-<...>.zip.sha256` — the archive's SHA-256 plus its filename; written by the publish script, recomputed and compared by the verifier (Stage 19) |
 | Contents | 75 files: `Mitosis.exe/.dll` (7 project DLLs), WinAppSDK payload (`Microsoft.WinUI.dll`, `WinRT.Runtime.dll`, `Microsoft.Windows.SDK.NET.dll`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, WebView2Loader, ONNX/DirectML components included by the App SDK package), and `Assets/` with the 13 pose PNGs. No `.cs`/`.csproj`/`.swift`, no test results, no git metadata, no user data (verified by scanning the zip); the exe icon is embedded |
 | Size | ≈ 39 MB compressed, ≈ 113 MB unpacked (dominated by the App SDK AI/ML payload shipped with `Microsoft.WindowsAppSDK 2.5.1`) |
 | PDBs | Included on purpose for diagnosable releases; strip only via a later change to the script + this doc |
@@ -127,13 +193,16 @@ but would extract oddly under non-Windows tools.
 ## CI (`.github/workflows/windows-ci.yml`)
 
 - `build-test` (existing, unchanged): restore, Release build, full suite, TRX.
-- `publish-release-candidate` (Stage 17): runs after tests pass on the same
-  `windows-latest` image, runs `scripts/publish-release.ps1`, and uploads
-  `windows-release-candidate` = `Mitosis-windows-<version>-x64-<sha>.zip`
-  (14-day retention; since Stage 18 the
-  `publish-release-candidate` job runs the same version-checked script, so the
-  name carries the built version). Nothing is published externally, signed, or
-  attached to a release page; the macOS `release.yml` workflow is untouched.
+- `publish-release-candidate` (Stage 17, verified since Stage 19): runs after
+  tests pass on the same `windows-latest` image, runs
+  `scripts/publish-release.ps1`, then a **verify step** runs the
+  `tools/ReleaseVerifier` tool against the actual `artifacts/Mitosis-windows-*.zip`
+  before anything is uploaded. If verification fails (nonzero exit), the
+  upload step never runs — an invalid RC cannot appear in the CI results.
+  `windows-release-candidate` = the zip plus its `.sha256` sidecar (14-day
+  retention; the name carries the built version since Stage 18). Nothing is
+  published externally, signed, or attached to a release page; the macOS
+  `release.yml` workflow is untouched.
 
 ## Release checklist (current truth)
 
@@ -147,6 +216,10 @@ Before anything could be called 1.0 for Windows:
 - [x] The exe has an application icon (Stage 18, derived from existing product
       artwork; a purpose-drawn 16/24 px small-size glyph remains open — a
       downscaled 1024 px mascot stays legible to about 32 px).
+- [x] Published-artifact structural and integrity verification (Stage 19:
+      `windows/tools/ReleaseVerifier` — ZIP enumeration/extraction, required
+      files, x64 architecture, embedded icon, metadata/name coherence, SHA-256
+      sidecar; 16 fixture failure-case tests; CI verifies before upload).
 - [ ] Merge `WindowsVersion` after all stages; CI green including the
       `windows-release-candidate` artifact (automated; working).
 - [ ] Decide and stamp a real `FileVersion`/`ProductVersion` at release time by

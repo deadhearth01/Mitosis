@@ -47,9 +47,11 @@ if ($versionInfo.ProductVersion -notmatch '^' + [regex]::Escape($shortVersion) +
 }
 
 # The artifact must never carry source files, tool caches, tests, or user data:
-# everything under %LOCALAPPDATA% is resolved at runtime, never published.
+# everything under %LOCALAPPDATA% is resolved at runtime, never published. The
+# extension is taken from the last dot of the name, so ".user" also covers
+# "*.json.user" editor settings.
 $unexpected = @(Get-ChildItem $publishDir -Recurse |
-    Where-Object { $_.Extension -in ".cs", ".csproj", ".swift", ".json.user", ".log" })
+    Where-Object { $_.Extension -in ".cs", ".csproj", ".swift", ".user", ".log" })
 if ($unexpected.Count -gt 0) {
     throw "Publish output contains non-runtime files: $($unexpected | Select-Object -First 3)"
 }
@@ -64,11 +66,25 @@ $revParse = cmd /c "git -C ""$windowsDir"" rev-parse --short HEAD 2>nul"
 if ($LASTEXITCODE -eq 0 -and $revParse -match '^[0-9a-f]{7,40}$') { $sha = $Matches[0] }
 $revision = if ($sha) { $sha } else { "nogit" }
 $zipPath = Join-Path $zipDir "Mitosis-windows-$shortVersion-x64-$revision.zip"
+# Only the current candidate stays: staging a new RC while old zips linger is how
+# a stale artifact gets picked up and uploaded by mistake.
+Get-ChildItem $zipDir -Filter "Mitosis-windows-*.zip" -ErrorAction SilentlyContinue |
+    Remove-Item -Force
+Get-ChildItem $zipDir -Filter "Mitosis-windows-*.zip.sha256" -ErrorAction SilentlyContinue |
+    Remove-Item -Force
 Compress-Archive -Path (Join-Path $publishDir "*") -DestinationPath $zipPath -Force
 $zip = Get-Item $zipPath
 
+# The integrity sidecar (Stage 19): the verifier recomputes the archive hash and
+# refuses to bless the artifact when it disagrees with this file.
+$sha256Hash = (Get-FileHash $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
+$sidecar = "$zipPath.sha256"
+Set-Content -Path $sidecar -Value "$sha256Hash  $($zip.Name)" -Encoding ascii
+
 Write-Host ("== Release candidate: {0} (version {1}{2}, {3:N0} bytes) ==" -f
     $zip.Name, $shortVersion, $(if ($sha) { " rev $sha" } else { "" }), $zip.Length)
+Write-Host "   sidecar:    $sidecar (SHA-256 of the archive)"
+Write-Host "   verify:     dotnet run --project tools\ReleaseVerifier -c Release -- --archive $zipPath"
 Write-Host ("   publish tree: {0} files, {1:N0} bytes in Assets" -f
     @(Get-ChildItem $publishDir -Recurse -File).Count,
     ((Get-ChildItem (Join-Path $publishDir "Assets") -Recurse -File | Measure-Object Length -Sum).Sum))

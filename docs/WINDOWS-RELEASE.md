@@ -132,7 +132,13 @@ The verifier recomputes the SHA-256 of the archive itself, always (streaming
 read), and prints it — this hash is the value to paste into any handoff or bug
 report. When a `<archive>.sha256` sidecar is present it must match exactly, so
 the hash cannot quietly drift from the bytes; a missing sidecar is reported as
-a finding, because every RC must ship with its integrity file.
+a finding, because every RC must ship with its integrity file. Since Stage 20
+the sidecar is also *bound*: the file must be one sha256sum-style line
+`<64-hex hash>` + two spaces + the archive's file name, and the name token must
+equal the archive being verified — a sidecar that hashes correctly but names
+another artifact is rejected. Sidecars are size-capped (1 MB) so a flooded or
+replaced sidecar is a finding, not a memory event, and an unreadable sidecar is
+reported as a finding instead of crashing.
 
 What each check proves:
 
@@ -140,7 +146,7 @@ What each check proves:
 |---|---|
 | Archive name parse (`Mitosis-windows-<version>-x64-<revision>.zip`) | The artifact identifies its built version and source revision; anything else is unidentifiable and rejected |
 | ZIP opens and entry list is fully enumerated | The archive is structurally sound, not just a file with the right name |
-| Path-traversal and duplicate entry rejection | Extraction cannot write outside the extraction root or silently overwrite itself (`.git/...` or `.../..` names are refused) |
+| Path-traversal and duplicate entry rejection | Extraction cannot write outside the extraction root or silently overwrite itself (`.git/...` or `.../..` names are refused). Stage 20 extends this: absolute (`/etc/...`) and drive-qualified (`C:\...`) entry names, Windows-ambiguous names (trailing dots/spaces that NTFS strips into a different file, colons that open alternate data streams), and `.`-segment spellings that hide duplicates are all rejected; backslash directory entries are treated as directories |
 | Denylist scan of the *archive entries* (`.cs`, `.csproj`, `.swift`, `.sln`, `.user`, `.log`, `.bak`, git metadata) | No source, project, editor-state, or repository files ride along in the shipped artifact |
 | Extraction into a fresh temporary directory; delete afterwards | The ZIP extracts on a real filesystem; nothing else on the machine is touched |
 | Required files (`Mitosis.exe`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, `Mitosis.deps.json`, `Mitosis.runtimeconfig.json`) + 13 `Assets/pose-*.png` | The pieces a clean machine cannot start without are inside the *archive*, not just in the publish tree |
@@ -174,13 +180,73 @@ and assembly hashes are stable for one commit, but archive *bytes* depend on
 `Compress-Archive` timestamps and are not byte-for-byte reproducible — the
 sidecar pins the hash per archive, not a build recipe property.
 
+## Hardening audit of the verifier itself (Stage 20)
+
+The Stage 19 verifier parses untrusted ZIP archives and hand-untrusted PE
+bytes, so Stage 20 treats *its inputs as hostile* and audits the tool the same
+way: every confirmed defect below is a behavior observed in code or reproduced
+by a failing fixture, not a hypothetical. The fixes are bounded to the
+verifier, the packaging pipeline is unchanged where it was already correct
+(publish cleanup is fail-closed under `$ErrorActionPreference = "Stop"`; the
+CI job has `permissions: contents: read`, no secrets, and verify-before-upload
+ordering), and the legitimate artifact must keep passing.
+
+Confirmed defects and their fixes:
+
+| # | Confirmed defect (evidence) | Fix | Regression tests |
+|---|---|---|---|
+| 1 | PE parser crash paths: `HasIconGroup` sliced data-directory/section fields without bounds checks; the `peOffset + 6` comparison could wrap negative for an attacker-chosen `e_lfanew`; resource-table arithmetic used `uint` wrap-around — a malformed exe crashed the verifier with an unhandled exception instead of reporting an invalid archive | Every read is bounds-checked in long arithmetic (`PeChecks.InBounds`), optional-header magic must be 0x10B/0x20B, unresolvable resource RVAs throw the parser's own `MissingWindowsHeader`, and a defensive final catch converts any remaining parser escape into a finding | `TruncatedOptionalHeaderIsReportedNotCrashing`, `RvaOutsideSectionsIsReportedNotCrashing`, `HugeSectionCountIsReportedNotCrashing`, `BadOptionalMagicIsReportedNotCrashing`, `NearMaxPeOffsetDoesNotWrap`, `NonExeExecutableIsReported` |
+| 2 | No resource limits: entry count, archive size, and expanded sizes were unbounded — a crafted "RC" could exhaust disk or hashing time; declared (untrusted) sizes were never enforced | `VerificationLimits` (documented below): pre-checks before hashing, entry-count cap during enumeration, declared-size rejection per entry, and metered extraction that counts truly decompressed bytes with `FileMode.CreateNew` targets (exclusive creation, no overwrite, no trust in archive file attributes — only regular file bytes are written regardless of what directories/symlinks entries claim) | `ArchiveSizeLimitIsEnforced`, `EntryCountLimitIsEnforced`, `ExtractionHoldsAtPerEntryDeclaredLimit`, `ReaderTruncatesAtDeclaredUncompressedSize`, `ExtractionStopsWhenTotalLimitIsCrossed` |
+| 3 | Sidecar could be welded to the wrong archive: the filename token was parsed but never compared; `File.ReadAllText` on an unreadable/huge sidecar crashed uncaught | Sidecar must be exactly `<hash>  <archive name>` (both tokens verified); 1 MB read cap; every sidecar I/O failure is a finding | `SidecarMustNameTheArchive`, `SidecarSingleTokenIsRejected`, `SidecarSizeLimitIsEnforced`, `SidecarHashMismatchIsReported`, `MissingSidecarIsReported` |
+| 4 | Windows filename normalization was unhandled: entries ending in dot/space (NTFS strips them — `Mitosis.exe.` and `Mitosis.exe` collide on disk, potentially overwriting required files), colons anywhere (NTFS alternate data streams), `.`-segment spellings hiding duplicates (`Assets/./pose.png` vs `Assets/pose.png`), and backslash directory entries (`Assets\`) misread as files | New `ZipAudit.IsWindowsAmbiguous` rejects trailing-dot/space and colon names; `Normalize` collapses `.` and empty segments before duplicate detection (case-insensitively); directories are recognized by normalized form | `TrailingDotEntryIsRejected`, `TrailingSpaceEntryIsRejected`, `AlternateDataStreamEntryIsRejected`, `DotSegmentCollidingEntriesAreRejected`, `CaseCollidingEntriesAreRejected`, `AbsolutePathEntryIsRejected`, `DriveQualifiedEntryIsRejected`, `ForwardSlashTraversalEntryIsRejected`, `BackslashTraversalEntryIsRejected`, `ScratchDirectoryIsCleanedAfterFailure` |
+
+Limit values, chosen against the real artifact (≈39 MB compressed, ≈113 MB
+unpacked, 75 files, largest payload well under 100 MB) with generous headroom —
+any future legitimate artifact that outgrows the limits will be rejected with an
+explanatory finding naming the limit, and the constants live in
+`windows/tools/ReleaseVerifier/VerificationLimits.cs` for review:
+
+| Limit | Value | Rationale |
+|---|---|---|
+| Max archive size | 512 MB | ~13× the current candidate; bounds the streaming hash pass |
+| Max entries | 1000 files | ~13× the current 75 entries |
+| Max per-entry expanded size | 256 MB | ~2.4× the largest real payload file |
+| Max total expanded size | 512 MB | ~4.5× the current unpacked tree |
+| Max sidecar size | 1 MB | A legitimate sidecar is one short line |
+
+Two defense-in-depth observations recorded honestly:
+
+- **Declared sizes are untrusted, but the .NET reader bounds them** — an
+  archive whose central directory claims a small entry while the stream holds
+  1 MB decompresses to exactly the declared size under the current reader
+  (pinned by `ReaderTruncatesAtDeclaredUncompressedSize`). The declared-size
+  pre-check is the primary bomb guard, the metered copy is the backstop if
+  reader behavior ever changes, and the total meter is exercised in practice
+  (`ExtractionStopsWhenTotalLimitIsCrossed`).
+- **Cleanup is guaranteed on every path** — extraction runs inside
+  `try/finally` with a best-effort scratch-directory delete on success, meter
+  abort, and malformed-archive failure; the unique scratch name means a locked
+  leftover can only be a stray temp folder, never mistaken for verified state
+  (`ScratchDirectoryIsCleanedAfterFailure` asserts zero leftovers after a
+  failure).
+
+Residual limitations of the verifier (not fixed in Stage 20, all fail-closed or
+out of its charter): CRC values are not validated (content checks + required
+file/PE audits cover the fixed artifact set); a rare extraction I/O failure
+message may include the scratch temp path (CI logs are repo-visible anyway);
+the CLI resolves a relative `--archive` path against the current directory (CI
+always passes an absolute path); PE completeness beyond the COFF header +
+resource directory (e.g. corrupt x64 code sections) is outside the
+verifier's structural charter and remains launch-test territory. 38 verifier
+fixture tests total (22 added in Stage 20); full suite 329/329 green.
+
 ## Artifact
 
 | Property | Value (verified this stage) |
 |---|---|
 | Publish tree | `windows/artifacts/release/` (gitignored) |
 | Archive | `windows/artifacts/Mitosis-windows-<version>-x64-<revision>.zip` — the version is read back from the built exe's `FileVersion` and the suffix is the commit hash, so an artifact identifies its exact source revision and built version; without git access the suffix is `nogit` (verified both ways). Stale candidate zips are removed before packaging (only the current RC is ever present) |
-| Sidecar | `windows/artifacts/Mitosis-windows-<...>.zip.sha256` — the archive's SHA-256 plus its filename; written by the publish script, recomputed and compared by the verifier (Stage 19) |
+| Sidecar | `windows/artifacts/Mitosis-windows-<...>.zip.sha256` — sha256sum-style one-liner: the archive's SHA-256, two spaces, then the archive's file name; written by the publish script, recomputed and name-bound by the verifier (Stage 19; both tokens checked since Stage 20 — a correct hash naming a different archive is a finding) |
 | Contents | 75 files: `Mitosis.exe/.dll` (7 project DLLs), WinAppSDK payload (`Microsoft.WinUI.dll`, `WinRT.Runtime.dll`, `Microsoft.Windows.SDK.NET.dll`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, WebView2Loader, ONNX/DirectML components included by the App SDK package), and `Assets/` with the 13 pose PNGs. No `.cs`/`.csproj`/`.swift`, no test results, no git metadata, no user data (verified by scanning the zip); the exe icon is embedded |
 | Size | ≈ 39 MB compressed, ≈ 113 MB unpacked (dominated by the App SDK AI/ML payload shipped with `Microsoft.WindowsAppSDK 2.5.1`) |
 | PDBs | Included on purpose for diagnosable releases; strip only via a later change to the script + this doc |
@@ -220,6 +286,13 @@ Before anything could be called 1.0 for Windows:
       `windows/tools/ReleaseVerifier` — ZIP enumeration/extraction, required
       files, x64 architecture, embedded icon, metadata/name coherence, SHA-256
       sidecar; 16 fixture failure-case tests; CI verifies before upload).
+- [x] Published-artifact verification hardened against hostile/corrupt input
+      (Stage 20: resource limits — 512 MB archive/expanded, 1000 entries, 1 MB
+      sidecar; strict two-token sidecar binding; traversal/absolute/drive/
+      Windows-ambiguity/ADS/dot-segment rejection; metered exclusive extraction
+      with guaranteed scratch cleanup; bounds-checked PE parsing that fails as a
+      finding, never an uncaught crash; 22 adversarial fixture tests; CI
+      permissions already least-privilege).
 - [ ] Merge `WindowsVersion` after all stages; CI green including the
       `windows-release-candidate` artifact (automated; working).
 - [ ] Decide and stamp a real `FileVersion`/`ProductVersion` at release time by

@@ -359,6 +359,34 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   sidecar pins the hash per artifact. Verification remains structural only —
   it provides no clean-machine launch, OS-compatibility, or signing evidence.
   See `docs/WINDOWS-RELEASE.md` (Stage 19 section).
+- Stage 20: security and robustness audit of the release verifier and packaging
+  pipeline — **implemented, all findings evidence-based, verified end-to-end**.
+  The verifier's inputs (ZIP bytes, PE headers, sidecar) are now treated as
+  hostile: every PE read is bounds-checked in long arithmetic and malformed
+  structures (truncated optional header, unresolvable resource RVA, huge
+  section count, bad magic, near-int-max `e_lfanew`) surface as findings
+  instead of uncontrolled crashes; explicit resource limits
+  (`VerificationLimits`: 512 MB archive/expanded total, 256 MB per entry, 1000
+  entries, 1 MB sidecar — sized ~13× the real artifact with a documented
+  rejection message) guard hashing, enumeration, and metered extraction
+  (`FileMode.CreateNew` targets, no overwrite, no reliance on archive file
+  attributes); the `.sha256` sidecar is strictly two-token bound (`<hash>`
+  followed by the archive's own file name) with capped, failure-tolerant
+  reads; and Windows filesystem equivalence rules are enforced — trailing
+  dots/spaces (NTFS name stripping), NTFS alternate-data-stream colons, `.`
+  -segment duplicate spellings, absolute/drive-qualified entry names, and
+  backslash-style directory entries are all rejected before extraction.
+  Scratch extraction cleanup is guaranteed on success, meter-abort, and
+  failure paths. Audit findings included a discovered observation that the
+  .NET ZIP reader truncates decompression at the declared entry size (now
+  pinned by a regression test as the primary bomb guard, with the metered
+  copy as backstop). 22 adversarial fixture tests took the verifier class to
+  38 and the suite to 329/329 green; the real pipeline re-ran end-to-end plus
+  tamper/negative demos. The packaging script and CI workflow needed no
+  changes (cleanup already fail-closed; CI already least-privilege with
+  verify-before-upload ordering). Limits stay structural: no clean-machine
+  launch, OS-compatibility, or signing evidence is claimed by passing
+  verification. See `docs/WINDOWS-RELEASE.md` (Stage 20 section).
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

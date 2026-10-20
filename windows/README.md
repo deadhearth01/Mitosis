@@ -136,7 +136,12 @@ verifies the actual archive with `windows/tools/ReleaseVerifier` (ZIP
 enumeration + extraction, required files, x64 executable, embedded icon,
 version coherence, `SHA-256` sidecar) before uploading the
 `windows-release-candidate` artifact (the zip plus its `.sha256` sidecar, both
-14 days) — see `docs/WINDOWS-RELEASE.md`. Reproduce locally with the commands in
+14 days). Stage 20 hardened the verifier against hostile input: documented
+resource limits (archive/expanded size, entry count, sidecar size), strict
+two-token sidecar binding, traversal/absolute/drive/Windows-ambiguous entry
+rejection, metered extraction with guaranteed scratch cleanup, and
+bounds-checked PE parsing that fails as a finding rather than a crash — see
+`docs/WINDOWS-RELEASE.md`. Reproduce locally with the commands in
 `docs/WINDOWS-CI.md`. CI covers compilation, unit tests, and artifact
 verification only — not UI launch, pixels, Narrator, isolation, licensing,
 install-time behavior, or clean-machine runs.

@@ -284,8 +284,58 @@ no app was copied, launched, or modified to produce any of this evidence.
   (`main-1060x720-light.png`) but was not recaptured this pass.
 - Clean Windows 10/11 VMs, a standard (non-admin) account, and a second
   Windows user/session. S4 clone detail was not opened (preview data only).
-- Touch, IME, right-to-left layout, drag-below-floor for the main window, the
-  wizard validation-error path, Settings store reveal/tips actions, and Help
-  action buttons.
+- Touch, IME, right-to-left layout, drag-below-floor for the main window, and
+  Help action buttons.
 - A published Windows artifact remains macOS-only upstream, so "View Release"
   click-through was not exercised.
+
+### 5.3 Follow-up pass: dialogs, support actions, and wizard paths (2026-11-27)
+
+Same machine, theme, and scale as §5. This pass ran against the working tree's
+publish output (`artifacts\live-check`, Release, 0 warnings, 497/497) so the
+fixed build could be checked before packaging. Eight screenshots were added.
+
+- Profile edit (app detail ▸ Edit profile): the dialog opens with keyboard focus
+  in `Name`. Saving an empty name keeps the dialog open with "Give the clone a
+  name."; a name that matches another profile reports "You already have Android
+  Studio Work."; a valid rename plus a different badge color persisted to
+  `profiles.json` and re-rendered in the profile list; Esc closed without
+  changing the store. UI Automation exposed the error as a `StatusBar` whose
+  accessible name is the message (`profile-edit-duplicate-dark.png`).
+- **Defect 12:** after a failed save the caret stayed on Save, so a keyboard user
+  had to find the invalid field, and the error bar was drawn but never spoken.
+  The save path now focuses the first invalid field and selects its text, and
+  raises an automation notification carrying the message (`InfoBar` draws its
+  message but has no live-region event). Re-checked live: focus returns to
+  `Name`, the dialog stays open, Esc still cancels
+  (`profile-edit-error-focused-dark.png`).
+- Remove (app detail ▸ Remove profile): the default button is Cancel — Enter and
+  Esc both closed the dialog with the record intact; Remove deleted only the
+  metadata record, the profile list refreshed, and `profiles.json` lost exactly
+  that entry (`profile-remove-confirm-dark.png`).
+- Settings ▸ General ▸ Diagnostics: Copy diagnostics placed the documented
+  report on the clipboard — version, runtime, OS, architecture, Windows App SDK,
+  data and log folders, writability, and the explicit "not recorded" note — and
+  showed the confirmation text (`settings-diagnostics-copied-dark.png`). Show log
+  folder in File Explorer opened the real `%LOCALAPPDATA%\Mitosis\Logs` folder.
+- Settings ▸ Advanced: Show Tips Again became a disabled "Tips Are On" and wrote
+  `Onboarded: false` to `preferences.json`; preferences were restored from a
+  backup afterwards (`settings-tips-reset-dark.png`).
+- Settings height follows the tab content by design (General 740 client px,
+  Advanced 300), so the window changed from 540×779 to 540×339 including the
+  title bar when switching tabs. Recorded as intended macOS parity, not a
+  defect.
+- Wizard (Ctrl+N): Continue stays disabled until an app is picked; the name field
+  validates inline and disabled Continue for empty, leading-dot, and duplicate
+  names; the review step restates application, name, badge, and compatibility
+  with "This saves a planned profile record only."; Save Profile reached the done
+  state with Show Profile/Close; Show Profile opened the app detail with the new
+  record listed as *Planned*; removing that temporary profile left the two
+  pre-existing records untouched (`wizard-validation-empty-dark.png`,
+  `wizard-validation-leading-dot-dark.png`, `wizard-review-dark.png`; the done
+  state reuses the Stage 27 `wizard-done-dark.png`).
+
+Not exercised: the acknowledgement checkbox, which appears only for apps
+assessed *Needs review* — on this machine every app is *Not yet assessed* or
+*Not supported* — and Narrator speech for the new notification. The automation
+tree exposes the message text and the focus move, but no audio was captured.

@@ -476,6 +476,6 @@ After every stage:
 | 19 | Artifact integrity verification | `67ceeb6` | 307 | SHA sidecar + verifier |
 | 20 | Verifier/security hardening | `2ef60d0` | 329 | Hostile-input limits |
 | — | Merge `origin/main` `v0.2.3` | `6f8e3de` | 329 | No Windows source changes |
-| 21 | Profile lifecycle + wizard handoff | `pending` | 339 | Metadata-only edit/remove; app-detail entry |
+| 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
 
 Stages 21+ are appended as they complete.

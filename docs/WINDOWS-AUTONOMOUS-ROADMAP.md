@@ -483,7 +483,7 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` at `6f8e3de` | CI remote run observation |
+| Code compiles (Release) | Verified | `dotnet build` at `6dbb0c5` | CI remote run observation |
 | 396 tests pass | Verified | `dotnet test` at the Stage 24 tree | CI remote run observation |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left | Clean machine; damaged real store; alternate consoles; packaging |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines | Visual focus, minimized restore, second user/session, elevated launch |
@@ -524,6 +524,6 @@ After every stage:
 | 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
 | 22 | Local diagnostics and crash safety | `e36fdec` | 353 | Bounded redacted log; report; Settings actions |
 | 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
-| 24 | Read-only CLI and doctor report | `pending` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
+| 24 | Read-only CLI and doctor report | `6dbb0c5` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
 
 Stages 21+ are appended as they complete.

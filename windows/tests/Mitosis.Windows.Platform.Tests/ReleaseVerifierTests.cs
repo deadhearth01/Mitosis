@@ -77,6 +77,7 @@ public sealed class ReleaseVerifierTests
         ("Mitosis.deps.json", Text("{}")),
         ("Mitosis.runtimeconfig.json", Text("{}")),
         ("Mitosis.pri", Text("pri")),
+        ("install.ps1", Text("# fixture installer")),
         ("cli/mitosis.exe", cliExeBytes ?? PeFixture.Build()),
         ("cli/mitosis.deps.json", Text("{}")),
         ("cli/mitosis.runtimeconfig.json", Text("{}")),
@@ -132,6 +133,18 @@ public sealed class ReleaseVerifierTests
         var path = WriteArchive(entries.ToArray());
         var (_, result) = VerifyFixture(path);
         Assert.IsTrue(result.Findings.Any(f => f.Contains("Mitosis.pri")),
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void MissingInstallerScriptIsReported()
+    {
+        var entries = RequiredEntries().ToList();
+        entries.RemoveAll(e => e.EntryName == "install.ps1");
+        var path = WriteArchive(entries.ToArray());
+        var (_, result) = VerifyFixture(path);
+        Assert.IsTrue(result.Findings.Any(f => f.Contains("install.ps1")),
             "findings: " + string.Join("; ", result.Findings));
         Directory.Delete(Path.GetDirectoryName(path)!, true);
     }

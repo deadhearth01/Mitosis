@@ -41,6 +41,10 @@ public static class ReleaseVerifier
         // published app starts and then dies with XamlParseException
         // (microsoft/WindowsAppSDK#6720).
         "Mitosis.pri",
+        // The per-user installer/uninstaller (docs/WINDOWS-INSTALL.md). It is part
+        // of the package, not an optional download: the Start-menu/uninstall
+        // entry registered by it points back into the install folder.
+        "install.ps1",
     };
 
     /// <summary>The read-only CLI ships beside the app in a <c>cli/</c> subfolder.

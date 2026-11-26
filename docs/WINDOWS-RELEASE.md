@@ -17,6 +17,7 @@ tied to build evidence from this stage; untested items are marked.
 | Version metadata | Stage 18: `windows/Directory.Build.props` is the single version source; see the section below |
 | Writable data | Everything resolves at runtime under `%LOCALAPPDATA%\Mitosis` (`WindowsProfilePaths.cs`); nothing is baked into the artifact |
 | Read-only CLI | Ships in the same archive as `cli\mitosis.exe` (Stage 26). It cannot share the root: `Mitosis.exe`/`mitosis.exe` and their `.deps.json` files are the same names on case-insensitive NTFS |
+| Installer | `install.ps1` in the archive root: per-user install and uninstall, prerequisite detection, Start-menu shortcut, HKCU Apps entry. No elevation, no `PATH` change, no MSI, no signing. See `docs/WINDOWS-INSTALL.md` |
 
 Deliberately **not** changed this stage (no evidence justifying it, and each
 would be a real architecture decision for a later stage): MSIX packaging,
@@ -130,6 +131,9 @@ Since Stage 26 the recipe also:
   `ResolvedFileToPublish` itself. Without it the published exe throws
   `XamlParseException` about a second after launch, while the build output runs
   fine.
+- copies `scripts/install.ps1` into the archive root after parse-checking it, so
+  a syntax error fails packaging instead of the user's first install; the
+  verifier requires it in the archive (see `docs/WINDOWS-INSTALL.md`).
 
 ## Release-candidate verification (Stage 19)
 
@@ -162,7 +166,7 @@ What each check proves:
 | Path-traversal and duplicate entry rejection | Extraction cannot write outside the extraction root or silently overwrite itself (`.git/...` or `.../..` names are refused). Stage 20 extends this: absolute (`/etc/...`) and drive-qualified (`C:\...`) entry names, Windows-ambiguous names (trailing dots/spaces that NTFS strips into a different file, colons that open alternate data streams), and `.`-segment spellings that hide duplicates are all rejected; backslash directory entries are treated as directories |
 | Denylist scan of the *archive entries* (`.cs`, `.csproj`, `.swift`, `.sln`, `.user`, `.log`, `.bak`, git metadata) | No source, project, editor-state, or repository files ride along in the shipped artifact |
 | Extraction into a fresh temporary directory; delete afterwards | The ZIP extracts on a real filesystem; nothing else on the machine is touched |
-| Required files (`Mitosis.exe`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, `Mitosis.deps.json`, `Mitosis.runtimeconfig.json`, `Mitosis.pri`) + 13 `Assets/pose-*.png` + `cli/mitosis.exe`, `cli/mitosis.deps.json`, `cli/mitosis.runtimeconfig.json` | The pieces a clean machine cannot start without - including the XAML resource index and the bundle CLI - are inside the *archive*, not just in the publish tree |
+| Required files (`Mitosis.exe`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, `Mitosis.deps.json`, `Mitosis.runtimeconfig.json`, `Mitosis.pri`, `install.ps1`) + 13 `Assets/pose-*.png` + `cli/mitosis.exe`, `cli/mitosis.deps.json`, `cli/mitosis.runtimeconfig.json` | The pieces a clean machine cannot start or install without - including the XAML resource index, the per-user installer, and the bundled CLI - are inside the *archive*, not just in the publish tree |
 | PE header machine = 0x8664 for both `Mitosis.exe` and `cli/mitosis.exe` | Both executables are x64, read directly from the COFF header, no tool environment needed |
 | Icon resource present (RT_ICON/RT_GROUP_ICON in the PE resource directory) | The GUI icon is embedded in the exe itself. The console CLI is not required to have one |
 | `FileVersionInfo` coherence with the archive name | The version Explorer shows, the metadata-derived archive name, and the embedded git revision all agree (nogit archives must not carry an embedded hash) |
@@ -182,9 +186,10 @@ Evidence categories (do not substitute one for another):
 2. **Published artifact structural and integrity checks** — the verifier: the
    ZIP enumerates, extracts, contains the required files, x64 exe, embedded
    icon, coherent metadata, matching SHA-256. This stage's evidence.
-3. **Actual launch testing on a clean Windows machine** — still pending; NOT
-   provided by category 2. Passing verification says the archive *can* install
-   nowhere more than "archive contents are sound".
+3. **Actual launch testing** — performed on this development machine (publish
+   tree, unzipped archive, and an installed copy), including install/uninstall
+   from the archive (Stage 26). A clean Windows 10/11 VM run is still pending;
+   passing verification or a dev-machine launch does not substitute for it.
 4. **Code-signing and trust validation** — none; unsigned. SmartScreen warning
    expected for all consumers.
 
@@ -214,7 +219,7 @@ Confirmed defects and their fixes:
 | 4 | Windows filename normalization was unhandled: entries ending in dot/space (NTFS strips them — `Mitosis.exe.` and `Mitosis.exe` collide on disk, potentially overwriting required files), colons anywhere (NTFS alternate data streams), `.`-segment spellings hiding duplicates (`Assets/./pose.png` vs `Assets/pose.png`), and backslash directory entries (`Assets\`) misread as files | New `ZipAudit.IsWindowsAmbiguous` rejects trailing-dot/space and colon names; `Normalize` collapses `.` and empty segments before duplicate detection (case-insensitively); directories are recognized by normalized form | `TrailingDotEntryIsRejected`, `TrailingSpaceEntryIsRejected`, `AlternateDataStreamEntryIsRejected`, `DotSegmentCollidingEntriesAreRejected`, `CaseCollidingEntriesAreRejected`, `AbsolutePathEntryIsRejected`, `DriveQualifiedEntryIsRejected`, `ForwardSlashTraversalEntryIsRejected`, `BackslashTraversalEntryIsRejected`, `ScratchDirectoryIsCleanedAfterFailure` |
 
 Limit values, chosen against the real artifact (≈46 MB compressed, ≈119 MB
-unpacked, 93 files, largest payload well under 100 MB) with generous headroom —
+unpacked, 94 files, largest payload well under 100 MB) with generous headroom —
 any future legitimate artifact that outgrows the limits will be rejected with an
 explanatory finding naming the limit, and the constants live in
 `windows/tools/ReleaseVerifier/VerificationLimits.cs` for review:
@@ -253,18 +258,18 @@ resource directory (e.g. corrupt x64 code sections) is outside the
 verifier's structural charter and remains launch-test territory. 38 verifier
 fixture tests total (22 added in Stage 20); full suite 329/329 green.
 
-## Stage 26 packaging: bundled CLI and the missing PRI
+## Stage 26 packaging: bundled CLI, installer, and the missing PRI
 
-Stage 26's installer itself is still open (no installer is built, installed, or
-signed), but the unsigned **zip package** was completed and, for the first time,
-launch-tested:
+The unsigned **zip package** was completed and launch-tested for the first time.
+The per-user installer script now defines the install story; MSI/Inno/WiX,
+signing, and public distribution remain open and authorization-gated.
 
 - **Bundled CLI.** The read-only CLI ships as `cli\mitosis.exe`. The publish
   recipe publishes it into `cli/`, compares its version metadata with the app's,
   and smoke-runs `version` before packaging. The verifier requires its three
   runtime files, audits it as x64, and checks its metadata against the archive
   name (`cli/mitosis.exe` is not required to carry an icon). Six verifier fixture
-  tests and the CLI smoke check cover the layout; 44 verifier fixture tests now
+  tests and the CLI smoke check cover the layout; 45 verifier fixture tests now
   exist in total.
 - **Missing PRI (real defect found by launch-testing).** The Stage 19/20
   verifier only proves structure; the published tree had never been launched.
@@ -273,14 +278,32 @@ launch-tested:
   generated PRI to `ResolvedFileToPublish` with the workaround documented in
   microsoft/WindowsAppSDK#6720, and both the publish script and the verifier now
   require `Mitosis.pri`.
-- **Observed locally on 2026-11-26** (development machine, not a clean VM): the
-  publish tree and a freshly unzipped archive both start, show the main and
-  welcome windows, and exit cleanly when the main window closes; the bundled
-  `cli\mitosis.exe version` reports `0.2.2+0dba1ac…`; the verifier passes; the
-  archive is 45,754,040 bytes with SHA-256
-  `b012a5df39b6ddfbfa49ed87e1f11542689cad8ed047958893bb0bd012dc45e0`.
-  A clean-machine launch, installer behavior, PATH installation, signing, and
-  public distribution remain open and authorization-gated.
+- **Per-user installer.** `scripts/install.ps1` ships as `install.ps1` in the
+  archive root and is both installer and uninstaller. It installs under
+  `%LOCALAPPDATA%\Programs\Mitosis`, writes a marker with the recorded file list,
+  adds a Start-menu shortcut and an HKCU Apps entry, detects the .NET and Windows
+  App Runtime prerequisites without downloading anything, keeps profile data on
+  uninstall unless `-RemoveUserData` is passed, and refuses unsafe or unowned
+  targets. `-DryRun`, `-NoShellIntegration`, and `-StrictPrerequisites` are
+  documented in `docs/WINDOWS-INSTALL.md`; 11 behavioral tests run the real
+  script against a temporary fixture.
+- **Startup hardening.** The async first-activation continuation no longer opens
+  the welcome window after shutdown has begun (defense in depth around
+  `Application.Exit()` being asynchronous). Closing the main window 500 ms after
+  its handle exists was observed to exit the process in every trial; no
+  reproducible live orphan was found — the earlier suspicion was an automation
+  artifact caused by closing before the window handle existed.
+- **Observed locally on 2026-11-26/27** (development machine, not a clean VM):
+  the publish tree and a freshly unzipped archive both start, show the main and
+  welcome windows, and exit cleanly when the main window closes; installing from
+  the unzipped archive and launching the installed copy behaves the same, and
+  uninstall removed both the install folder and (with `-RemoveUserData`) the data
+  folder; the bundled `cli\mitosis.exe version` reports `0.2.2+3cd3dd0…`; the
+  verifier passes; the archive is 94 files, 45,762,106 bytes with SHA-256
+  `9db1ef6bc9b74fd40afa042536cf03500348ff0823e73934f4687d8a53b8d499`.
+  Clean-machine install/launch, MSI or another installer technology, signing,
+  `PATH` installation, and public distribution remain open and
+  authorization-gated.
 
 ## Artifact
 
@@ -289,8 +312,8 @@ launch-tested:
 | Publish tree | `windows/artifacts/release/` (gitignored) |
 | Archive | `windows/artifacts/Mitosis-windows-<version>-x64-<revision>.zip` — the version is read back from the built exe's `FileVersion` and the suffix is the commit hash, so an artifact identifies its exact source revision and built version; without git access the suffix is `nogit` (verified both ways). Stale candidate zips are removed before packaging (only the current RC is ever present) |
 | Sidecar | `windows/artifacts/Mitosis-windows-<...>.zip.sha256` — sha256sum-style one-liner: the archive's SHA-256, two spaces, then the archive's file name; written by the publish script, recomputed and name-bound by the verifier (Stage 19; both tokens checked since Stage 20 — a correct hash naming a different archive is a finding) |
-| Contents | 93 files: `Mitosis.exe/.dll` (7 project DLLs), `Mitosis.pri`, WinAppSDK payload (`Microsoft.WinUI.dll`, `WinRT.Runtime.dll`, `Microsoft.Windows.SDK.NET.dll`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, WebView2Loader, ONNX/DirectML components included by the App SDK package), `Assets/` with the 13 pose PNGs, and `cli/` with the read-only CLI and its 16 supporting files. No `.cs`/`.csproj`/`.swift`, no test results, no git metadata, no user data (verified by scanning the zip); the GUI exe icon is embedded |
-| Size | ≈ 46 MB compressed (45,754,040 bytes), ≈ 119 MB unpacked (dominated by the App SDK AI/ML payload shipped with `Microsoft.WindowsAppSDK 2.5.1`, duplicated once in `cli/` for the CLI) |
+| Contents | 94 files: `Mitosis.exe/.dll` (7 project DLLs), `Mitosis.pri`, `install.ps1`, WinAppSDK payload (`Microsoft.WinUI.dll`, `WinRT.Runtime.dll`, `Microsoft.Windows.SDK.NET.dll`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, WebView2Loader, ONNX/DirectML components included by the App SDK package), `Assets/` with the 13 pose PNGs, and `cli/` with the read-only CLI and its 16 supporting files. No `.cs`/`.csproj`/`.swift`, no test results, no git metadata, no user data (verified by scanning the zip); the GUI exe icon is embedded |
+| Size | ≈ 46 MB compressed (45,762,106 bytes), ≈ 119 MB unpacked (dominated by the App SDK AI/ML payload shipped with `Microsoft.WindowsAppSDK 2.5.1`, duplicated once in `cli/` for the CLI) |
 | PDBs | Included on purpose for diagnosable releases; strip only via a later change to the script + this doc |
 | Reproducibility | Two consecutive publishes of the same commit produced identical file sets, byte-identical sizes, and matching SHA-256 hashes for `Mitosis.Windows.App.dll` and `deps.json`. Not a formal reproducibility program: archive bytes are not compared, NuGet cache state and VS/SDK drift may change payload components, and the XAML compiler embeds a comment cache — treat "same SHA ⇒ same artifact" as reliable-but-unproven |
 
@@ -336,16 +359,19 @@ Before anything could be called 1.0 for Windows:
       finding, never an uncaught crash; 22 adversarial fixture tests; CI
       permissions already least-privilege).
 - [x] Read-only CLI bundled in `cli\` and enforced by the verifier (Stage 26).
+- [x] Per-user installer/uninstaller (`install.ps1`) shipped and enforced by the
+      verifier, with prerequisite detection, Start-menu/HKCU integration, marker-
+      scoped removal, and 11 behavioral tests (Stage 26).
 - [x] Published ZIP launch-tested on the development machine, which exposed and
-      fixed the missing `Mitosis.pri` (Stage 26). Clean-machine launch remains
-      open below.
+      fixed the missing `Mitosis.pri` (Stage 26), and install/uninstall-launch
+      tested from the unzipped archive. Clean-machine launch remains open below.
 - [ ] Merge `WindowsVersion` after all stages; CI green including the
       `windows-release-candidate` artifact (automated; working).
 - [ ] Decide and stamp a real `FileVersion`/`ProductVersion` at release time by
       overriding `-p:WindowsPortVersion` (the scheme is in place since Stage 18;
       the shipping number is a release decision, not a build artifact).
-- [ ] Purpose-drawn 16/24 px icon sizes (see the icon paragraph above) and, if
-      an installer is introduced, an installer shell icon.
+- [ ] Purpose-drawn 16/24 px icon sizes (see the icon paragraph above), and an
+      installer shell icon if a compiled installer replaces `install.ps1`.
 - [ ] Code signing: none. Windows SmartScreen blocks unsigned exes; decide
       Authenticode strategy before any public distribution.
 - [ ] Clean-machine runs of the published zip with .NET 10 runtime + App SDK
@@ -356,12 +382,12 @@ Before anything could be called 1.0 for Windows:
 - [ ] Windows 10 1809+/**Windows 11 24H2/23H2** compatibility runs — untested;
       only Windows 11 25H2 is verified.
 - [ ] ARM64 — out of scope (`Platforms=x64`).
-- [ ] Installer (MSIX, winget manifest, Inno Setup/WiX, or zip-only) — still
-      undecided and unbuilt; per-user install, uninstall, and prerequisite
-      detection belong to the remaining Stage 26 work and cannot be validated
-      here without a disposable VM. Installing system-wide, signing, and public
-      distribution require explicit authorization. The unsigned zip + manual
-      runtime prerequisites is the current working model.
+- [ ] MSI/Inno Setup/WiX/Store packaging, or a signed compiled installer —
+      undecided and unbuilt. `install.ps1` is the working per-user install story
+      for the unsigned zip (`docs/WINDOWS-INSTALL.md`); its clean-VM validation
+      and any machine-wide install, signing, or public distribution require
+      explicit authorization. The unsigned zip + manual runtime prerequisites is
+      the current working model.
 - [ ] **The clone engine itself** — the product's core (clone, launch, refresh,
       delete, recovery) is framework-only with an empty strategy catalog and
       closed execution gates; UI actions show honest "not available in preview"

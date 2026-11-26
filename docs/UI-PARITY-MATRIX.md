@@ -667,13 +667,16 @@ Implemented in Stage 25; W08, W36, and W53 above now reflect it.
   for 0.2.3, and an honest failure through a blocked proxy; banner updated and
   dismissed in the live app. See `docs/WINDOWS-UPDATES.md`.
 
-## Stage 26 notes: unsigned distribution package (2026-11-26)
+## Stage 26 notes: unsigned distribution package (2026-11-26/27)
 
 - The read-only CLI now ships in `cli\` inside the Windows release zip. This is
-  a packaging change only: no W-row behavior changes, no PATH change, no
-  installer, no signing, and no self-update.
+  a packaging change only: no W-row behavior changes, no PATH change, and no
+  signing or self-update.
 - The published artifact is now launch-tested on the development machine. That
   found and fixed a missing `Mitosis.pri` in the unpackaged publish output
   (microsoft/WindowsAppSDK#6720); structural verification alone had passed.
-- Tests: 6 new verifier tests plus two warning cleanups; suite 478/478 green,
-  zero build warnings.
+- The archive carries `install.ps1`, a per-user installer/uninstaller with
+  prerequisite detection, a Start-menu shortcut, and an HKCU Apps entry. No UI
+  behavior changes; no elevation, PATH change, or download.
+- Tests: 6 new verifier tests plus two warning cleanups, then 1 verifier and 11
+  installer tests; suite 490/490 green, zero build warnings.

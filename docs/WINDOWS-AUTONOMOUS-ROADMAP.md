@@ -8,7 +8,7 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 478/478 green (Release, .NET SDK 10.0.404; 0 warnings)
+- **Current suite:** 490/490 green (Release, .NET SDK 10.0.404; 0 warnings)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 478 tests |
+| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 490 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -88,7 +88,7 @@ source, test, or artifact that establishes it.
 | Single-instance activation | Implemented and runtime-verified | Per-user named mutex + focus/ack events; second launch redirected and exits; crash recovery and shutdown hand-over observed | Visual foreground on a desktop session; minimized restore |
 | Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; cross-process log lock; CLI doctor adds store/log/discovery state; manual dialog checks pending |
 | Update availability check | Implemented and runtime-verified | Manual GitHub Releases read with 15 s timeout/cancellation; banner only when strictly newer; no download, install, or auto-check (Stage 25); click-through and a published Windows artifact remain unverified |
-| Installer / uninstaller | **Missing** | Unpackaged zip only |
+| Installer / uninstaller | Complete for the unsigned per-user model; clean-VM run pending | `install.ps1` in the archive: install/uninstall, prerequisites, shortcut, HKCU entry; 11 tests |
 | Code signing | **Missing / requires authorization** | Unsigned; SmartScreen expected |
 | Clean-machine validation | **Blocked by environment** | Only Windows 11 25H2 dev machine used |
 | ARM64 / MSIX / Store | Deferred | `Platforms=x64`; unpackaged model documented |
@@ -97,13 +97,13 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 478/478; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, update checks |
+| Unit/integration tests | Complete for implemented logic | 490/490; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, installer scripts, update checks |
 | Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
-| Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `Mitosis.pri` fix |
-| Artifact verifier | Complete and verified (44 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI rules in Stage 26 |
+| Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `install.ps1`; `Mitosis.pri` fix |
+| Artifact verifier | Complete and verified (45 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI + installer rules in Stage 26 |
 | Version metadata | Complete; release stamp decision pending | `Directory.Build.props` (`0.2.2`; product tag is `v0.2.3`) |
 | Application icon | Complete for ≥32 px; small-size glyph open | `app.ico`; `make-icon.ps1` |
-| Documentation | Current through Stage 26; manual UI evidence still missing | Stage docs, `windows/README.md`, release/CLI/update docs |
+| Documentation | Current through Stage 26; manual UI evidence still missing | Stage docs, `windows/README.md`, release/CLI/update/install docs |
 
 ## 2. Remaining engineering gaps
 
@@ -122,7 +122,7 @@ is eligible now, deferred, or authorization-gated.
 | G8 | Process integrity | Multiple app instances can run concurrently | Per-user named mutex + activation events added in Stage 23; second launch is redirected and exits | Duplicate windows, concurrent store access, confusing onboarding | Complete (Stage 23), runtime-verified |
 | G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | Read-only console project added in Stage 24 (`version`, `list`, `profiles`, `doctor`, `--json`) | Automation and support path missing | Complete (Stage 24), runtime-verified |
 | G10 | Updates | No update check; banner was static preview data | Manual GitHub Releases check added in Stage 25 (`UpdateChecker`, `GitHubReleaseFeed`, Settings action, live banner) | Users cannot learn about releases | Complete (Stage 25), runtime-verified; install/self-update still deferred |
-| G11 | Install | Zip-only; no installer/uninstaller | `WINDOWS-RELEASE.md` | Manual prerequisites; no Start-menu/uninstall story | Partly authorization-gated |
+| G11 | Install | Per-user script installer added (Stage 26); no MSI/signing | `WINDOWS-INSTALL.md` | Manual prerequisites replaced by detected ones; Start-menu/uninstall entry provided; clean-VM run and system-wide install pending | Complete for the unsigned per-user model |
 | G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
 | G13 | Compatibility | Only Windows 11 25H2 ever exercised | Release checklist | Unknown behavior on 10/24H2/23H2 | Blocked by environment |
 | G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | `WINDOWS-UI-VERIFICATION.md` | Visual/a11y parity unproven | Eligible with a desktop session |
@@ -315,7 +315,7 @@ only started when its dependencies and authorization state allow it.
   deferred. The same verification pass found and fixed the Stage 23 shutdown gap
   described above. See `docs/WINDOWS-UPDATES.md`.
 
-### Stage 26 — Installer and unsigned distribution package (partly completed)
+### Stage 26 — Installer and unsigned distribution package (implemented for the per-user model; clean-VM run pending)
 
 - **Objective:** Decide and implement the install story (per-user installer vs
   zip-only), including uninstall and prerequisite checks.
@@ -337,7 +337,7 @@ only started when its dependencies and authorization state allow it.
   run recorded; signing/public distribution still separate.
 - **Authorization:** Building is allowed; installing system-wide, signing, and
   public distribution require explicit authorization.
-- **Result (2026-11-26, partly complete, pushed `18dd7d6`):** The distribution
+- **Result, packaging half (2026-11-26, pushed `18dd7d6`):** The distribution
   package now bundles the read-only CLI in `cli/` and launch-testing the artifact
   exposed a real
   startup defect that structural verification had missed:
@@ -348,14 +348,47 @@ only started when its dependencies and authorization state allow it.
   publishes the CLI, compares CLI/app version metadata, and smoke-runs
   `cli\mitosis.exe version`; the verifier requires the CLI runtime files and the
   PRI, audits both executables as x64, and checks both versions. 6 new verifier
-  tests and two warning cleanups; 478/478 green, 0 build warnings. Observed on
-  this machine: publish tree and freshly unzipped archive both launch and exit
-  cleanly, the bundled CLI reports the build version, and the verifier passes
-  (45,754,040-byte zip, SHA-256
-  `b012a5df39b6ddfbfa49ed87e1f11542689cad8ed047958893bb0bd012dc45e0`). Still
-  open: choosing/building a per-user installer, uninstall rules, prerequisite
-  detection and clean-VM install runs; no PATH change was made. Installing
-  system-wide, signing, and public distribution still require authorization.
+  tests and two warning cleanups; 478/478 green, 0 build warnings.
+- **Result, installer half (2026-11-27):** No Inno Setup, WiX, or NSIS is
+  installed, and adding one is a tooling decision, so the install story is a
+  dependency-free per-user script instead: `windows/scripts/install.ps1` ships as
+  `install.ps1` in the archive root and is both installer and uninstaller. It
+  installs the payload under `%LOCALAPPDATA%\Programs\Mitosis`, records every
+  copied file in `.mitosis-install.json`, adds a Start-menu shortcut and an HKCU
+  Apps entry, and detects the .NET 10 and Windows App Runtime 2.5 prerequisites
+  without downloading or elevating. Uninstall removes exactly the recorded files
+  plus the marker, shortcut, and registry entry; it keeps files the user added
+  and keeps profile data unless `-RemoveUserData` is passed; it refuses unsafe
+  roots, unowned folders, a missing/mismatched marker, and a running app. Exit
+  codes 0/1/2 mean success/usage/refused, and `-DryRun`,
+  `-NoShellIntegration`, `-SkipPrerequisiteCheck`, and `-StrictPrerequisites`
+  exist for testing and portable use. The recipe now parse-checks and copies the
+  script into the archive; the verifier requires it (one fixture test for the
+  missing case). 11 behavioral tests run the real script against a temporary
+  fixture with a redirected install root, data root, and shell integration
+  disabled; the suite is 490/490 green with 0 build warnings.
+- **Startup hardening:** the async first-activation continuation and
+  `ShowOnboarding` no longer open the welcome window once shutdown has begun
+  (defense in depth around `Application.Exit()` being asynchronous). The earlier
+  "orphan process" suspicion was an automation artifact: closing before the main
+  window handle exists is not a close request. Closing the handle 500 ms after it
+  appears exited the process in every trial.
+- **Observed on this machine (2026-11-26/27, not a clean VM):** the publish tree
+  and a freshly unzipped archive start, show the main and welcome windows, and
+  exit cleanly when the main window closes; installing from the unzipped archive
+  and launching the installed copy behaves the same; a full shell-integration
+  install was inspected (shortcut target/workdir/icon, uninstall strings) and
+  uninstalled, leaving the Start menu and HKCU clean; uninstall removed both the
+  install folder and, with `-RemoveUserData`, the data folder; prerequisite
+  detection reported the user-local .NET 10 runtime honestly (it is not on the
+  apphost search path without `DOTNET_ROOT`) and initialized the real Windows App
+  Runtime bootstrapper; `-StrictPrerequisites` failed before writing in that case
+  and passed with `DOTNET_ROOT` set; the verifier passes the final archive (94
+  files, 45,762,106 bytes, SHA-256
+  `9db1ef6bc9b74fd40afa042536cf03500348ff0823e73934f4687d8a53b8d499`).
+  Still open: clean-VM install/launch runs, MSI/Inno/WiX/Store packaging, signing,
+  `PATH` installation, and public distribution — all authorization-gated. See
+  `docs/WINDOWS-INSTALL.md`.
 
 ### Stage 27 — Visual, accessibility, and clean-machine verification (partly blocked)
 
@@ -491,7 +524,8 @@ These are separate milestones. Passing one does not imply the next.
    no open high-severity findings.
 4. **Installable** — A per-user installer (or documented zip) with prerequisite
    detection, uninstall, and no hidden system changes; user data survives
-   uninstall unless explicitly removed.
+   uninstall unless explicitly removed. (`install.ps1` satisfies this on the
+   development machine; clean-VM repetition is part of milestone 2.)
 5. **Maintainable** — Structured diagnostics, CI, reproducible builds, current
    docs, and no machine-specific assumptions.
 6. **Ready for a controlled release** — Signed artifact, small-cohort rollout,
@@ -500,14 +534,15 @@ These are separate milestones. Passing one does not imply the next.
    update channel, privacy statement, license/trademark compliance, and capacity
    to support users.
 
-**Current position:** Stages 21–25 closed the metadata-profile dead end, the
+**Current position:** Stages 21–26 closed the metadata-profile dead end, the
 blind-support gap, duplicate-process risk, the missing automation/support path,
-and the static update banner. The UI shell is between feature complete and
-functionally verified; the product is not at feature complete because the clone
-engine is absent. The port is not installable, signed, or clean-machine verified,
-and neither the CLI nor the update check is in the release archive yet. Next
-eligible work is tray/background decisions or the installer package (Stage 26),
-with clean-VM, signing, and public distribution still authorization-gated.
+the static update banner, and the missing install story. The UI shell is between
+feature complete and functionally verified; the product is not at feature
+complete because the clone engine is absent. The port is installable per-user and
+shipped in a launch-tested archive, but not signed or clean-machine verified. Next
+eligible work is the manual UI/accessibility protocol (desktop evidence already
+available) or tray/background decisions, with clean-VM, signing, system-wide
+install, and public distribution still authorization-gated.
 
 ## 5. Authorization boundaries
 
@@ -533,7 +568,7 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` on the Stage 26 tree (0 warnings) | CI remote run observation |
-| 478 tests pass | Verified | `dotnet test` at the Stage 26 tree, eight test projects | CI remote run observation |
+| 490 tests pass | Verified | `dotnet test` at the Stage 26 tree, eight test projects | CI remote run observation |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Visual focus, minimized restore, second user/session, elevated launch |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
@@ -541,11 +576,11 @@ operations are allowed without additional authorization.
 | Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
-| Release zip is structurally sound | Verified | Stage 19/20 verifier + 44 fixture tests; Stage 26 additionally bundled the CLI and requires the PRI | Clean-machine launch |
+| Release zip is structurally sound | Verified | Stage 19/20 verifier + 45 fixture tests; Stage 26 additionally bundled the CLI, requires the PRI, and requires `install.ps1` | Clean-machine launch |
 | Published artifact launches | Verified (development machine only) | Stage 26: the publish tree and a freshly unzipped archive start, show the main/welcome windows, and exit cleanly; this exposed and fixed the missing `Mitosis.pri` (microsoft/WindowsAppSDK#6720) | Clean Windows 10/11 VM, missing-prerequisite path, another desktop session |
 | UI matches macOS pixels | **Not verified** | Design spec + code | Screenshots/contrast/Narrator |
 | Any clone works | **Not verified / not implemented** | Catalog empty | Authorization + engine + evidence |
-| Installer works | **Not implemented** | Zip only | Remaining Stage 26 (per-user install/uninstall, prerequisite detection) |
+| Installer works | Verified (development machine, logic + runtime) | `install.ps1`: dry run, install/reinstall/`-Force`, unsafe-path and unowned-folder refusal, recorded-file-only uninstall, data preservation and `-RemoveUserData`, missing-marker refusal, real shortcut + HKCU entry inspected and removed; 11 behavioral tests | Clean Windows 10/11 VM, standard user, PowerShell 7, SmartScreen/AV |
 | Binary is trusted | **Not verified** | Unsigned | Signing decision |
 
 ## 7. Roadmap maintenance
@@ -577,6 +612,6 @@ After every stage:
 | 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
 | 24 | Read-only CLI and doctor report | `6dbb0c5` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
 | 25 | Update availability check | `58353a0` | 472 | Manual GitHub read; live banner; shutdown child-window fix |
-| 26 | CLI in release zip + PRI publish fix | `18dd7d6` | 478 | `cli/` layout; launch-tested artifact; installer still open |
+| 26 | CLI in release zip, PRI fix, per-user installer | `18dd7d6` | 490 | `cli/` layout; launch-tested artifact; `install.ps1`; clean-VM run pending |
 
 Stages 21+ are appended as they complete.

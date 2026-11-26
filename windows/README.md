@@ -22,8 +22,9 @@ session), a read-only CLI (`version`, `list`, `profiles`, `doctor`) that ships i
 `cli/` inside the release zip, and a manual, read-only update-availability check
 against GitHub Releases are implemented. Closing the main window quits. The
 update banner opens only when a newer release exists and offers its release page;
-nothing downloads or installs. An installer, signing, self-update, and tray
-integration remain later stages. See
+nothing downloads or installs. The release zip also carries a per-user installer
+(`install.ps1`), so there is a supported install and uninstall path. Signing,
+self-update, and tray integration remain later stages. See
 [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md) for
 current status and gaps.
 
@@ -73,6 +74,9 @@ windows/
     Mitosis.Cli.Tests/             CLI parsing, text/JSON output, read-only guarantees
   tools/
     ReleaseVerifier/          release-candidate archive verification console tool (Stage 19)
+  scripts/
+    publish-release.ps1       publish, version-check, smoke-test, zip, SHA-256 sidecar
+    install.ps1               per-user install/uninstall shipped in the archive root (Stage 26)
 ```
 
 The domain, application, infrastructure, compatibility, and Windows platform
@@ -188,6 +192,23 @@ folder supports both `Mitosis.exe` and `cli\mitosis.exe`. No PATH change is
 made; run it by explicit path. Details and runtime evidence:
 `docs/WINDOWS-CLI.md`.
 
+## Install and uninstall (Stage 26)
+
+The release zip's `install.ps1` installs the app per-user — payload under
+`%LOCALAPPDATA%\Programs\Mitosis`, a Start-menu shortcut, and an HKCU Apps entry —
+detects the .NET 10 and Windows App Runtime prerequisites without downloading
+anything, and uninstalls from Settings ▸ Apps or with `-Uninstall`. It removes only
+files it recorded at install time and keeps profile data unless `-RemoveUserData`
+is passed. `-DryRun`, `-NoShellIntegration`, and `-StrictPrerequisites` help with
+testing and portable use. There is no elevation, PATH change, service, or MSI yet.
+Details and evidence: `docs/WINDOWS-INSTALL.md`.
+
+```powershell
+Expand-Archive Mitosis-windows-<version>-x64-<rev>.zip -DestinationPath Mitosis
+powershell -ExecutionPolicy Bypass -File .\Mitosis\install.ps1 -DryRun
+powershell -ExecutionPolicy Bypass -File .\Mitosis\install.ps1
+```
+
 ## Continuous integration (Stage 11)
 
 Pushes to `WindowsVersion` and pull requests run `.github/workflows/windows-ci.yml`
@@ -199,7 +220,8 @@ enumeration + extraction, required files, x64 executable, embedded icon,
 version coherence, `SHA-256` sidecar) before uploading the
 `windows-release-candidate` artifact (the zip plus its `.sha256` sidecar, both
 14 days). The recipe also bundles the read-only CLI in `cli\` and smoke-runs it,
-and both the recipe and verifier require `Mitosis.pri` (Stage 26). Stage 20
+copies the parse-checked per-user installer to the archive root, and both the
+recipe and verifier require `Mitosis.pri` and `install.ps1` (Stage 26). Stage 20
 hardened the verifier against hostile input: documented
 resource limits (archive/expanded size, entry count, sidecar size), strict
 two-token sidecar binding, traversal/absolute/drive/Windows-ambiguous entry
@@ -225,7 +247,8 @@ running window against `Assets/Screenshots/clone-light.png` / `clone-dark.png` a
 `docs/WINDOWS-DESIGN-SPEC.md`. Known provisional items: font-size mapping, tile and
 pill glyph choices (compile-safe `Symbol` enum), sidebar width 240, icon tiles are
 initial letters (real badged icons arrive with the engine), minimum window size not
-enforced, and no tray integration, installer, or signing yet. Screenshots,
-Narrator runs, contrast themes, keypress observation, the crash dialog, clipboard
-delivery, and File Explorer reveal remain pending
-(`docs/WINDOWS-UI-VERIFICATION.md`).
+enforced, and no tray integration or signing yet. Screenshots, Narrator runs,
+contrast themes, keypress observation, the crash dialog, clipboard delivery, and
+File Explorer reveal remain pending (`docs/WINDOWS-UI-VERIFICATION.md`); installer
+behavior has automated and development-machine evidence but no clean-VM run
+(`docs/WINDOWS-INSTALL.md`).

@@ -135,6 +135,14 @@ public sealed partial class MainWindow : Window
     {
         Activated -= OnFirstActivated;
         await ViewModel.LoadAsync();
+        // Application.Exit() is processed asynchronously, so a close that lands
+        // while the first load is in flight can be followed by this continuation.
+        // Never open the welcome window (and with it, a new message loop) after
+        // shutdown has begun.
+        if (App.IsShuttingDown)
+        {
+            return;
+        }
         if (ViewModel.NeedsOnboarding)
         {
             ViewModel.ClearOnboardingRequest();
@@ -259,6 +267,12 @@ public sealed partial class MainWindow : Window
 
     private void ShowOnboarding()
     {
+        // Defense in depth for the same startup race handled in
+        // OnFirstActivated: never create a window once shutdown has begun.
+        if (App.IsShuttingDown)
+        {
+            return;
+        }
         if (onboardingWindow != null)
         {
             onboardingWindow.Activate();

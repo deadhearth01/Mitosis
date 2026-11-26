@@ -86,6 +86,24 @@ if ($LASTEXITCODE -ne 0 -or
         $LASTEXITCODE, ($cliSmokeOutput -join ' '))
 }
 
+# The per-user installer ships in the archive root (docs/WINDOWS-INSTALL.md). It
+# is copied from scripts/ rather than authored in the publish tree so the
+# repository copy stays the single source. Parsing it here turns a syntax error
+# into a packaging failure instead of a failure the user discovers at install
+# time.
+$installerSource = Join-Path $windowsDir "scripts\install.ps1"
+if (-not (Test-Path $installerSource)) { throw "Missing installer script $installerSource" }
+$parseTokens = $null
+$parseErrors = $null
+[void][System.Management.Automation.Language.Parser]::ParseFile(
+    $installerSource, [ref]$parseTokens, [ref]$parseErrors)
+if ($parseErrors -and $parseErrors.Count -gt 0) {
+    $firstErrors = ($parseErrors | Select-Object -First 3 |
+        ForEach-Object { "line $($_.Extent.StartLineNumber): $($_.Message)" }) -join '; '
+    throw "install.ps1 has syntax errors: $firstErrors"
+}
+Copy-Item -LiteralPath $installerSource -Destination (Join-Path $publishDir "install.ps1") -Force
+
 # The artifact must never carry source files, tool caches, tests, or user data:
 # everything under %LOCALAPPDATA% is resolved at runtime, never published. The
 # extension is taken from the last dot of the name, so ".user" also covers

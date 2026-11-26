@@ -200,8 +200,9 @@ Stage 26 ships the CLI inside the release archive in a `cli/` subfolder:
   dominated by `Microsoft.Windows.SDK.NET.dll`) because the two executables
   cannot share one probing path. That cost is accepted for a correct layout.
 - No system `PATH` change is made or proposed. Run `cli\mitosis.exe` from the
-  unzipped folder or by explicit path. An installer/PATH decision remains
-  separate and authorization-gated.
+  unzipped folder or by explicit path. The per-user installer (`install.ps1`)
+  installs the folder but still adds nothing to `PATH`; a `PATH` installation
+  remains separate and authorization-gated (`docs/WINDOWS-INSTALL.md`).
 
 ## 8. Verification
 

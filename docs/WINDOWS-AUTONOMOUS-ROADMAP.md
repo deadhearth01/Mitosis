@@ -292,7 +292,7 @@ only started when its dependencies and authorization state allow it.
 - **Manual verification:** Check with network on/off.
 - **Definition of done:** Tests green; no auto-update claim; docs updated.
 - **Authorization:** Not required (read-only public network request).
-- **Result:** Implemented, pushed, and runtime-verified. 76 new tests (472/472
+- **Result:** Implemented, pushed (`58353a0`), and runtime-verified. 76 new tests (472/472
   green; one pre-existing CS0105 warning remains). The only network read is a GET
   of `https://api.github.com/repos/deadhearth01/Mitosis/releases?per_page=10`
   with no token, query identity, or telemetry; the response is bounded to 512 KB
@@ -555,5 +555,6 @@ After every stage:
 | 22 | Local diagnostics and crash safety | `e36fdec` | 353 | Bounded redacted log; report; Settings actions |
 | 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
 | 24 | Read-only CLI and doctor report | `6dbb0c5` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
+| 25 | Update availability check | `58353a0` | 472 | Manual GitHub read; live banner; shutdown child-window fix |
 
 Stages 21+ are appended as they complete.

@@ -83,6 +83,19 @@ final class StepRecorder: Sendable {
         try Signer.verify(clone)
     }
 
+    // A renamed clone would otherwise look for Contents/MacOS/<new name>.
+    @Test func cloneOfAppWithoutExecutableKeyNamesItsProgram() throws {
+        var o = FixtureOptions()
+        o.name = "Muse"; o.executable = "Muse"; o.omitInfoKeys = ["CFBundleExecutable"]
+        let (root, source, builder) = try Self.setUp(o)
+        _ = try builder.create(CloneRequest(source: source, name: "Muse (Work)", badge: Badge(text: "W", color: "#0A84FF")))
+        let clone = root.appendingPathComponent("Clones/Muse (Work).app")
+        let info = try InfoPlistEditor.read(clone.appendingPathComponent("Contents/Info.plist"))
+        #expect(info["CFBundleExecutable"] as? String == "Muse")
+        #expect(FileManager.default.isExecutableFile(atPath: clone.appendingPathComponent("Contents/MacOS/Muse").path))
+        try Signer.verify(clone)
+    }
+
     @Test func duplicateNameIsRejectedAndSlugIsDeduplicated() throws {
         let (_, source, builder) = try Self.setUp()
         _ = try builder.create(CloneRequest(source: source, name: "Fixture (Work)", badge: Badge(text: "W", color: "#0A84FF")))

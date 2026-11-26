@@ -25,10 +25,12 @@ public struct ModeDecider: Sendable {
                 "This app relies on iCloud or shared app data that only works for the original app, so it can't be cloned yet. Light mode (coming soon) will support it.",
             ])
         }
+        // A full clone even here: compatibility mode runs the original app, which can't help apps that allow one
+        // copy per bundle ID or ignore HOME (Muse). If the full clone won't start, CloneWorkflow tries it anyway.
         if !app.restrictedEntitlements.isEmpty {
             let list = app.restrictedEntitlements.joined(separator: ", ")
-            return ModeDecision(mode: .fallback, support: .limited, reasons: [
-                "Uses features tied to its developer (\(list)), so the clone runs in compatibility mode: it shares the original's notifications and must be opened after the original.",
+            return ModeDecision(mode: .identity, support: .limited, reasons: [
+                "Uses features tied to its developer (\(list)). The clone gets its own data and Dock icon, but those features may not work in it, so you may need to sign in again when you open it.",
             ])
         }
         if app.hasMASReceipt {

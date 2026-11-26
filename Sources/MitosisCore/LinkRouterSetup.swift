@@ -7,7 +7,7 @@ public protocol URLHandlerRegistry: Sendable {
     func setDefaultHandler(bundleID: String, forScheme scheme: String) throws
 }
 
-public enum LinkRouterError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum LinkRouterError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case noSchemes(String)
     case appNotFound(String)
     case timedOut(String)

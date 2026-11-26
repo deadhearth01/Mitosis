@@ -3,7 +3,7 @@ import CoreText
 import ImageIO
 import UniformTypeIdentifiers
 
-public enum IconError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum IconError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case noBaseIcon(String)
     case renderFailed(Int)
     case encodeFailed

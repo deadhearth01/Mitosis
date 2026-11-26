@@ -3,11 +3,12 @@ import Testing
 @testable import MitosisCore
 
 @Suite struct CloneBuilderFallbackTests {
-    @Test func restrictedEntitlementsProduceAShortcutApp() throws {
+    @Test func compatibilityModeProducesAShortcutApp() throws {
         var o = FixtureOptions()
         o.entitlements = ["keychain-access-groups": ["ABCDE12345.com.example"]]
         let (root, source, builder) = try CloneBuilderIdentityTests.setUp(o)
-        let entry = try builder.create(CloneRequest(source: source, name: "Fixture (Safe)", badge: Badge(text: "S", color: "#30D158")))
+        let entry = try builder.create(CloneRequest(source: source, name: "Fixture (Safe)", badge: Badge(text: "S", color: "#30D158"),
+                                                    modeOverride: .fallback))
 
         #expect(entry.manifest.mode == .fallback)
         let clone = root.appendingPathComponent("Clones/Fixture (Safe).app")

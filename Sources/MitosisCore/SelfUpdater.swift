@@ -1,7 +1,7 @@
 import CryptoKit
 import Foundation
 
-public enum SelfUpdaterError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum SelfUpdaterError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case checksumMismatch
     case notMitosis
     case badSignature

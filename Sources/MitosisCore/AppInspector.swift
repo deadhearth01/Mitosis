@@ -20,16 +20,23 @@ public struct AppInfo: Equatable, Sendable {
     public var cdhash: String?
 }
 
-public enum InspectionError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum InspectionError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case notAnApp(String)
     case missingInfo(key: String, app: String)
+    case noExecutable(app: String)
 
     public var description: String {
         switch self {
         case .notAnApp(let path): return "\(path) is not a Mac app."
         case let .missingInfo(key, app): return "\(app) is missing \(key) in its Info.plist."
+        case .noExecutable(let app): return "\(app) doesn't contain a program Mitosis can start. Check that the app opens on its own, then try again."
         }
     }
+}
+
+/// Mitosis errors explain themselves in plain words; `localizedDescription` (shown in the app) uses that text.
+extension LocalizedError where Self: CustomStringConvertible {
+    public var errorDescription: String? { description }
 }
 
 public struct AppInspector: Sendable {
@@ -41,9 +48,7 @@ public struct AppInspector: Sendable {
         guard let bundleID = info["CFBundleIdentifier"] as? String else {
             throw InspectionError.missingInfo(key: "CFBundleIdentifier", app: url.lastPathComponent)
         }
-        guard let executable = info["CFBundleExecutable"] as? String else {
-            throw InspectionError.missingInfo(key: "CFBundleExecutable", app: url.lastPathComponent)
-        }
+        let executable = try Self.executableName(of: url, info: info)
         let fm = FileManager.default
         let entitlements = try Entitlements.read(from: url)
         let version = info["CFBundleShortVersionString"] as? String ?? "0"
@@ -71,6 +76,24 @@ public struct AppInspector: Sendable {
               let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any]
         else { throw InspectionError.notAnApp(app.path) }
         return plist
+    }
+
+    /// The program macOS starts: `CFBundleExecutable`, or, when an app leaves it out (Muse does), a file in
+    /// Contents/MacOS named after the bundle or `CFBundleName`, or the only program there.
+    static func executableName(of app: URL, info: [String: Any]) throws -> String {
+        if let name = info["CFBundleExecutable"] as? String, !name.isEmpty { return name }
+        let fm = FileManager.default
+        let macOS = app.appendingPathComponent("Contents/MacOS")
+        func isProgram(_ name: String) -> Bool {
+            var isDir: ObjCBool = false
+            let path = macOS.appendingPathComponent(name).path
+            return fm.fileExists(atPath: path, isDirectory: &isDir) && !isDir.boolValue && fm.isExecutableFile(atPath: path)
+        }
+        let candidates = [app.deletingPathExtension().lastPathComponent, info["CFBundleName"] as? String].compactMap { $0 }
+        if let name = candidates.first(where: isProgram) { return name }
+        let programs = ((try? fm.contentsOfDirectory(atPath: macOS.path)) ?? []).filter(isProgram)
+        if programs.count == 1 { return programs[0] }
+        throw InspectionError.noExecutable(app: app.lastPathComponent)
     }
 
     static func cdhash(of app: URL) -> String? {

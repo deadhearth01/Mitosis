@@ -4,6 +4,16 @@ All notable changes to Mitosis are documented here. The format follows [Keep a C
 
 ## [Unreleased]
 
+## [0.2.3] - 2026-10-19
+
+### Fixed
+- **Muse and similar apps can be cloned.** Some apps leave out the Info.plist entry that names their program (macOS then uses the app's name); Mitosis now finds the program the same way macOS does, and gives clones of such apps an explicit entry so they start under their new name.
+- Errors now read in plain words instead of "The operation couldn't be completed (MitosisCore… error 1)".
+
+### Changed
+- **Apps with developer-only features get a full clone.** Apps like Muse that use keychain groups or other features tied to their developer used to get compatibility mode, which can't work for apps that allow one copy per bundle ID. They now get a full clone with its own data and Dock icon ("Works with limits": you may need to sign in again when you open it).
+- **Automatic mode retries in compatibility mode.** If a full clone won't start, Mitosis tries compatibility mode before giving up, instead of asking you to do it.
+
 ## [0.2.2] - 2026-10-09
 
 ### Added
@@ -68,7 +78,8 @@ First preview: the clone engine and the `mitosis` command-line tool.
 - Refresh after the original app updates; delete to the Trash (never permanently).
 - `mitosis` command-line tool: `doctor`, `clone`, `list`, `stats`, `clean`, `refresh`, `delete`, `open`.
 
-[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.2...HEAD
+[Unreleased]: https://github.com/deadhearth01/Mitosis/compare/v0.2.3...HEAD
+[0.2.3]: https://github.com/deadhearth01/Mitosis/compare/v0.2.2...v0.2.3
 [0.2.2]: https://github.com/deadhearth01/Mitosis/compare/v0.2.1...v0.2.2
 [0.2.1]: https://github.com/deadhearth01/Mitosis/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/deadhearth01/Mitosis/compare/v0.1.1...v0.2.0

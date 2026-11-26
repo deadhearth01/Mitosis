@@ -76,7 +76,7 @@ enum HelpTopic: String, CaseIterable, Identifiable {
         case .apps:
             return [
                 "**Works great:** most apps built with Electron or Chromium, like Slack, Discord, Signal, VS Code, Notion, and Claude. Clones get their own login, data, notifications, and Dock icon.",
-                "**Works with limits:** some apps use features tied to their developer. Mitosis clones them in compatibility mode: separate login and data, but they use the original app's Dock icon and notifications. Mac App Store apps may ask you to sign in again.",
+                "**Works with limits:** some apps use features tied to their developer, like saving your sign-in to the keychain. Their clones get their own data and Dock icon, but you may need to sign in again when you open one. Mac App Store apps may also ask you to sign in again. If a clone won't start, Mitosis switches to compatibility mode on its own: separate data, but the original app's Dock icon and notifications.",
                 "**Not supported:** Apple's own apps, and apps that need iCloud or shared app data, like WhatsApp. A light mode for these is planned.",
                 "The New Clone picker shows a label for every app before you start.",
             ]

@@ -5,12 +5,15 @@ public struct InfoPlistEdit: Sendable, Equatable {
     public var name: String
     public var iconFile: String?
     public var disableSparkle: Bool
+    /// Always written: an app that leaves it out would otherwise start Contents/MacOS/<clone name>.
+    public var executable: String?
 
-    public init(bundleID: String, name: String, iconFile: String?, disableSparkle: Bool) {
+    public init(bundleID: String, name: String, iconFile: String?, disableSparkle: Bool, executable: String? = nil) {
         self.bundleID = bundleID
         self.name = name
         self.iconFile = iconFile
         self.disableSparkle = disableSparkle
+        self.executable = executable
     }
 }
 
@@ -30,6 +33,7 @@ public enum InfoPlistEditor {
         d["CFBundleIdentifier"] = edit.bundleID
         d["CFBundleName"] = edit.name
         d["CFBundleDisplayName"] = edit.name
+        if let exe = edit.executable { d["CFBundleExecutable"] = exe }
         if let icon = edit.iconFile {
             d["CFBundleIconFile"] = icon
             d.removeValue(forKey: "CFBundleIconName")   // asset-catalog icon would win over the .icns

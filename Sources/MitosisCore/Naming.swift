@@ -29,7 +29,7 @@ public enum Slug {
     }
 }
 
-public enum CloneNameError: Error, Equatable, CustomStringConvertible, Sendable {
+public enum CloneNameError: Error, LocalizedError, Equatable, CustomStringConvertible, Sendable {
     case empty
     case tooLong
     case leadingDot

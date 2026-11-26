@@ -12,24 +12,38 @@ public struct CloneWorkflow: Sendable {
     private var registry: CloneRegistry { CloneRegistry(fileURL: builder.environment.registryFile) }
 
     /// Creates the clone, opens it, and keeps it only if it is still running after `window`.
-    /// A clone that doesn't start is removed completely (bundle, fresh data, registry entry).
+    /// A clone that doesn't start is removed completely (bundle, fresh data, registry entry). In automatic mode a
+    /// full clone that won't start is retried once in compatibility mode before giving up.
     public func createVerified(_ request: CloneRequest, window: Duration = .seconds(10)) async throws -> RegistryEntry {
         let entry = try builder.create(request)
+        if try await startsAndStays(entry, window: window) { return entry }
+        try removeFailed(entry)
+        let name = entry.manifest.name
+        guard entry.manifest.mode == .identity else {
+            throw CloneError.failed(step: "launch check", message: "\"\(name)\" didn't stay open, so it was removed.")
+        }
+        guard request.modeOverride == nil else {
+            throw CloneError.failed(step: "launch check",
+                                    message: "\"\(name)\" didn't stay open, so it was removed. Try compatibility (fallback) mode.")
+        }
+        builder.progress?("compatibility mode")
+        var fallback = request
+        fallback.modeOverride = .fallback
+        let second = try builder.create(fallback)
+        if try await startsAndStays(second, window: window) { return second }
+        try removeFailed(second)
+        throw CloneError.failed(step: "launch check",
+                                message: "\"\(name)\" didn't stay open as a full clone or in compatibility mode, so it was removed.")
+    }
+
+    private func startsAndStays(_ entry: RegistryEntry, window: Duration) async throws -> Bool {
         builder.progress?("launch check")
-        let alive: Bool
         do {
-            alive = try await CloneLauncher.openAndCheck(entry, window: window)
+            return try await CloneLauncher.openAndCheck(entry, window: window)
         } catch {
             try removeFailed(entry)
             throw CloneError.failed(step: "launch check", message: "couldn't open \"\(entry.manifest.name)\" (\(error)), so it was removed.")
         }
-        guard alive else {
-            try removeFailed(entry)
-            let hint = entry.manifest.mode == .identity ? " Try compatibility (fallback) mode." : ""
-            throw CloneError.failed(step: "launch check",
-                                    message: "\"\(entry.manifest.name)\" didn't stay open, so it was removed.\(hint)")
-        }
-        return entry
     }
 
     /// Refreshes the clone, opens it, and restores the previous version if the new one doesn't start.

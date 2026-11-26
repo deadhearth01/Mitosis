@@ -7,7 +7,7 @@ enum CommandLineTool {
         case alreadyInstalled
     }
 
-    struct InstallError: Error, CustomStringConvertible {
+    struct InstallError: Error, LocalizedError, CustomStringConvertible {
         var description: String
     }
 

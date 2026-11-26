@@ -77,6 +77,37 @@ import Testing
         #expect(!info.isSandboxed)
     }
 
+    // Muse ships without CFBundleExecutable; macOS then starts Contents/MacOS/<bundle name>.
+    @Test func missingExecutableKeyFallsBackLikeMacOS() throws {
+        let dir = try TestSupport.tempDir()
+        var o = FixtureOptions()
+        o.name = "Muse"; o.executable = "Muse"; o.omitInfoKeys = ["CFBundleExecutable"]
+        #expect(try AppInspector().inspect(try FixtureFactory.makeApp(in: dir, o)).executableName == "Muse")
+    }
+
+    @Test func missingExecutableKeyFallsBackToTheOnlyProgram() throws {
+        let dir = try TestSupport.tempDir()
+        var o = FixtureOptions()
+        o.name = "Muse"; o.executable = "EndoMain"; o.omitInfoKeys = ["CFBundleExecutable"]
+        #expect(try AppInspector().inspect(try FixtureFactory.makeApp(in: dir, o)).executableName == "EndoMain")
+    }
+
+    @Test func noProgramToStartIsExplainedInPlainWords() throws {
+        let dir = try TestSupport.tempDir()
+        var o = FixtureOptions()
+        o.name = "Broken"; o.omitInfoKeys = ["CFBundleExecutable"]
+        let app = try FixtureFactory.makeApp(in: dir, o)
+        try FileManager.default.removeItem(at: app.appendingPathComponent("Contents/MacOS/Fixture"))
+        let error = #expect(throws: InspectionError.self) { try AppInspector().inspect(app) }
+        #expect(error?.localizedDescription.contains("Broken.app") == true)
+        #expect(error?.localizedDescription.contains("MitosisCore") == false)
+    }
+
+    @Test func errorsReadWellInTheApp() {
+        let e: Error = InspectionError.missingInfo(key: "CFBundleIdentifier", app: "Odd.app")
+        #expect(e.localizedDescription == InspectionError.missingInfo(key: "CFBundleIdentifier", app: "Odd.app").description)
+    }
+
     @Test func rejectsNonApps() throws {
         let dir = try TestSupport.tempDir()
         #expect(throws: InspectionError.notAnApp(dir.path)) { try AppInspector().inspect(dir) }

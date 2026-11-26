@@ -429,8 +429,10 @@ only started when its dependencies and authorization state allow it.
   restore, and clean shutdown.
   Narrator speech, high-contrast themes, 150/200% text scaling, clean-VM
   installs, and a second Windows user were not run; this stage therefore
-  stays **partly blocked**. Suite 497/497, 0 warnings; the archive was
-  republished and verified.
+  stays **partly blocked**. Suite 497/497, 0 warnings. The republished archive
+  `Mitosis-windows-0.2.2-x64-47dd1f0.zip` (94 files, 45,762,467 bytes, SHA-256
+  `e67f68623c0b6963b2b41415f14dc7eb52b06227c5dd23ad1a67299ddb6038d3`) passes the
+  verifier.
 
 ### Stage 28 — Clone engine authorization and strategy implementation (blocked)
 

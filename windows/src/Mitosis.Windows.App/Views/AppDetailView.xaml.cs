@@ -19,4 +19,20 @@ public sealed partial class AppDetailView : UserControl
 
     public static readonly DependencyProperty ViewModelProperty =
         DependencyProperty.Register(nameof(ViewModel), typeof(MainViewModel), typeof(AppDetailView), new PropertyMetadata(null));
+
+    private async void OnEditProfileClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is Guid id && ViewModel.FindProfile(id) is { } profile)
+        {
+            await ProfileDialogs.EditAsync(XamlRoot, ViewModel, profile);
+        }
+    }
+
+    private async void OnRemoveProfileClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is Guid id && ViewModel.FindProfile(id) is { } profile)
+        {
+            await ProfileDialogs.RemoveAsync(XamlRoot, ViewModel, profile);
+        }
+    }
 }

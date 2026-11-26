@@ -1,0 +1,481 @@
+# Mitosis for Windows — autonomous roadmap
+
+Living plan for the remaining Windows port. This document is updated after every
+stage. It is deliberately evidence-first: a subsystem is only "complete" when code,
+automated tests, and the stated verification level agree.
+
+- **Branch:** `WindowsVersion`
+- **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
+  `WindowsVersion`; the merge changed no Windows source)
+- **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
+- **Current suite:** 339/339 green (Release, .NET SDK 10.0.404)
+- **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
+- **Clone engine:** framework only; production strategy catalog empty; execution
+  gates closed
+- **Last updated:** 2026-11-26
+
+> **Product truth.** The UI shell is largely built. The product is not: nothing on
+> Windows can create, launch, refresh, repair, or delete a real clone. No amount of
+> UI polish changes that. The clone engine and its isolation evidence remain the
+> largest blocker and require explicit authorization before implementation or
+> execution.
+
+## 0. Status vocabulary
+
+| Status | Meaning |
+|---|---|
+| **Complete and verified** | Implemented; automated tests and the stated runtime/artifact checks pass. |
+| **Implemented, verification pending** | Built and launchable/tested at the logic level; pixels, Narrator, or desktop interaction not yet observed. |
+| **Partially implemented** | A real, honest subset works; the missing part is named. |
+| **Planned** | Designed here; no implementation yet. |
+| **Blocked** | Cannot proceed without a dependency, environment, or authorization. |
+| **Requires explicit authorization** | Touches third-party apps/data, system state, signing, or public distribution. |
+
+"Verified" never means "a filename suggests it works." Each claim below cites the
+source, test, or artifact that establishes it.
+
+## 1. Current project status
+
+### 1.1 Foundation and data layer
+
+| Subsystem | Status | Evidence |
+|---|---|---|
+| Solution/project boundaries (.NET 10, 8 src projects, 6 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 339 tests |
+| Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
+| Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
+| Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
+| Preferences JSON store | Complete and verified | `JsonAppPreferencesStore.cs`; 17 tests |
+| Evidence bundle model/store/evaluation | Complete and verified (framework only) | `Evidence.cs`, `EvidenceEvaluation.cs`, `JsonEvidenceStore.cs`; 40 tests |
+| Read-only app discovery (registry + packaged apps) | Complete and verified | `Windows.Platform/Discovery`; 14 ViewModel tests + platform tests; 180-app smoke test recorded in Stage 3 |
+| Compatibility assessor | Complete and verified (rule-based, conservative) | `Mitosis.Compatibility`; 8 tests |
+| Provisioning planner/gate framework | Complete and verified (planning only) | `Planner.cs`, `Gate.cs`; 27 planning tests |
+| Strategy research catalog | Complete and verified (research records only) | `ResearchCatalog.cs`; 8 tests |
+| Production provisioning catalog | **Empty by design** | `Provisioning/Gate.cs:65`; no strategy registered |
+
+### 1.2 Application shell and UI
+
+| Subsystem | Status | Evidence / missing part |
+|---|---|---|
+| Main window, sidebar, search, grouping, selection | Implemented, verification pending | Real discovery; Stage 15 interaction tests; pixel/Narrator pass pending |
+| App detail (metadata, compatibility, evidence, profiles) | Implemented, verification pending | `AppDetailView.xaml`; profiles are manageable when `Planned`; pixel pass pending |
+| Clone detail page | Partially implemented | Only reachable through explicit preview data; all engine actions are honest placeholders |
+| New Clone wizard | Partially implemented | Metadata-only save works; app-detail entry opens it preselected (Stage 21); macOS picker segments/mode picker/launch check deferred |
+| Badge editing | Partially implemented | Wizard inline editor plus `Planned`-profile re-badging (Stage 21); provisioned profiles still read-only |
+| Profile lifecycle management | Implemented, verification pending (metadata only) | Rename, re-badge, and remove for `Planned` records on app and orphan detail; non-`Planned` refused; dialog/Narrator checks pending |
+| Settings | Partially implemented | General/Advanced subset; tray, updates, default mode, CLI installer deliberately absent |
+| Help | Implemented, verification pending | Nine topics, honest Windows copy |
+| Onboarding | Implemented, verification pending | Three pages, persisted once |
+| Window lifecycle and keyboard routing | Implemented, verification pending | Minimum sizes, focus return, F1/Ctrl+,/Ctrl+F; keypress observation pending |
+| Tray / menu-bar equivalent | Deferred by decision | `docs/WINDOWS-PORT.md` § Stage 14 |
+| Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
+| Accessibility | Partially implemented | Names, live regions, focus targets; Narrator and contrast passes pending |
+| Visual parity | Implemented, verification pending | No screenshots captured; `WINDOWS-UI-VERIFICATION.md` scenarios pending |
+
+### 1.3 Clone engine and Windows integration
+
+| Subsystem | Status | Evidence / missing part |
+|---|---|---|
+| Real cloning/provisioning | **Blocked / requires authorization** | No executor; catalog empty; gates closed |
+| Application data separation | **Blocked / requires authorization** | Research only; no live evidence |
+| Registry/filesystem isolation | **Blocked / requires authorization** | Research only; no live evidence |
+| Process launch and liveness verification | **Blocked / requires authorization** | No implementation |
+| Refresh / rollback / restore | **Blocked** | Depends on engine |
+| Delete / clean caches / relink | **Blocked** | Clone deletion needs the engine; metadata-record removal is implemented for `Planned` profiles only |
+| Live stats (disk/data/memory/CPU) | **Missing** | Static placeholder tiles in preview; no collector |
+| Link routing / protocol handler | Partially implemented (UI only) | Toggle holds state; no interception |
+| Background refresh agent | **Missing** | Depends on engine |
+| CLI (`mitosis.exe`) | **Missing** | No console project |
+| Single-instance activation | **Missing** | No mutex/`AppInstance` handling; multiple instances can start |
+| Structured logging / diagnostics | **Missing** | No logger, no log file, no doctor report |
+| Update check / self-update | **Missing** | Static banner version; no network check |
+| Installer / uninstaller | **Missing** | Unpackaged zip only |
+| Code signing | **Missing / requires authorization** | Unsigned; SmartScreen expected |
+| Clean-machine validation | **Blocked by environment** | Only Windows 11 25H2 dev machine used |
+| ARM64 / MSIX / Store | Deferred | `Platforms=x64`; unpackaged model documented |
+
+### 1.4 Quality and release engineering
+
+| Subsystem | Status | Evidence |
+|---|---|---|
+| Unit/integration tests | Complete for implemented logic | 329/329; covers domain, stores, discovery, view models, shortcuts, verifier |
+| Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
+| Release packaging | Complete and verified structurally | `publish-release.ps1`; SHA sidecar; ~39 MB x64 zip |
+| Artifact verifier | Complete and verified (38 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening in Stage 20 |
+| Version metadata | Complete; release stamp decision pending | `Directory.Build.props` (`0.2.2`; product tag is `v0.2.3`) |
+| Application icon | Complete for ≥32 px; small-size glyph open | `app.ico`; `make-icon.ps1` |
+| Documentation | Partially current | Stage docs are detailed; `windows/README.md` is stale (still says Stage 3) |
+
+## 2. Remaining engineering gaps
+
+The table records only gaps that are real today. "Disposition" says whether the gap
+is eligible now, deferred, or authorization-gated.
+
+| # | Area | Gap | Evidence | Impact | Disposition |
+|---|---|---|---|---|---|
+| G1 | Core product | No real clone engine/executor | `ProductionCatalog.Strategies = Array.Empty` | Cannot clone anything | Authorization-gated |
+| G2 | Isolation | No live isolation evidence for any Windows app | `WINDOWS-ISOLATION-VERIFICATION-PLAN.md` | Cannot claim separation | Authorization-gated |
+| G3 | Lifecycle | No launch verification, refresh, rollback, recovery | Engine absent | Clones could not be trusted | Authorization-gated |
+| G4 | Data safety | No delete/clean/relink semantics for real clones | Engine absent | Cannot safely remove data | Authorization-gated |
+| G5 | Profiles | Saved profiles had no rename, re-badge, or removal path | `Planned`-profile Edit/Remove added in Stage 21; provisioned profiles remain read-only | Future provisioned records must be managed by the engine, not metadata code | Complete for `Planned` (Stage 21) |
+| G6 | Wizard entry | App-detail “New Clone…” showed a placeholder | `CreateCloneFromAppCommand` now raises `NewCloneRequested`; preview keeps the placeholder | A primary path works | Complete (Stage 21) |
+| G7 | Diagnostics | No structured logs, crash report, or doctor output | No logger/`UnhandledException` handling | Support and engine debugging would be blind | Eligible (Stage 22) |
+| G8 | Process integrity | Multiple app instances can run concurrently | No mutex/`AppInstance` code | Duplicate windows, concurrent store access, confusing onboarding | Eligible (Stage 23) |
+| G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | No console project | Automation and support path missing | Eligible (Stage 24) |
+| G10 | Updates | No update check; banner is static preview data | `BannerVersion` hardcoded | Users cannot learn about releases | Eligible (Stage 25) |
+| G11 | Install | Zip-only; no installer/uninstaller | `WINDOWS-RELEASE.md` | Manual prerequisites; no Start-menu/uninstall story | Partly authorization-gated |
+| G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
+| G13 | Compatibility | Only Windows 11 25H2 ever exercised | Release checklist | Unknown behavior on 10/24H2/23H2 | Blocked by environment |
+| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | `WINDOWS-UI-VERIFICATION.md` | Visual/a11y parity unproven | Eligible with a desktop session |
+| G15 | Stats | Detail tiles are static preview values | `PreviewData` | Misleading only if shown as live; currently preview-gated | Depends on engine |
+| G16 | Link routing | Toggle is UI-only | `ShowLinksCard` / `LinkRoutingOn` | Users may expect routing | Depends on engine/protocol handler |
+| G17 | Background | No refresh agent or scheduled task | No code | Clones would age silently | Depends on engine |
+| G18 | Docs | `windows/README.md` described Stage 3 | File header | Misleads contributors | Addressed (Stage 21) |
+| G19 | Version | Windows stamp `0.2.2` vs product `v0.2.3` | `Directory.Build.props` | Artifact naming/version claims drift | Release decision |
+| G20 | Performance | Discovery cost/scale unmeasured beyond one smoke test | Stage 3 record | Startup may be slow on large machines | Eligible later |
+| G21 | Licensing | PolyForm Noncommercial + trademark constraints | `LICENSE`, `WINDOWS-PORT.md` §8 | Distribution must respect them | Policy, not code |
+
+## 3. Stage plan
+
+Stages are ordered by dependency, safety, and product value. Numbers are not a
+target; stages may be split, merged, or reordered when evidence changes. A stage is
+only started when its dependencies and authorization state allow it.
+
+### Stage 21 — Profile lifecycle and app-detail handoff (completed)
+
+- **Objective:** Make saved metadata profiles manageable and make the app-detail
+  “New Clone…” action open the wizard preselected to that app.
+- **Current problem:** Profiles can only be created. A typo in a name or badge is
+  permanent, and the app-detail button shows a placeholder even though the wizard
+  exists.
+- **Evidence:** `AppDetailView.xaml` profile list has no actions;
+  `MainViewModel.CreateCloneFromAppCommand` raises a placeholder;
+  `CloneProfile.Rename/ChangeBadge` and `ICloneProfileRepository.UpdateAsync/
+  RemoveAsync` already exist and are tested.
+- **Implementation:** View-model edit/remove operations restricted to `Planned`
+  records; repository-backed reload; edit dialog (name, 1–2 char badge, preset
+  color); remove confirmation that states metadata-only impact; same actions for
+  orphan profiles; fix the app-detail command to raise `NewCloneRequested`;
+  correct the test that pins the placeholder.
+- **Dependencies:** None beyond the existing profile store.
+- **Risks:** Accidental deletion of a future provisioned record — guarded by the
+  `Planned`-only rule and an explicit dialog; duplicate names — repository and
+  view-model reject with the existing message.
+- **Automated tests:** Rename/re-badge persistence; duplicate/invalid name
+  rejection; non-`Planned` refusal; removal; orphan refresh; app-detail wizard
+  event and preselection; `OrphanProfiles` change notification.
+- **Manual verification:** Dialog layout, focus, Enter/Esc, Narrator names
+  (pending; add scenarios to `WINDOWS-UI-VERIFICATION.md`).
+- **Definition of done:** All tests green; no app data touched; docs updated;
+  one conventional commit pushed.
+- **Authorization:** Not required (Mitosis-owned metadata only).
+- **Result:** Implemented and pushed; 339/339 tests green. Planned records can be
+  edited and removed on app and orphan detail; non-`Planned` records are refused
+  with an engine-dependent message; the app-detail “New Clone…” action opens the
+  wizard preselected. Manual dialog/Narrator checks remain pending.
+
+### Stage 22 — Diagnostics, logging, and crash reporting (eligible)
+
+- **Objective:** Add a safe, local diagnostic trail and a user-facing failure path.
+- **Current problem:** No logs, no crash handler, no doctor-style report; engine
+  work and support would be blind.
+- **Evidence:** No `ILogger`, `UnhandledException`, or log directory in `windows/src`.
+- **Implementation:** Small structured file logger under
+  `%LOCALAPPDATA%\Mitosis\Logs` with size/age rotation; no secrets, paths redacted
+  to `~`; UI-thread and task exception hooks that show a plain dialog and exit
+  nonzero; `doctor`-style report assembled from app version, OS, runtime, App SDK
+  presence, data-directory writability, profile/evidence store health, and
+  discovery counts. No network, no elevation.
+- **Dependencies:** None.
+- **Risks:** Logging sensitive paths or app names; unbounded growth; hiding
+  exceptions. Mitigate with redaction, caps, and rethrow/exit semantics.
+- **Automated tests:** Redaction, rotation caps, report fields, failure paths.
+- **Manual verification:** Crash dialog and log inspection on a desktop.
+- **Definition of done:** Tests green; logs capped; docs describe what is and is
+  not recorded.
+- **Authorization:** Not required (local diagnostics only).
+
+### Stage 23 — Single-instance activation and store hardening (eligible)
+
+- **Objective:** One Mitosis process per user session; a second launch focuses the
+  existing window instead of creating a duplicate.
+- **Current problem:** Multiple instances can start, duplicating onboarding and
+  racing the JSON stores.
+- **Evidence:** No mutex/`AppInstance` code; stores serialize only within a process.
+- **Implementation:** Named mutex or `AppInstance` redirect keyed to the current
+  user; second launch activates the existing main window; explicit behavior when
+  the primary is shutting down; tests for the decision logic; no admin rights.
+- **Dependencies:** None.
+- **Risks:** Stale mutex/handle on crash; redirected activation when the primary is
+  unresponsive. Mitigate with abandoned-mutex handling and a bounded wait.
+- **Automated tests:** Decision/state logic and store cross-process safety notes.
+- **Manual verification:** Launch twice, observe focus; kill primary and relaunch.
+- **Definition of done:** Tests green; duplicate launches prevented; docs updated.
+- **Authorization:** Not required (current-user process behavior).
+
+### Stage 24 — Read-only CLI and doctor report (eligible)
+
+- **Objective:** Ship `mitosis.exe` with read-only commands: `version`, `list`,
+  `profiles`, `doctor`. No clone, launch, delete, or mutation commands.
+- **Current problem:** No CLI; macOS has one and Windows support/automation has no
+  path.
+- **Evidence:** No console project; `WINDOWS-PORT.md` W46/W55 marked missing.
+- **Implementation:** Console project in the solution; shares discovery, stores,
+  and diagnostics; machine-readable `--json` where useful; explicit “not
+  implemented on Windows yet” for engine commands; packaging decision documented.
+- **Dependencies:** Stage 22 diagnostics for `doctor`.
+- **Risks:** Shipping a second binary; PATH installation. Keep zip-local, no
+  system PATH change without authorization.
+- **Automated tests:** Command parsing, output shape, exit codes, no-write
+  guarantees.
+- **Manual verification:** Run from the publish tree.
+- **Definition of done:** Tests green; commands honest; docs updated.
+- **Authorization:** Not required for read-only local commands; PATH/system
+  installation remains out of scope.
+
+### Stage 25 — Update availability check (eligible)
+
+- **Objective:** Tell the user when a newer GitHub release exists; no automatic
+  download or install.
+- **Current problem:** The update banner uses a hardcoded preview version.
+- **Evidence:** `PreviewData.BannerVersion`; no `HttpClient` in `windows/src`.
+- **Implementation:** Opt-in/manual check against the repository’s public releases;
+  version comparison; timeout/cancellation; no telemetry; honest offline/error
+  states; banner only when a newer version exists.
+- **Dependencies:** Stage 22 for diagnostics.
+- **Risks:** Network privacy, rate limits, malformed responses. Keep the request
+  minimal and documented.
+- **Automated tests:** Version comparison, response parsing, failure states.
+- **Manual verification:** Check with network on/off.
+- **Definition of done:** Tests green; no auto-update claim; docs updated.
+- **Authorization:** Not required (read-only public network request).
+
+### Stage 26 — Installer and unsigned distribution package (partly eligible)
+
+- **Objective:** Decide and implement the install story (per-user installer vs
+  zip-only), including uninstall and prerequisite checks.
+- **Current problem:** Zip + manual .NET/App SDK prerequisites; no Start-menu or
+  uninstall path.
+- **Evidence:** `WINDOWS-RELEASE.md` deployment model.
+- **Implementation:** Per-user installer script (e.g. Inno Setup or WiX) built
+  locally; prerequisite detection; uninstall removes app files only, never user
+  profile data without explicit choice; no system-wide install by default.
+- **Dependencies:** Stages 21–25; signing decision.
+- **Risks:** Installer writing outside per-user scope; leftover files; false
+  prerequisite claims. Test in a disposable VM.
+- **Automated tests:** Script/manifest validation; path and uninstall rules.
+- **Manual verification:** Install/uninstall in a clean VM.
+- **Definition of done:** Installer builds and passes structural checks; clean-VM
+  run recorded; signing/public distribution still separate.
+- **Authorization:** Building is allowed; installing system-wide, signing, and
+  public distribution require explicit authorization.
+
+### Stage 27 — Visual, accessibility, and clean-machine verification (partly blocked)
+
+- **Objective:** Execute the manual protocol and close W65/W66 plus the pending
+  interaction scenarios.
+- **Current problem:** No screenshots, Narrator runs, contrast checks, or
+  clean-machine launches exist.
+- **Evidence:** `WINDOWS-UI-VERIFICATION.md`; release checklist.
+- **Implementation:** Run S1–S24, capture screenshots, record Narrator order,
+  contrast themes, DPI, keypresses; fix only evidence-backed defects; run the
+  published zip on a clean Windows 11 and Windows 10 1809+ VM with and without
+  prerequisites.
+- **Dependencies:** A real desktop session and clean VMs.
+- **Risks:** Environment cannot provide clean VMs; do not fabricate results.
+- **Automated tests:** None for pixels; regression tests for any code fix.
+- **Manual verification:** The point of the stage.
+- **Definition of done:** Evidence files/screenshots attached; remaining
+  differences classified cosmetic/minor/major.
+- **Authorization:** Not required for local UI checks; VM provisioning may need
+  environment access.
+
+### Stage 28 — Clone engine authorization and strategy implementation (blocked)
+
+- **Objective:** Implement the first production provisioning strategy and executor
+  behind the existing gate.
+- **Current problem:** The catalog is empty and no executor exists; the product
+  cannot clone.
+- **Evidence:** `Gate.cs`, `Planner.cs`, `WINDOWS-PROVISIONING.md`.
+- **Implementation:** Only after written authorization: choose a researched
+  candidate (e.g. documented per-profile flag), implement a strategy + executor,
+  create one private data directory per instance, verify launch, and register the
+  strategy only when evidence passes. No generic copying.
+- **Dependencies:** Stages 22–23; explicit authorization; disposable test app.
+- **Risks:** Data loss, cross-account leakage, breaking the original install.
+  Require a disposable environment, backups, and abort controls.
+- **Automated tests:** Planner/gate unit tests; executor dry-run tests; no live
+  third-party app tests in CI.
+- **Manual verification:** The isolation protocol with a disposable app.
+- **Definition of done:** One strategy registered with complete evidence; a clone
+  launches and is verifiably separate; rollback works.
+- **Authorization:** **Required before any code that can execute provisioning.**
+
+### Stage 29 — Isolation verification execution (blocked)
+
+- **Objective:** Run the seven-phase protocol and produce evidence bundles for the
+  first candidate.
+- **Current problem:** Framework only; nothing verified live.
+- **Evidence:** `WINDOWS-ISOLATION-VERIFICATION-PLAN.md`.
+- **Implementation:** Execute phases 1–7 in a disposable environment; record all
+  ten dimensions; owner approval; no production catalog change without a pass.
+- **Dependencies:** Stage 28; named operator/reviewer; written authorization.
+- **Risks:** Residual shared state (registry, IPC, credentials, updates, file
+  associations). A partial pass is a fail.
+- **Automated tests:** Evidence validation/evaluation (already present).
+- **Manual verification:** The protocol itself.
+- **Definition of done:** Evidence bundle with all dimensions verified and
+  approved; otherwise the candidate remains ineligible.
+- **Authorization:** **Required.**
+
+### Stage 30 — Clone lifecycle: launch, refresh, rollback, delete/recovery (blocked)
+
+- **Objective:** Make a provisioned clone maintainable: open, verify running,
+  refresh after the original updates, restore on failure, delete to Recycle Bin
+  with an explicit data choice, and relink.
+- **Current problem:** No lifecycle code.
+- **Evidence:** macOS `CloneMaintenance.swift`, `CloneBuilder.swift`,
+  `AutoRefreshAgent.swift`; Windows engine absent.
+- **Implementation:** Process launch/liveness; snapshot/rollback; refresh
+  orchestration; Recycle Bin semantics; no permanent delete; explicit data
+  handling.
+- **Dependencies:** Stages 28–29.
+- **Risks:** Data loss during refresh/delete; open-process conflicts. Require
+  backups, dry runs, and abort paths.
+- **Automated tests:** State machine, path safety, rollback decision logic.
+- **Manual verification:** Disposable-app lifecycle runs.
+- **Definition of done:** A clone can be created, opened, refreshed, rolled back,
+  and deleted without touching the original or other clones.
+- **Authorization:** **Required.**
+
+### Stage 31 — Live stats, link routing, and background refresh (blocked)
+
+- **Objective:** Replace placeholder tiles with real measurements; route links to
+  the right clone; refresh in the background.
+- **Current problem:** Static tiles, UI-only link toggle, no scheduler.
+- **Evidence:** macOS `StatsCollector.swift`, `LinkRouterSetup.swift`,
+  `AutoRefreshAgent.swift`.
+- **Implementation:** Per-clone disk/data/memory/CPU collection; protocol handler
+  registration; per-clone routing and restore; scheduled refresh with skip-running
+  and defer-mid-update.
+- **Dependencies:** Stage 30.
+- **Risks:** Protocol-handler hijacking, performance overhead, background task
+  lifetime.
+- **Automated tests:** Parsing/formatting, routing decisions, schedule logic.
+- **Manual verification:** Real clone runs and link opens.
+- **Definition of done:** Live values match the OS; links land in the chosen clone;
+  background refresh is observable and cancellable.
+- **Authorization:** **Required** (third-party launches, protocol registration).
+
+### Stage 32 — Signing, public distribution, and support (blocked)
+
+- **Objective:** Signed installer, release notes, SmartScreen/reputation plan,
+  support and rollback process.
+- **Current problem:** Unsigned; no public release.
+- **Evidence:** Release checklist.
+- **Implementation:** Authenticode certificate decision, signed builds, release
+  channel, checksums, support docs, privacy statement.
+- **Dependencies:** Stages 26–31.
+- **Risks:** Identity/legal claims, certificate handling, distribution policy.
+- **Automated tests:** Signature/checksum verification in CI.
+- **Manual verification:** Install and update on clean VMs.
+- **Definition of done:** Signed artifact verified; public release approved.
+- **Authorization:** **Required.**
+
+### Deferred (not stages yet)
+
+- Tray/menu-bar equivalent (needs lifetime architecture and a real reason).
+- Window position/size restoration (no macOS evidence to mirror).
+- MSIX/Store distribution, ARM64, self-update, workspaces, sandboxed light mode.
+- macOS UI screenshot parity for states that do not exist on Windows yet.
+
+## 4. Completion criteria
+
+These are separate milestones. Passing one does not imply the next.
+
+1. **Feature complete** — Every parity row is implemented or explicitly deferred
+   with a documented reason. The engine, lifecycle, stats, links, CLI, settings,
+   and help all have real behavior; no dead buttons presented as complete.
+2. **Functionally verified** — Unit/integration tests pass; the manual UI protocol
+   is executed; a clean-machine install and launch are recorded; supported OS
+   versions are exercised.
+3. **Security reviewed** — Threat model, isolation evidence for every registered
+   strategy, path/permission review, dependency review, and a release audit with
+   no open high-severity findings.
+4. **Installable** — A per-user installer (or documented zip) with prerequisite
+   detection, uninstall, and no hidden system changes; user data survives
+   uninstall unless explicitly removed.
+5. **Maintainable** — Structured diagnostics, CI, reproducible builds, current
+   docs, and no machine-specific assumptions.
+6. **Ready for a controlled release** — Signed artifact, small-cohort rollout,
+   rollback plan, known-issues list, and support contact.
+7. **Ready for broad public distribution** — SmartScreen/reputation strategy,
+   update channel, privacy statement, license/trademark compliance, and capacity
+   to support users.
+
+**Current position:** Stage 21 closed the metadata-profile dead end. The UI shell
+is between feature complete and functionally verified; the product is not at
+feature complete because the clone engine is absent. The port is not installable,
+signed, or clean-machine verified. Next eligible work is local diagnostics
+(Stage 22), then single-instance activation and a read-only CLI.
+
+## 5. Authorization boundaries
+
+The following always require explicit user authorization before implementation or
+execution, regardless of roadmap placement:
+
+- Implementing or enabling real application cloning/provisioning.
+- Executing a clone, launching third-party apps through clone infrastructure, or
+  modifying third-party app data.
+- Live isolation testing against real applications.
+- Deleting/recovering real application data.
+- System-wide registry/filesystem changes, services, drivers, or admin-required
+  operations.
+- Signing with a real identity/certificate.
+- Public distribution of binaries.
+- Licensing or legal claims.
+
+Planning, documentation, tests for non-executing logic, and Mitosis-owned metadata
+operations are allowed without additional authorization.
+
+## 6. Verification ledger
+
+| Claim | Level | Evidence | Still needed |
+|---|---|---|---|
+| Code compiles (Release) | Verified | `dotnet build` at `6f8e3de` | CI remote run observation |
+| 339 tests pass | Verified | `dotnet test` at the Stage 21 tree | CI remote run observation |
+| Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
+| Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
+| Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
+| Release zip is structurally sound | Verified | Stage 19/20 verifier + fixture tests | Clean-machine launch |
+| UI matches macOS pixels | **Not verified** | Design spec + code | Screenshots/contrast/Narrator |
+| Any clone works | **Not verified / not implemented** | Catalog empty | Authorization + engine + evidence |
+| Installer works | **Not implemented** | Zip only | Stage 26 |
+| Binary is trusted | **Not verified** | Unsigned | Signing decision |
+
+## 7. Roadmap maintenance
+
+After every stage:
+
+1. Update the status table and gap table with what actually changed.
+2. Move completed stages to a short "completed" log with commit hash and test count.
+3. Re-read the next stage's dependencies; reorder if new evidence changes priority.
+4. Record new gaps rather than hiding them in a stage report.
+5. Never mark a manual check complete without a recorded observation.
+6. Keep the authorization boundary explicit; a roadmap entry is not permission.
+
+### Completed stage log
+
+| Stage | Title | Commit | Tests | Notes |
+|---|---|---|---|---|
+| 13 | Settings, Help, onboarding | `1b92b2d` | 266 | Real preference persistence |
+| 14 | Window lifecycle and keyboard | `4bf257c` | 278 | Tray/restoration deferred |
+| 15 | Main-window interaction parity | `08a1a6d` | 283 | Selection survives search |
+| 16 | Keyboard/focus/accessibility | `0aa36bc` | 283 | XAML/wiring fixes |
+| 17 | Release packaging audit | `1cfacc4` | 287 | RC pipeline |
+| 18 | Version metadata and identity | `2308fd9` | 291 | `Mitosis.exe` + icon |
+| 19 | Artifact integrity verification | `67ceeb6` | 307 | SHA sidecar + verifier |
+| 20 | Verifier/security hardening | `2ef60d0` | 329 | Hostile-input limits |
+| — | Merge `origin/main` `v0.2.3` | `6f8e3de` | 329 | No Windows source changes |
+| 21 | Profile lifecycle + wizard handoff | `pending` | 339 | Metadata-only edit/remove; app-detail entry |
+
+Stages 21+ are appended as they complete.

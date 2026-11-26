@@ -146,13 +146,31 @@
                         <ItemsControl ItemsSource="{x:Bind ViewModel.ProfilesForSelectedApp, Mode=OneWay}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="domain:CloneProfile">
-                                    <StackPanel Padding="0,6" Spacing="2">
-                                        <TextBlock FontSize="14" FontWeight="Medium" Text="{x:Bind Name, Mode=OneTime}" />
-                                        <TextBlock
-                                            FontSize="12"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                            Text="{x:Bind Mode=OneTime, Converter={StaticResource ProfileSubtitle}}" />
-                                    </StackPanel>
+                                    <Grid Padding="0,6" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock FontSize="14" FontWeight="Medium" Text="{x:Bind Name, Mode=OneTime}" />
+                                            <TextBlock
+                                                FontSize="12"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="{x:Bind Mode=OneTime, Converter={StaticResource ProfileSubtitle}}" />
+                                        </StackPanel>
+                                        <StackPanel
+                                            Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Orientation="Horizontal"
+                                            Spacing="4">
+                                            <Button
+                                                AutomationProperties.Name="Edit profile"
+                                                Click="OnEditProfileClick"
+                                                Content="Edit"
+                                                Tag="{x:Bind Id}" />
+                                            <Button
+                                                AutomationProperties.Name="Remove profile"
+                                                Click="OnRemoveProfileClick"
+                                                Content="Remove"
+                                                Tag="{x:Bind Id}" />
+                                        </StackPanel>
+                                    </Grid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>

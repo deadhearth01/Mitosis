@@ -55,6 +55,10 @@ found. The record is kept…`), never auto-deleted, rejoining automatically if t
 returns. Profiles for a selected app render name, honest state subtitle, and created
 date, with loading / empty (`No profiles yet.`) / error + retry states.
 
+`Planned` records also expose **Edit** and **Remove** on the app detail and orphan
+detail panels (Stage 21). Both actions are metadata-only and are refused for any
+other lifecycle state. See §10.
+
 ## 6. Privacy guarantees
 
 - Stored per profile: IDs, names, badge text/color, state, timestamps. No credentials,
@@ -74,10 +78,12 @@ date, with loading / empty (`No profiles yet.`) / error + retry states.
 
 ## 8. Explicitly deferred
 
-Provisioning and verification (engine sets `Ready`), standalone badge editor,
-refresh/relink/delete of clones, `Ready`/`Failed` transitions in the UI,
+Provisioning and verification (engine sets `Ready`), lifecycle management of
+provisioned clones (refresh/relink/delete with real data semantics), standalone
+editing of provisioned profiles, `Ready`/`Failed` transitions in the UI,
 cross-process file locking, migration between schema versions, and encrypted storage
-(nothing stored warrants it).
+(nothing stored warrants it). Editing and metadata-only removal of `Planned` records
+are implemented (§10).
 
 ## 9. New Clone wizard (Stage 5, metadata only)
 
@@ -90,3 +96,30 @@ Compatibility gates (Stage 3 assessments): `Unsupported` blocks with reasons,
 saves ignored; duplicates and store failures land on Failed with retry; cancel
 leaves nothing). Done reads `{name} planned.` plus the metadata-only notice and
 never transitions to `Ready`; the main list then refreshes and selects the app.
+
+## 10. Planned-profile lifecycle management (Stage 21)
+
+`MainViewModel.CanModifyProfile` permits edits and removal only while a record is
+`Planned`. Once a profile enters `Provisioning`, `Ready`, `Failed`, or `Unavailable`,
+the action is refused with an explicit message that managing it needs the clone
+engine, which is not implemented; nothing is changed and no exception escapes.
+
+- **Edit** (app detail and orphan detail): name, 1–2 character badge, and a preset
+  color. Input is validated by `CloneProfile.Rename` / `ChangeBadge`, so the store
+  and UI share the repository's duplicate-name and character rules. A rejected edit
+  keeps the dialog open with the existing user-facing message; the stored record is
+  untouched.
+- **Remove**: a confirmation dialog states that only the saved metadata record is
+  deleted, that no application files, logins, or data are affected, and that the
+  profile was never provisioned. Confirming calls `ICloneProfileRepository.RemoveAsync`.
+- **Refresh**: after a successful write the list reloads; `ProfilesForSelectedApp`,
+  `OrphanProfiles`, and `SelectedOrphan` are refreshed. If the reload itself fails,
+  the existing profiles error state is shown without claiming the write failed.
+- **Scope**: no paths, no application files, no launches, and no engine calls. The
+  JSON store's atomicity, corruption, and duplicate rules are unchanged.
+- **Tests**: 10 new ViewModel tests cover rename/re-badge persistence, duplicate and
+  invalid names, non-`Planned` refusal, metadata-only removal, orphan refresh and
+  removal, orphan change notification, the `CanModifyProfile` rule, and the
+  app-detail wizard handoff. Suite: 339/339.
+- **Manual verification pending**: dialog focus and Enter/Esc behavior, Narrator
+  names, and visual layout.

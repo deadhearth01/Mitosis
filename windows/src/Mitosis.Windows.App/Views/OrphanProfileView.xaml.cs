@@ -19,4 +19,20 @@ public sealed partial class OrphanProfileView : UserControl
 
     public static readonly DependencyProperty ViewModelProperty =
         DependencyProperty.Register(nameof(ViewModel), typeof(MainViewModel), typeof(OrphanProfileView), new PropertyMetadata(null));
+
+    private async void OnEditProfileClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedOrphan?.Profile is { } profile)
+        {
+            await ProfileDialogs.EditAsync(XamlRoot, ViewModel, profile);
+        }
+    }
+
+    private async void OnRemoveProfileClick(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel.SelectedOrphan?.Profile is { } profile)
+        {
+            await ProfileDialogs.RemoveAsync(XamlRoot, ViewModel, profile);
+        }
+    }
 }

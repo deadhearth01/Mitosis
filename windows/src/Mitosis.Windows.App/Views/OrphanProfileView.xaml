@@ -23,6 +23,16 @@
                     <TextBlock
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         Text="Unavailable profile" />
+                    <StackPanel Margin="0,8,0,0" Orientation="Horizontal" Spacing="4">
+                        <Button
+                            AutomationProperties.Name="Edit profile"
+                            Click="OnEditProfileClick"
+                            Content="Edit" />
+                        <Button
+                            AutomationProperties.Name="Remove profile"
+                            Click="OnRemoveProfileClick"
+                            Content="Remove" />
+                    </StackPanel>
                 </StackPanel>
             </Grid>
             <Border Style="{StaticResource MitosisCardStyle}" Padding="16,12">

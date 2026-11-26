@@ -522,3 +522,36 @@ view-layer wiring; the one behavior change with testable logic (banner
 dismissal) was already covered by `DismissBanner_HidesIt`. Existing suite
 283/283 green; Release build clean (the pre-existing CS0105 duplicate-using
 warning in `NewCloneWizardTests.cs` remains, untouched).
+
+## Stage 21 profile lifecycle and app-detail handoff notes
+
+Implemented in Stage 21, metadata only. No application files, logins, or data are
+touched; the strategy catalog remains empty and every provisioning gate stays
+closed.
+
+- W05/W14/W27 entry: the app-detail “New Clone…” action now raises
+  `NewCloneRequested` for the selected app, and `MainViewModel.CreateWizard()`
+  preselects it. Preview mode keeps the honest placeholder dialog
+  (`NewCloneRequested` is production-only). The previous test that pinned the
+  placeholder was corrected.
+- W35 (badge editing): Partially → `Planned` profiles can now be renamed and
+  re-badged from app detail and orphan detail, using the same inline dialog
+  controls as the wizard. Provisioned profiles remain read-only; a standalone
+  editor for them is still deferred with the engine.
+- W41 (failure/prompt handling): removal is now a real, confirmed metadata action
+  with explicit “no application files, logins, or data” copy. Engine actions remain
+  honest placeholders.
+- New behavior: `Planned` profiles can be removed from either surface. Non-`Planned`
+  records are refused in place with an engine-dependent message; there is no silent
+  no-op and no fictional success.
+- Accessibility: Edit/Remove buttons carry `AutomationProperties.Name`; the edit
+  dialog focuses the name field on open. Narrator order, contrast, and visual
+  layout remain pending (S22–S24, W65/W66).
+- Tests: 10 new ViewModel tests (rename/re-badge, duplicate and invalid names,
+  non-`Planned` refusal, metadata-only removal, orphan refresh/removal, orphan
+  change notification, `CanModifyProfile`, app-detail handoff). Suite 339/339
+  green; Release build clean apart from the pre-existing CS0105 duplicate-using
+  warning.
+- Not implemented: editing or removing provisioned profiles, any engine call, any
+  application-data deletion, and any change to the store's atomicity or duplicate
+  rules.

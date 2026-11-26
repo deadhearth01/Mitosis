@@ -1,4 +1,4 @@
-# Mitosis for Windows — project foundation (Stage 0)
+# Mitosis for Windows
 
 This folder holds the native Windows port of Mitosis. The macOS implementation in
 `Sources/` (Swift/SwiftUI) is untouched and remains the authoritative Mac app.
@@ -6,21 +6,26 @@ See [docs/WINDOWS-PORT.md](../docs/WINDOWS-PORT.md) for the full port plan.
 
 ## Status
 
-Stage 3 shell + read-only discovery. `Mitosis.Windows.App` is a real, launchable
-WinUI 3 application: the sidebar lists genuinely discovered applications
-(read-only Windows registrations) with per-app compatibility verdicts, plus the
-clone detail, empty state, and update banner from Stage 2. Sample data survives
-only behind the explicit `Show preview instead` fallback and is never mixed with
-real results. The New Clone wizard, Settings, Help, onboarding, tray menu, and
-the clone engine arrive in later stages. Nothing here clones, launches, modifies,
-or deletes any application.
+Shell, read-only discovery, metadata profiles, the metadata-only New Clone
+wizard, Settings, Help, onboarding, and the release-candidate pipeline are
+implemented. `Mitosis.Windows.App` is a real, launchable WinUI 3 application: the
+sidebar lists genuinely discovered applications (read-only Windows registrations)
+with per-app compatibility verdicts; profiles can be created, renamed, re-badged,
+and removed as metadata records. Sample data survives only behind the explicit
+`Show preview instead` fallback and is never mixed with real results.
+
+The clone engine is framework only: the production strategy catalog is empty and
+every provisioning gate is closed. Nothing here clones, launches, or modifies an
+application. Tray integration, a CLI, an installer, and signing remain later
+stages. See [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md)
+for current status and gaps.
 
 ## Prerequisites
 
-| Tool | Required | Status on the Stage 0 machine |
+| Tool | Required | Status on the development machine |
 |---|---|---|
 | Git | any recent | 2.54.0 installed |
-| .NET SDK | 10.0.100 or newer (LTS, `latestFeature` roll-forward per `global.json`) | 10.0.402 installed |
+| .NET SDK | 10.0.100 or newer (LTS, `latestFeature` roll-forward per `global.json`) | 10.0.404 (user-local install) |
 | Windows App SDK (NuGet `Microsoft.WindowsAppSDK` 2.5.1) | needed from Stage 2 (WinUI 3 UI) | Referenced; runtime 2.5.1 present on this machine (unpackaged app requires a machine runtime, see Run) |
 | Visual Studio 2026 / VS Code + C# Dev Kit | recommended for XAML work | Not installed; `dotnet` CLI only |
 | Windows 10 SDK / MSVC | only for native Win32 interop (Stage 5+) | Not installed |
@@ -37,7 +42,7 @@ then restore works offline of any template: plain `dotnet build` / `dotnet test`
 
 ```text
 windows/
-  Mitosis.sln                 solution (src + tests; the WinUI app joins in Stage 2)
+  Mitosis.sln                 solution (8 src projects, 6 test projects, verifier)
   global.json                 pins .NET SDK 10.0.100+ and MSTest.Sdk 4.5.1
   Directory.Build.props       shared compiler settings (nullable + implicit usings)
   src/
@@ -50,16 +55,21 @@ windows/
     Mitosis.Windows.ViewModels/ hand-rolled MVVM state for the shell, preview data, commands (net10.0)
     Mitosis.Windows.App/      WinUI 3 application: main window, sidebar, detail, theme (unpackaged WinExe)
   tests/
-    Mitosis.Domain.Tests/     MSTest suite for the domain layer
-    Mitosis.ViewModels.Tests/ MSTest suite for shell view models (selection, filtering, states, placeholders)
+    Mitosis.Domain.Tests/          domain primitives and profile lifecycle
+    Mitosis.Application.Tests/     application-layer contracts
+    Mitosis.Infrastructure.Tests/  JSON stores and persistence
+    Mitosis.Compatibility.Tests/   compatibility assessment
+    Mitosis.CloneEngine.Tests/     planner/gate framework (no execution)
+    Mitosis.ViewModels.Tests/      shell view models (discovery, profiles, wizard, settings)
+    Mitosis.Windows.Platform.Tests/ Windows-specific discovery and app-host tests
   tools/
     ReleaseVerifier/          release-candidate archive verification console tool (Stage 19)
 ```
 
-Only `Mitosis.Domain` carries code so far: `CloneName`, a direct port of the
-macOS naming rules (`Sources/MitosisCore/Naming.swift`), covered by
-`Mitosis.Domain.Tests`. The remaining libraries are structural placeholders that
-reserve the assembly and namespace boundaries for later stages.
+The domain, application, infrastructure, compatibility, and Windows platform
+layers carry real implementations. `Mitosis.CloneEngine` currently contains the
+planning/gating framework only; it has no executor and the production strategy
+catalog is deliberately empty.
 
 ## Build and test
 
@@ -106,18 +116,22 @@ Selecting an app shows its publisher, version, scope, sources, and reasons.
 Clone profiles persist as metadata in `%LOCALAPPDATA%\Mitosis\Profiles\profiles.json`
 (versioned JSON, atomic saves). Each app shows its profiles (`Planned — metadata
 only` until the engine provisions them); profiles whose app is missing are kept
-under an `Unavailable` section and rejoin automatically. Nothing is provisioned,
-launched, or deleted. Details: `docs/WINDOWS-PROFILES.md`.
+under an `Unavailable` section and rejoin automatically. `Planned` profiles can be
+renamed, re-badged, or removed from the app detail and orphan detail panels — a
+removal deletes the metadata record only, never application files, logins, or data.
+Profiles that have left the planning stage are refused because managing them needs
+the clone engine. Details: `docs/WINDOWS-PROFILES.md`.
 
 ## New Clone wizard (Stage 5, metadata only)
 
 Ctrl+N (or New Clone) opens the wizard: pick an application, enter details with
-live badge preview, review, then save. Saving writes one `Planned` profile record
-— the app is not copied or launched. `Unsupported` apps are blocked with reasons;
-review-required apps need explicit acknowledgement. The review step also states
-provisioning availability: profile flags are under research, nothing is validated
-yet (see `docs/WINDOWS-STRATEGY-RESEARCH.md`). Unsupported visual states and
-manual screenshot comparison steps are listed in `docs/UI-PARITY-MATRIX.md`.
+live badge preview, review, then save. The app detail's “New Clone…” button opens
+the same wizard with that application preselected. Saving writes one `Planned`
+profile record — the app is not copied or launched. `Unsupported` apps are blocked
+with reasons; review-required apps need explicit acknowledgement. The review step
+also states provisioning availability: profile flags are under research, nothing is
+validated yet (see `docs/WINDOWS-STRATEGY-RESEARCH.md`). Unsupported visual states
+and manual screenshot comparison steps are listed in `docs/UI-PARITY-MATRIX.md`.
 
 ## Evidence bundles (Stage 8, framework only)
 
@@ -149,15 +163,18 @@ install-time behavior, or clean-machine runs.
 What you should see: the Mitosis main window (1060×720) with discovered
 applications grouped by initial letter, an update banner, and the empty state when
 nothing is selected. Selecting an app shows its detail page with the compatibility
-verdict; selecting nothing (or a failed discovery without preview) shows the empty
-state. Every engine action (New Clone, Open, Refresh, Delete, …) shows a dialog stating it
-is unavailable in the preview. Search filters live; Enter opens (placeholder),
-Delete requests delete (placeholder), Ctrl+N starts New Clone (placeholder),
-Ctrl+F focuses search, right-click shows the clone menu.
+verdict and its saved profiles; the empty state appears when discovery returns
+nothing. Search filters live; Enter opens the selected app, Ctrl+N starts New
+Clone, Ctrl+F focuses search, right-click shows the app/clone menu, and F1 / Ctrl+,
+open Help / Settings. Engine-only actions (Open, Refresh, Delete, Clean Caches, …)
+still show honest “unavailable” dialogs because no executor exists; they never
+pretend to succeed.
 
 Manual visual verification (no automated UI tests in this environment): compare the
 running window against `Assets/Screenshots/clone-light.png` / `clone-dark.png` and
 `docs/WINDOWS-DESIGN-SPEC.md`. Known provisional items: font-size mapping, tile and
 pill glyph choices (compile-safe `Symbol` enum), sidebar width 240, icon tiles are
-initial letters (real badged icons arrive with the engine), no Settings/Help/
-onboarding/tray yet, minimum window size not enforced.
+initial letters (real badged icons arrive with the engine), minimum window size not
+enforced, and no tray integration, installer, or signing yet. Screenshots,
+Narrator runs, contrast themes, and keypress observation remain pending
+(`docs/WINDOWS-UI-VERIFICATION.md`).

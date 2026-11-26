@@ -276,7 +276,7 @@ public sealed class DiscoveryViewModelTests
     }
 
     [TestMethod]
-    public async Task CreateCloneFromApp_IsHonestPlaceholder()
+    public async Task CreateCloneFromApp_OpensWizardPreselected()
     {
         var discovery = new FakeDiscoveryService();
         discovery.Returns(new[] { DiscoveredApps.Make("Slack") });
@@ -286,12 +286,18 @@ public sealed class DiscoveryViewModelTests
         Assert.IsFalse(model.CreateCloneFromAppCommand.CanExecute(null));
         model.SelectedApp = model.VisibleAppGroups.SelectMany(g => g.Items).Single();
 
+        var raised = 0;
         DialogRequest? request = null;
+        model.NewCloneRequested += (_, _) => raised++;
         model.DialogRequested += (_, r) => request = r;
         model.CreateCloneFromAppCommand.Execute(null);
 
-        Assert.IsNotNull(request);
-        Assert.IsTrue(request.Title.Contains("not available in this preview"));
+        Assert.AreEqual(1, raised, "The app-detail button opens the real wizard.");
+        Assert.IsNull(request, "Production opens the wizard, not a placeholder.");
+
+        var wizard = model.CreateWizard();
+        Assert.AreEqual("Slack", wizard.SelectedApp?.App.DisplayName);
+        Assert.AreEqual(WizardStep.Pick, wizard.Step);
     }
 
     [TestMethod]

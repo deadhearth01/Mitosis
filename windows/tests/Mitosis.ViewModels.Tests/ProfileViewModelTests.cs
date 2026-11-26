@@ -49,11 +49,45 @@ internal sealed class FakeProfileRepository : ICloneProfileRepository
         return Task.FromResult(profile);
     }
 
-    public Task<CloneProfile> UpdateAsync(CloneProfile profile, CancellationToken cancellationToken = default) =>
-        Task.FromResult(profile);
+    public Exception? UpdateFailure { get; set; }
+
+    public Exception? RemoveFailure { get; set; }
+
+    public Task<CloneProfile> UpdateAsync(CloneProfile profile, CancellationToken cancellationToken = default)
+    {
+        if (UpdateFailure != null)
+        {
+            throw UpdateFailure;
+        }
+
+        var index = Store.FindIndex(p => p.Id == profile.Id);
+        if (index < 0)
+        {
+            throw new ProfileNotFoundException($"No profile with ID {profile.Id} exists.");
+        }
+
+        if (Store.Any(p => p.Id != profile.Id
+            && string.Equals(p.Name, profile.Name, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new DuplicateProfileException($"You already have {profile.Name}.");
+        }
+
+        Store[index] = profile;
+        return Task.FromResult(profile);
+    }
 
     public Task RemoveAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        if (RemoveFailure != null)
+        {
+            throw RemoveFailure;
+        }
+
+        if (Store.All(p => p.Id != id))
+        {
+            throw new ProfileNotFoundException($"No profile with ID {id} exists.");
+        }
+
         Store.RemoveAll(p => p.Id == id);
         return Task.CompletedTask;
     }
@@ -217,6 +251,186 @@ public sealed class ProfileViewModelTests
         var planned = CloneProfile.Create("a", "App (X)");
         Assert.IsTrue(MainViewModel.ProfileSubtitleText(planned).Contains("metadata only"));
         Assert.IsTrue(MainViewModel.ProfileCreatedText(planned).StartsWith("Created "));
+    }
+
+    [TestMethod]
+    public void CanModifyProfile_AllowsOnlyPlannedRecords()
+    {
+        var planned = CloneProfile.Create("app", "App (Work)");
+
+        Assert.IsTrue(MainViewModel.CanModifyProfile(planned));
+        Assert.IsFalse(MainViewModel.CanModifyProfile(
+            planned.TransitionTo(CloneProfileState.Provisioning)));
+    }
+
+    [TestMethod]
+    public async Task EditProfile_RenamesAndRebadges()
+    {
+        var profiles = new FakeProfileRepository();
+        var profile = CloneProfile.Create(SlackAppId(), "Slack (Work)", "W", "blue");
+        profiles.Store.Add(profile);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+
+        var result = await model.UpdateProfileAsync(profile.Id, "Slack (Home)", "H", "#30D158");
+
+        Assert.IsTrue(result.Success, result.Error);
+        var stored = profiles.Store.Single();
+        Assert.AreEqual("Slack (Home)", stored.Name);
+        Assert.AreEqual("H", stored.BadgeText);
+        Assert.AreEqual("#30D158", stored.BadgeColor);
+        Assert.IsTrue(stored.UpdatedAt >= profile.UpdatedAt);
+        Assert.AreEqual("Slack (Home)", model.ProfilesForSelectedApp.Single().Name);
+    }
+
+    [TestMethod]
+    public async Task EditProfile_DuplicateName_IsRejected()
+    {
+        var profiles = new FakeProfileRepository();
+        var first = CloneProfile.Create(SlackAppId(), "Slack (Work)");
+        var second = CloneProfile.Create(SlackAppId(), "Slack (Home)");
+        profiles.Store.Add(first);
+        profiles.Store.Add(second);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+
+        var result = await model.UpdateProfileAsync(second.Id, "Slack (Work)", null, null);
+
+        Assert.IsFalse(result.Success);
+        StringAssert.Contains(result.Error ?? string.Empty, "already have");
+        CollectionAssert.AreEquivalent(
+            new[] { "Slack (Work)", "Slack (Home)" },
+            profiles.Store.Select(p => p.Name).ToList());
+    }
+
+    [TestMethod]
+    public async Task EditProfile_InvalidName_IsRejected()
+    {
+        var profiles = new FakeProfileRepository();
+        var profile = CloneProfile.Create(SlackAppId(), "Slack (Work)");
+        profiles.Store.Add(profile);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+
+        var result = await model.UpdateProfileAsync(profile.Id, "Slack/Work", null, null);
+
+        Assert.IsFalse(result.Success);
+        StringAssert.Contains(result.Error ?? string.Empty, "can't contain");
+        Assert.AreEqual("Slack (Work)", profiles.Store.Single().Name);
+    }
+
+    [TestMethod]
+    public async Task EditProfile_NonPlanned_IsRefused()
+    {
+        var profiles = new FakeProfileRepository();
+        var profile = CloneProfile.Create(SlackAppId(), "Slack (Work)")
+            .TransitionTo(CloneProfileState.Provisioning);
+        profiles.Store.Add(profile);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+
+        var result = await model.UpdateProfileAsync(profile.Id, "Slack (Home)", null, null);
+
+        Assert.IsFalse(result.Success);
+        StringAssert.Contains(result.Error ?? string.Empty, "clone engine");
+        Assert.AreEqual("Slack (Work)", profiles.Store.Single().Name);
+    }
+
+    [TestMethod]
+    public async Task RemoveProfile_DeletesMetadataOnly()
+    {
+        var profiles = new FakeProfileRepository();
+        var profile = CloneProfile.Create(SlackAppId(), "Slack (Work)");
+        profiles.Store.Add(profile);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+
+        var result = await model.RemoveProfileAsync(profile.Id);
+
+        Assert.IsTrue(result.Success, result.Error);
+        Assert.AreEqual(0, profiles.Store.Count);
+        Assert.AreEqual(0, model.ProfilesForSelectedApp.Count);
+        Assert.IsTrue(model.ShowProfilesEmpty);
+    }
+
+    [TestMethod]
+    public async Task RemoveProfile_NonPlanned_IsRefused()
+    {
+        var profiles = new FakeProfileRepository();
+        var profile = CloneProfile.Create(SlackAppId(), "Slack (Work)")
+            .TransitionTo(CloneProfileState.Provisioning);
+        profiles.Store.Add(profile);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+
+        var result = await model.RemoveProfileAsync(profile.Id);
+
+        Assert.IsFalse(result.Success);
+        StringAssert.Contains(result.Error ?? string.Empty, "clone engine");
+        Assert.AreEqual(1, profiles.Store.Count);
+    }
+
+    [TestMethod]
+    public async Task EditOrphanProfile_RefreshesSelectedOrphan()
+    {
+        var profiles = new FakeProfileRepository();
+        var orphan = CloneProfile.Create("app:gone", "Ghost (Work)");
+        profiles.Store.Add(orphan);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+        model.SelectedOrphan = model.OrphanProfiles.Single();
+
+        var result = await model.UpdateProfileAsync(orphan.Id, "Ghost (Home)", "H", "purple");
+
+        Assert.IsTrue(result.Success, result.Error);
+        Assert.AreEqual("Ghost (Home)", model.SelectedOrphan?.Profile.Name);
+        Assert.AreEqual("Ghost (Home)", model.OrphanProfiles.Single().Profile.Name);
+    }
+
+    [TestMethod]
+    public async Task RemoveOrphanProfile_ClearsSelectionAndSection()
+    {
+        var profiles = new FakeProfileRepository();
+        var orphan = CloneProfile.Create("app:gone", "Ghost (Work)");
+        profiles.Store.Add(orphan);
+        var model = await LoadWithSlackAsync(profiles, TestContext.CancellationToken);
+        model.SelectedOrphan = model.OrphanProfiles.Single();
+
+        var result = await model.RemoveProfileAsync(orphan.Id);
+
+        Assert.IsTrue(result.Success, result.Error);
+        Assert.IsFalse(model.HasOrphans);
+        Assert.IsNull(model.SelectedOrphan);
+        Assert.IsFalse(model.ShowOrphanDetail);
+        Assert.AreEqual(0, profiles.Store.Count);
+    }
+
+    [TestMethod]
+    public async Task AddingAnOrphan_RaisesOrphanProfilesNotification()
+    {
+        var (_, profiles, model) = Create(new[] { DiscoveredApps.Make("Slack") });
+        await model.LoadAsync(TestContext.CancellationToken);
+        var raised = 0;
+        model.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.OrphanProfiles))
+            {
+                raised++;
+            }
+        };
+
+        profiles.Store.Add(CloneProfile.Create("app:gone", "Ghost (Work)"));
+        await model.LoadAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(model.HasOrphans);
+        Assert.IsTrue(raised > 0, "The orphan list must announce changes after a refresh.");
+    }
+
+    private static string SlackAppId() =>
+        AppIdentity.Create(DiscoverySource.CurrentUserUninstall, "Slack", "Publisher");
+
+    private static async Task<MainViewModel> LoadWithSlackAsync(
+        FakeProfileRepository profiles, CancellationToken cancellationToken)
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("Slack") });
+        var model = new MainViewModel(discovery, new FakeAssessor(), profiles);
+        await model.LoadAsync(cancellationToken);
+        model.SelectedApp = model.VisibleAppGroups.SelectMany(g => g.Items).Single();
+        return model;
     }
 
     public TestContext TestContext { get; set; } = null!;

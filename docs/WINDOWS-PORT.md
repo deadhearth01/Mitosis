@@ -387,6 +387,17 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   verify-before-upload ordering). Limits stay structural: no clean-machine
   launch, OS-compatibility, or signing evidence is claimed by passing
   verification. See `docs/WINDOWS-RELEASE.md` (Stage 20 section).
+- Stage 21: profile lifecycle and app-detail handoff — **implemented, metadata
+  only, verification pending**. `Planned` profiles can be renamed, re-badged, and
+  removed from the app detail and orphan detail panels; edits validate through
+  `CloneProfile.Rename`/`ChangeBadge` and rejected input keeps the dialog open,
+  while removal is confirmed with explicit metadata-only copy. Records that have
+  left `Planned` are refused because managing them needs the clone engine. The
+  app-detail “New Clone…” action now opens the real wizard preselected instead of
+  a placeholder; preview mode keeps its honest placeholder. 10 new ViewModel
+  tests; 339/339 green. No application files, logins, or data touched; catalog
+  still empty; gates closed. See `docs/WINDOWS-PROFILES.md` §10 and
+  `docs/UI-PARITY-MATRIX.md` (Stage 21 notes).
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

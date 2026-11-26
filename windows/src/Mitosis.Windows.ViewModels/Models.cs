@@ -123,3 +123,12 @@ public sealed record OrphanProfileItem(CloneProfile Profile)
 /// <summary>Request for the view to show an explanatory dialog (engine actions are
 /// placeholders in Stage 2 and must never pretend to succeed).</summary>
 public sealed record DialogRequest(string Title, string Message);
+
+/// <summary>Outcome of a metadata-profile edit or removal. Failures carry a user-safe
+/// message so the view never has to catch domain/store exceptions itself.</summary>
+public sealed record ProfileOperationResult(bool Success, string? Error)
+{
+    public static ProfileOperationResult Ok() => new(true, null);
+
+    public static ProfileOperationResult Failed(string error) => new(false, error);
+}

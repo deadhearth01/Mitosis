@@ -97,7 +97,17 @@ public sealed class MainViewModel : ObservableObject
         RefreshAppsCommand = new RelayCommand(async _ => await LoadAsync());
         ShowPreviewCommand = new RelayCommand(ShowPreview);
         CreateCloneFromAppCommand = new RelayCommand(
-            () => RaisePlaceholder("New Clone", "Creating clones from discovered apps arrives with the engine in a later stage."),
+            () =>
+            {
+                if (IsPreview)
+                {
+                    RaisePlaceholder("New Clone",
+                        "Clone creation arrives with the engine in a later stage. This preview shows the shell only.");
+                    return;
+                }
+
+                NewCloneRequested?.Invoke(this, EventArgs.Empty);
+            },
             () => SelectedApp != null);
         ShowHelpCommand = new RelayCommand(() => ShowHelpRequested?.Invoke(this, EventArgs.Empty));
         ShowSettingsCommand = new RelayCommand(() => ShowSettingsRequested?.Invoke(this, EventArgs.Empty));
@@ -429,6 +439,122 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>All persisted profiles (unfiltered) for wizard duplicate checks.</summary>
     public IReadOnlyList<CloneProfile> AllProfiles => profileRecords.ToList();
+
+    /// <summary>True while a profile is still metadata-only, so editing or removing it
+    /// cannot touch provisioned files or application data. Once a profile leaves
+    /// <see cref="CloneProfileState.Planned"/>, lifecycle management belongs to the clone
+    /// engine and is deliberately refused here.</summary>
+    public static bool CanModifyProfile(CloneProfile profile) =>
+        profile.State == CloneProfileState.Planned;
+
+    /// <summary>Finds a persisted profile by ID, including profiles whose app is missing.</summary>
+    public CloneProfile? FindProfile(Guid id) =>
+        profileRecords.FirstOrDefault(p => p.Id == id);
+
+    /// <summary>Renames and re-badges a planned profile. Metadata only: no application
+    /// files, logins, or data are touched. Returns a user-safe failure instead of throwing.</summary>
+    public async Task<ProfileOperationResult> UpdateProfileAsync(
+        Guid id, string name, string? badgeText, string? badgeColor,
+        CancellationToken cancellationToken = default)
+    {
+        if (profiles == null)
+        {
+            return ProfileOperationResult.Failed("Profiles are not available in this view.");
+        }
+
+        var existing = FindProfile(id);
+        if (existing == null)
+        {
+            return ProfileOperationResult.Failed("That profile no longer exists.");
+        }
+
+        if (!CanModifyProfile(existing))
+        {
+            return ProfileOperationResult.Failed(
+                "This profile has left the planning stage. Managing it needs the clone engine, which is not implemented yet.");
+        }
+
+        try
+        {
+            var updated = existing.Rename(name).ChangeBadge(badgeText, badgeColor);
+            await profiles.UpdateAsync(updated, cancellationToken);
+            await ReloadProfilesAsync(cancellationToken);
+            return ProfileOperationResult.Ok();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is CloneNameException or InvalidProfileException
+            or ProfileStoreException)
+        {
+            return ProfileOperationResult.Failed(ex.Message);
+        }
+    }
+
+    /// <summary>Removes one planned profile record. The profile store deletes metadata
+    /// only — never an installed application, clone directory, login, or user data.</summary>
+    public async Task<ProfileOperationResult> RemoveProfileAsync(
+        Guid id, CancellationToken cancellationToken = default)
+    {
+        if (profiles == null)
+        {
+            return ProfileOperationResult.Failed("Profiles are not available in this view.");
+        }
+
+        var existing = FindProfile(id);
+        if (existing == null)
+        {
+            return ProfileOperationResult.Failed("That profile no longer exists.");
+        }
+
+        if (!CanModifyProfile(existing))
+        {
+            return ProfileOperationResult.Failed(
+                "This profile has left the planning stage. Removing it needs the clone engine, which is not implemented yet.");
+        }
+
+        try
+        {
+            await profiles.RemoveAsync(id, cancellationToken);
+            await ReloadProfilesAsync(cancellationToken);
+            return ProfileOperationResult.Ok();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (ProfileStoreException ex)
+        {
+            return ProfileOperationResult.Failed(ex.Message);
+        }
+    }
+
+    /// <summary>Reloads profile metadata after a successful edit/removal. A refresh
+    /// failure is surfaced through the existing profiles error state; the write itself
+    /// has already succeeded.</summary>
+    private async Task ReloadProfilesAsync(CancellationToken cancellationToken)
+    {
+        if (profiles == null)
+        {
+            return;
+        }
+
+        try
+        {
+            profileRecords = (await profiles.ListAsync(cancellationToken)).ToList();
+            ProfilesError = null;
+            RefreshVisibleGroups();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            ProfilesError = $"Couldn't refresh profiles ({ex.GetType().Name}). Try again.";
+        }
+    }
 
     /// <summary>Selects an application by stable ID; returns false when absent.</summary>
     public bool SelectAppById(string appId)
@@ -771,9 +897,9 @@ public sealed class MainViewModel : ObservableObject
             .ThenBy(p => p.Id)
             .Select(p => new OrphanProfileItem(p))
             .ToList();
-        if (selectedOrphan != null && orphanProfiles.All(o => o.Profile.Id != selectedOrphan.Profile.Id))
+        if (selectedOrphan is { } orphanSelection)
         {
-            SelectedOrphan = null;
+            SelectedOrphan = orphanProfiles.FirstOrDefault(o => o.Profile.Id == orphanSelection.Profile.Id);
         }
 
         RaisePropertyChanged(nameof(VisibleGroups));
@@ -786,6 +912,7 @@ public sealed class MainViewModel : ObservableObject
         RaisePropertyChanged(nameof(HasActiveQuery));
         RaisePropertyChanged(nameof(HasApps));
         RaisePropertyChanged(nameof(HasClones));
+        RaisePropertyChanged(nameof(OrphanProfiles));
         RaisePropertyChanged(nameof(HasOrphans));
         RaisePropertyChanged(nameof(HasNoResults));
         RaisePropertyChanged(nameof(NoResultsText));

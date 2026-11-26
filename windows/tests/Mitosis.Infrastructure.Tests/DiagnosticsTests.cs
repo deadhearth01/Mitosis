@@ -180,6 +180,41 @@ public sealed class FileDiagnosticLogTests : IDisposable
     }
 
     [TestMethod]
+    public void ConcurrentWriters_SerializeWithoutDisablingEitherLogger()
+    {
+        var directory = Dir("logs");
+        var first = new FileDiagnosticLog(directory, maxFileBytes: 1024 * 1024);
+        var second = new FileDiagnosticLog(directory, maxFileBytes: 1024 * 1024);
+        using var start = new ManualResetEventSlim();
+
+        void Writer(FileDiagnosticLog log, string tag)
+        {
+            start.Wait();
+            for (var i = 0; i < 60; i++)
+            {
+                log.Write(DiagnosticLevel.Info, "concurrent", $"{tag}-{i} {new string('x', 80)}");
+            }
+        }
+
+        var a = new Thread(() => Writer(first, "a"));
+        var b = new Thread(() => Writer(second, "b"));
+        a.Start();
+        b.Start();
+        start.Set();
+
+        Assert.IsTrue(a.Join(TimeSpan.FromSeconds(20)));
+        Assert.IsTrue(b.Join(TimeSpan.FromSeconds(20)));
+
+        Assert.IsTrue(first.IsEnabled, first.DisabledReason);
+        Assert.IsTrue(second.IsEnabled, second.DisabledReason);
+
+        var lines = File.ReadAllLines(first.CurrentFilePath);
+        Assert.AreEqual(120, lines.Length, "Every entry must survive two concurrent writers.");
+        Assert.AreEqual(60, lines.Count(line => line.Contains(" | a-", StringComparison.Ordinal)));
+        Assert.AreEqual(60, lines.Count(line => line.Contains(" | b-", StringComparison.Ordinal)));
+    }
+
+    [TestMethod]
     public void UnwritableTarget_DisablesTheLoggerWithoutThrowing()
     {
         Directory.CreateDirectory(root);

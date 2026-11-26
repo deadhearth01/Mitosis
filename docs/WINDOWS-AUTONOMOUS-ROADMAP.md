@@ -8,7 +8,7 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 353/353 green (Release, .NET SDK 10.0.404)
+- **Current suite:** 363/363 green (Release, .NET SDK 10.0.404)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 8 src projects, 6 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 353 tests |
+| Solution/project boundaries (.NET 10, 8 src projects, 6 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 363 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -85,8 +85,8 @@ source, test, or artifact that establishes it.
 | Link routing / protocol handler | Partially implemented (UI only) | Toggle holds state; no interception |
 | Background refresh agent | **Missing** | Depends on engine |
 | CLI (`mitosis.exe`) | **Missing** | No console project |
-| Single-instance activation | **Missing** | No mutex/`AppInstance` handling; multiple instances can start |
-| Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; manual dialog checks pending |
+| Single-instance activation | Implemented and runtime-verified | Per-user named mutex + focus/ack events; second launch redirected and exits; crash recovery and shutdown hand-over observed | Visual foreground on a desktop session; minimized restore |
+| Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; cross-process log lock; manual dialog checks pending |
 | Update check / self-update | **Missing** | Static banner version; no network check |
 | Installer / uninstaller | **Missing** | Unpackaged zip only |
 | Code signing | **Missing / requires authorization** | Unsigned; SmartScreen expected |
@@ -119,7 +119,7 @@ is eligible now, deferred, or authorization-gated.
 | G5 | Profiles | Saved profiles had no rename, re-badge, or removal path | `Planned`-profile Edit/Remove added in Stage 21; provisioned profiles remain read-only | Future provisioned records must be managed by the engine, not metadata code | Complete for `Planned` (Stage 21) |
 | G6 | Wizard entry | App-detail “New Clone…” showed a placeholder | `CreateCloneFromAppCommand` now raises `NewCloneRequested`; preview keeps the placeholder | A primary path works | Complete (Stage 21) |
 | G7 | Diagnostics | No structured logs, crash report, or doctor output | `FileDiagnosticLog`, `DoctorReport`, crash hooks, Settings diagnostics added in Stage 22; store-health fields move to the CLI doctor (Stage 24) | Support and engine debugging would be blind | Complete (Stage 22), verification pending |
-| G8 | Process integrity | Multiple app instances can run concurrently | No mutex/`AppInstance` code | Duplicate windows, concurrent store access, confusing onboarding | Eligible (Stage 23) |
+| G8 | Process integrity | Multiple app instances can run concurrently | Per-user named mutex + activation events added in Stage 23; second launch is redirected and exits | Duplicate windows, concurrent store access, confusing onboarding | Complete (Stage 23), runtime-verified |
 | G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | No console project | Automation and support path missing | Eligible (Stage 24) |
 | G10 | Updates | No update check; banner is static preview data | `BannerVersion` hardcoded | Users cannot learn about releases | Eligible (Stage 25) |
 | G11 | Install | Zip-only; no installer/uninstaller | `WINDOWS-RELEASE.md` | Manual prerequisites; no Start-menu/uninstall story | Partly authorization-gated |
@@ -201,23 +201,36 @@ only started when its dependencies and authorization state allow it.
   the values can be queried honestly. Crash-dialog, clipboard, Explorer reveal, and
   visual checks remain manual. See `docs/WINDOWS-DIAGNOSTICS.md`.
 
-### Stage 23 — Single-instance activation and store hardening (eligible)
+### Stage 23 — Single-instance activation and store hardening (completed)
 
 - **Objective:** One Mitosis process per user session; a second launch focuses the
   existing window instead of creating a duplicate.
 - **Current problem:** Multiple instances can start, duplicating onboarding and
   racing the JSON stores.
 - **Evidence:** No mutex/`AppInstance` code; stores serialize only within a process.
-- **Implementation:** Named mutex or `AppInstance` redirect keyed to the current
-  user; second launch activates the existing main window; explicit behavior when
-  the primary is shutting down; tests for the decision logic; no admin rights.
+- **Implementation:** Per-user named mutex (`Local\`, SID-derived scope) acquired in
+  `Program.Main` before the UI; named focus/acknowledgement events; a dedicated
+  listener in the primary that restores/minimizes/shows and activates the window
+  through the dispatcher queue; `AllowSetForegroundWindow` grant from the secondary;
+  bounded acknowledgement wait; abandoned-mutex recovery; explicit release on main
+  window close; cross-process log-write mutex (Stage 22 deferral).
 - **Dependencies:** None.
 - **Risks:** Stale mutex/handle on crash; redirected activation when the primary is
-  unresponsive. Mitigate with abandoned-mutex handling and a bounded wait.
-- **Automated tests:** Decision/state logic and store cross-process safety notes.
+  unresponsive. Mitigated with abandoned-mutex recovery and a bounded wait; both
+  were observed at runtime.
+- **Automated tests:** Decision/state logic, abandoned owner, listener delivery and
+  timeout, shutdown hand-over, scope validation, concurrent log writers.
 - **Manual verification:** Launch twice, observe focus; kill primary and relaunch.
 - **Definition of done:** Tests green; duplicate launches prevented; docs updated.
 - **Authorization:** Not required (current-user process behavior).
+- **Result:** Implemented, pushed, and runtime-verified. 10 new tests (363/363
+  green). Observed on the development machine: a second launch exits with code 0
+  in 122–215 ms and leaves exactly one process; a force-killed primary is recovered
+  by the next launch; closing the main window exits the process with code 0 and
+  releases the lock. Closing the main window now quits even when the welcome window
+  is open — the runtime check exposed that the old shutdown path left an orphaned
+  process holding the instance. Visual foreground focus and minimized restore remain
+  manual. See `docs/WINDOWS-SINGLE-INSTANCE.md`.
 
 ### Stage 24 — Read-only CLI and doctor report (eligible)
 
@@ -419,12 +432,13 @@ These are separate milestones. Passing one does not imply the next.
    update channel, privacy statement, license/trademark compliance, and capacity
    to support users.
 
-**Current position:** Stages 21–22 closed the metadata-profile dead end and the
-blind-support gap. The UI shell is between feature complete and functionally
-verified; the product is not at feature complete because the clone engine is
-absent. The port is not installable, signed, or clean-machine verified. Next
-eligible work is single-instance activation (Stage 23), then a read-only CLI with
-the fuller doctor report (Stage 24).
+**Current position:** Stages 21–23 closed the metadata-profile dead end, the
+blind-support gap, and duplicate-process risk. The UI shell is between feature
+complete and functionally verified; the product is not at feature complete because
+the clone engine is absent. The port is not installable, signed, or clean-machine
+verified. Next eligible work is the read-only CLI with the fuller doctor report
+(Stage 24), then tray/background behavior or engine prerequisites as evidence
+allows.
 
 ## 5. Authorization boundaries
 
@@ -450,7 +464,8 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` at `6f8e3de` | CI remote run observation |
-| 353 tests pass | Verified | `dotnet test` at the Stage 22 tree | CI remote run observation |
+| 363 tests pass | Verified | `dotnet test` at the Stage 23 tree | CI remote run observation |
+| Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines | Visual focus, minimized restore, second user/session, elevated launch |
 | Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
 | Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
@@ -487,5 +502,6 @@ After every stage:
 | — | Merge `origin/main` `v0.2.3` | `6f8e3de` | 329 | No Windows source changes |
 | 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
 | 22 | Local diagnostics and crash safety | `e36fdec` | 353 | Bounded redacted log; report; Settings actions |
+| 23 | Single-instance activation and shutdown | `pending` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
 
 Stages 21+ are appended as they complete.

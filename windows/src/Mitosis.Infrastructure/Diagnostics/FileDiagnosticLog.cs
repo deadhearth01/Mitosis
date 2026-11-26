@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Security;
+using System.Security.Cryptography;
 using System.Text;
 using Mitosis.Application.Diagnostics;
 
@@ -7,8 +8,11 @@ namespace Mitosis.Infrastructure.Diagnostics;
 
 /// <summary>Best-effort append-only log under the Mitosis data folder. One line per
 /// event, home paths redacted, bounded by a size cap and a fixed number of rotated
-/// files. Any filesystem failure disables the logger for the rest of the process
-/// instead of throwing into application code.</summary>
+/// files. A named mutex serializes writers from different processes (the single-instance
+/// primary and a short-lived secondary share the file); when that mutex cannot be
+/// acquired within a short bound, one entry is skipped rather than delaying the app.
+/// Filesystem failures disable the logger for the rest of the process instead of
+/// throwing into application code.</summary>
 public sealed class FileDiagnosticLog : IDiagnosticLog
 {
     public const string FileName = "mitosis.log";
@@ -19,6 +23,10 @@ public sealed class FileDiagnosticLog : IDiagnosticLog
 
     public const int DefaultMaxFiles = 3;
 
+    /// <summary>Upper bound for waiting on another process to finish one append.
+    /// Missing that bound only drops the entry; it never disables the logger.</summary>
+    public const int ProcessLockTimeoutMilliseconds = 1000;
+
     private const int MaxEventNameLength = 64;
 
     private readonly object gate = new();
@@ -26,6 +34,9 @@ public sealed class FileDiagnosticLog : IDiagnosticLog
     private readonly int maxFiles;
     private readonly Func<DateTimeOffset> clock;
     private readonly string? homeDirectory;
+    private readonly string processLockName;
+    private Mutex? processMutex;
+    private bool processMutexUnavailable;
     private string? disabledReason;
 
     public FileDiagnosticLog(
@@ -55,6 +66,7 @@ public sealed class FileDiagnosticLog : IDiagnosticLog
         this.maxFiles = maxFiles;
         this.clock = clock ?? (() => DateTimeOffset.UtcNow);
         this.homeDirectory = homeDirectory;
+        processLockName = ProcessLockNameFor(directoryPath);
     }
 
     public string DirectoryPath { get; }
@@ -97,9 +109,17 @@ public sealed class FileDiagnosticLog : IDiagnosticLog
             try
             {
                 Directory.CreateDirectory(DirectoryPath);
-                var line = Format(level, eventName, message);
-                RotateIfNeeded(line.Length);
-                File.AppendAllText(CurrentFilePath, line, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                var processLock = TryAcquireProcessLock();
+                try
+                {
+                    var line = Format(level, eventName, message);
+                    RotateIfNeeded(line.Length);
+                    File.AppendAllText(CurrentFilePath, line, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false));
+                }
+                finally
+                {
+                    ReleaseProcessLock(processLock);
+                }
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
                 or NotSupportedException or ArgumentException or SecurityException)
@@ -107,6 +127,61 @@ public sealed class FileDiagnosticLog : IDiagnosticLog
                 // Logging must never be the reason the app fails.
                 disabledReason = ex.GetType().Name;
             }
+        }
+    }
+
+    private static string ProcessLockNameFor(string directoryPath)
+    {
+        var normalized = directoryPath.Replace('/', '\\').TrimEnd('\\').ToLowerInvariant();
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(normalized));
+        return "Mitosis.Windows.log." + Convert.ToHexString(hash, 0, 8);
+    }
+
+    /// <summary>Serializes append+rotation across processes. Returns null when the lock
+    /// is unavailable (timeout or an environment without named mutexes); the caller
+    /// then writes unlocked, which is the same best-effort behavior as Stage 22.</summary>
+    private Mutex? TryAcquireProcessLock()
+    {
+        if (processMutexUnavailable)
+        {
+            return null;
+        }
+
+        try
+        {
+            processMutex ??= new Mutex(initiallyOwned: false, processLockName);
+            try
+            {
+                return processMutex.WaitOne(ProcessLockTimeoutMilliseconds) ? processMutex : null;
+            }
+            catch (AbandonedMutexException)
+            {
+                // The other writer died mid-append; we now own the lock.
+                return processMutex;
+            }
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException
+            or NotSupportedException or ArgumentException or WaitHandleCannotBeOpenedException)
+        {
+            processMutexUnavailable = true;
+            return null;
+        }
+    }
+
+    private static void ReleaseProcessLock(Mutex? processLock)
+    {
+        if (processLock is null)
+        {
+            return;
+        }
+
+        try
+        {
+            processLock.ReleaseMutex();
+        }
+        catch (Exception ex) when (ex is ApplicationException or ObjectDisposedException)
+        {
+            // Ownership was already lost; the append itself already happened.
         }
     }
 

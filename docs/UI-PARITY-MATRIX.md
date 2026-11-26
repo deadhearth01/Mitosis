@@ -583,3 +583,26 @@ credentials, or file contents are read or transmitted.
 - Deferred: store-health/discovery counts in the report (Stage 24 doctor), engine
   feature logs, cross-process log locking (Stage 23), export/zip, and remote
   reporting.
+
+## Stage 23 single-instance notes
+
+Implemented in Stage 23; no UI surface was added, so no parity row changed.
+
+- One main window per user session: a per-user `Local\` named mutex is decided in
+  `Program.Main` before any WinUI type exists. A second launch redirects to the
+  running instance and exits; it never shows a duplicate main window, welcome
+  flow, or stores.
+- Closing the main window now quits the process even when the welcome, Help, or
+  Settings window is open (`Application.Exit()` after releasing the lock). Runtime
+  verification found the previous behavior left an orphaned process and window.
+- The diagnostics log gained `app.instance` and `app.secondary-exit`; log writes
+  from the primary and a short-lived secondary serialize on a named mutex.
+- Tests: 9 coordinator tests (primary, secondary from another thread, abandoned
+  owner, listener delivery/timeout, missing primary, shutdown hand-over, scope
+  validation, user-scoped name) and 1 concurrent-writer log test. Suite 363/363
+  green.
+- Runtime evidence: second launch exits 0 in 122–215 ms with one process left;
+  force-kill then relaunch recovers; graceful close exits 0 with no processes.
+- Not verified: visual foreground/focus, minimized-window restore, a second
+  Windows user/session, and elevated launches. Manual checks are S25 in
+  `docs/WINDOWS-UI-VERIFICATION.md`.

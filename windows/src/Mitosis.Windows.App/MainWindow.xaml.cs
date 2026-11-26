@@ -75,6 +75,35 @@ public sealed partial class MainWindow : Window
         }
     }
 
+    /// <summary>Surfaces this window when a second launch is redirected to the running
+    /// process. A minimized window is restored and a hidden one shown before activation;
+    /// focus can still be refused by the shell, which is why the secondary launch only
+    /// waits for an acknowledgement that the request reached this process.</summary>
+    public void ActivateFromSecondLaunch()
+    {
+        try
+        {
+            if (AppWindow.Presenter is OverlappedPresenter { State: OverlappedPresenterState.Minimized } presenter)
+            {
+                presenter.Restore();
+            }
+
+            if (!AppWindow.IsVisible)
+            {
+                AppWindow.Show();
+            }
+
+            Activate();
+        }
+        catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException
+            or System.Runtime.InteropServices.COMException)
+        {
+            // The window was already closing when the queued activation ran. The
+            // secondary launch has either been acknowledged or will time out; there
+            // is nothing left to surface.
+        }
+    }
+
     /// <summary>The update banner's close button promises to hide the message; macOS
     /// dismisses for the session (`updates.dismissed = true`, MainWindow.swift:94-103)
     /// and the view model already carries the tested dismissal logic.</summary>

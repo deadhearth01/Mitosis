@@ -410,6 +410,21 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   data, or credentials are involved. Store health and discovery counts move to the
   read-only CLI doctor in Stage 24. 14 new tests; 353/353 green. See
   `docs/WINDOWS-DIAGNOSTICS.md`.
+- Stage 23: single-instance activation and shutdown — **implemented and
+  runtime-verified**. The unpackaged app uses the documented alternative to
+  `AppInstance` identity redirection: a per-user `Local\` named mutex plus named
+  focus/acknowledgement events. `Program.Main` decides before the UI exists; a
+  second launch grants foreground permission, asks the running instance to surface
+  its window, waits at most 5 seconds for an acknowledgement, and exits 0 without
+  creating a window. The primary's dedicated listener restores a minimized or
+  hidden window and activates it through the dispatcher queue. Crash recovery uses
+  `AbandonedMutexException`; closing the main window releases the lock and quits
+  (even when the welcome window is open — the old path left an orphaned process,
+  found during verification). Log writes from two processes now serialize on a
+  named mutex. 10 new tests; 363/363 green. Observed: a second launch exits in
+  122–215 ms with one process remaining, force-kill/relaunch recovers, and graceful
+  close exits 0. Visual focus and minimized restore remain manual. See
+  `docs/WINDOWS-SINGLE-INSTANCE.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

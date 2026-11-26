@@ -124,6 +124,15 @@ native adaptation or a parity defect.
   name (macOS isButton/isSelected traits, BadgeEditing.swift:43) and the
   others as "Not selected"; keyboard context-menu access on a focused
   sidebar row (Shift+F10 / the Apps key) opens the 10-item clone menu.
+- S25: single instance (Stage 23): launch Mitosis twice from Start/taskbar —
+  the second launch exits and the existing window is raised (check foreground
+  focus and that no second taskbar entry appears); minimize the primary, launch
+  again — the minimized window is restored and focused; close the main window
+  while the welcome window is open — the whole process exits (no orphaned
+  welcome window); force-kill the process, then launch again — a fresh primary
+  starts; after each step confirm the log contains `app.instance`,
+  `app.secondary-exit` (second launch), and `app.stop` (graceful close). Repeat
+  with a different Windows user or session if available.
 
 ## 3. Accessibility checks
 

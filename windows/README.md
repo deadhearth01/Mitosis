@@ -17,8 +17,9 @@ and removed as metadata records. Sample data survives only behind the explicit
 The clone engine is framework only: the production strategy catalog is empty and
 every provisioning gate is closed. Nothing here clones, launches, or modifies an
 application. Local diagnostics (a bounded, redacted log, a copyable environment
-report, and crash hooks) are implemented. Tray integration, a CLI, an installer,
-and signing remain later stages. See
+report, and crash hooks) and single-instance activation (one window per user
+session) are implemented. Closing the main window quits. Tray integration, a CLI,
+an installer, and signing remain later stages. See
 [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md) for
 current status and gaps.
 
@@ -152,6 +153,16 @@ reveals the folder and copies a plain environment report (versions, OS,
 architecture, data-folder writability, paths). Nothing is uploaded and no
 application data or credentials are read. Details:
 `docs/WINDOWS-DIAGNOSTICS.md`.
+
+## Single instance (Stage 23)
+
+One Mitosis window per user session. A per-user `Local\` named mutex is decided in
+`Program.Main`; a second launch asks the running instance to surface its window
+(restoring it if minimized) and exits without creating a duplicate. A crashed
+instance leaves only an abandoned mutex, which the next launch recovers. Closing
+the main window quits the process even when the welcome, Help, or Settings window
+is open, and releases the lock immediately. Details and observed runtime results:
+`docs/WINDOWS-SINGLE-INSTANCE.md`.
 
 ## Continuous integration (Stage 11)
 

@@ -15,7 +15,7 @@ outright rather than pretending to work.
 | `doctor` | Implemented, runtime-verified (text and `--json`) |
 | `help` / `--help` / `--version` | Implemented |
 | Clone, stats, clean, refresh, delete, open, links | Not implemented; not accepted as commands |
-| Release-archive packaging | Deferred to the packaging stage (see §7) |
+| Release-archive packaging | Shipped in `cli/` inside the Windows release zip (Stage 26; see §7) |
 
 The CLI targets `net10.0-windows10.0.19041.0`, is framework-dependent x64, and
 does not reference WinUI. It therefore starts without the Windows App SDK UI
@@ -185,17 +185,23 @@ exit code, to detect a damaged store or failed discovery.
 
 ## 7. Packaging decision
 
-The CLI is **not** included in the GUI release zip yet:
+Stage 26 ships the CLI inside the release archive in a `cli/` subfolder:
 
 - Windows filenames are case-insensitive, so `Mitosis.exe` (the GUI) and
-  `mitosis.exe` (the CLI) cannot share one folder. Bundling requires a `cli/`
-  subfolder, which changes the archive layout and the Stage 19 verifier's fixed
-  required-file contract.
-- The current release candidate remains exactly as verified. Package layout,
-  PATH installation, and a combined verifier/SHA story belong to the installer
-  and distribution stage (Stage 26).
-- No system `PATH` change is made or proposed here. Running the CLI from its
-  publish folder or an explicit path is the supported use.
+  `mitosis.exe` (the CLI) - and their `.deps.json` files - cannot share one
+  folder. `cli/` is therefore a real requirement, not a preference.
+- `publish-release.ps1` publishes the CLI into the same archive, checks its
+  version metadata against the app's, and smoke-runs `cli\mitosis.exe version`
+  before zipping. `ReleaseVerifier` requires `cli/mitosis.exe`,
+  `cli/mitosis.deps.json`, and `cli/mitosis.runtimeconfig.json`, audits the CLI
+  as x64, and checks its version metadata against the archive name. The CLI is
+  not required to carry an icon.
+- The `cli/` folder duplicates the shared assemblies (about 26 MB unpacked,
+  dominated by `Microsoft.Windows.SDK.NET.dll`) because the two executables
+  cannot share one probing path. That cost is accepted for a correct layout.
+- No system `PATH` change is made or proposed. Run `cli\mitosis.exe` from the
+  unzipped folder or by explicit path. An installer/PATH decision remains
+  separate and authorization-gated.
 
 ## 8. Verification
 

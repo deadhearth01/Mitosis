@@ -663,6 +663,17 @@ Implemented in Stage 25; W08, W36, and W53 above now reflect it.
   Windows banner therefore tracks the product release line and links the release
   page; it does not imply a Windows download. Self-update remains deferred.
 - Tests: 76 new across Domain/Application/Infrastructure/ViewModels; suite
-  472/472 green. Runtime: real feed reported 0.2.3 for a 0.2.2 build, up to date
+  478/478 green. Runtime: real feed reported 0.2.3 for a 0.2.2 build, up to date
   for 0.2.3, and an honest failure through a blocked proxy; banner updated and
   dismissed in the live app. See `docs/WINDOWS-UPDATES.md`.
+
+## Stage 26 notes: unsigned distribution package (2026-11-26)
+
+- The read-only CLI now ships in `cli\` inside the Windows release zip. This is
+  a packaging change only: no W-row behavior changes, no PATH change, no
+  installer, no signing, and no self-update.
+- The published artifact is now launch-tested on the development machine. That
+  found and fixed a missing `Mitosis.pri` in the unpackaged publish output
+  (microsoft/WindowsAppSDK#6720); structural verification alone had passed.
+- Tests: 6 new verifier tests plus two warning cleanups; suite 478/478 green,
+  zero build warnings.

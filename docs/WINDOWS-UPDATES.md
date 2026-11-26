@@ -108,9 +108,10 @@ Automated (Release, .NET SDK 10.0.404):
 
 - 76 new tests: version parsing/comparison, selection rules, feed parsing and
   failures, timeout/cancellation, view-model states, banner integration, and
-  Settings forwarding/disposal. Suite: 472/472 green.
-- One pre-existing warning remains (`CS0105` duplicate using in
-  `NewCloneWizardTests.cs`); this stage added none.
+  Settings forwarding/disposal. Suite: 478/478 green.
+- Both pre-existing test warnings (`CS0105` duplicate using and obsolete
+  `DataTestMethod`) were cleaned up in Stage 26; the Release build is now
+  warning-free.
 
 Runtime (development machine, Windows 11 25H2, real network):
 

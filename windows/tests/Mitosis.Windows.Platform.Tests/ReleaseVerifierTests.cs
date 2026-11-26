@@ -69,12 +69,17 @@ public sealed class ReleaseVerifierTests
 
     private static (string EntryName, byte[] Bytes)[] RequiredEntries(
         byte[]? exeBytes = null,
-        bool omitPose = false) =>
+        bool omitPose = false,
+        byte[]? cliExeBytes = null) =>
     [
         ("Mitosis.exe", exeBytes ?? PeFixture.Build()),
         ("Microsoft.WindowsAppRuntime.Bootstrap.dll", Text("stub")),
         ("Mitosis.deps.json", Text("{}")),
         ("Mitosis.runtimeconfig.json", Text("{}")),
+        ("Mitosis.pri", Text("pri")),
+        ("cli/mitosis.exe", cliExeBytes ?? PeFixture.Build()),
+        ("cli/mitosis.deps.json", Text("{}")),
+        ("cli/mitosis.runtimeconfig.json", Text("{}")),
         ..(omitPose
             ? Array.Empty<(string, byte[])>()
             : Enumerable.Range(0, 13)
@@ -115,6 +120,81 @@ public sealed class ReleaseVerifierTests
         var path = WriteArchive(entries.ToArray());
         var (_, result) = VerifyFixture(path);
         Assert.IsTrue(result.Findings.Any(f => f.Contains("Mitosis.deps.json")),
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void MissingPriIsReported()
+    {
+        var entries = RequiredEntries().ToList();
+        entries.RemoveAll(e => e.EntryName == "Mitosis.pri");
+        var path = WriteArchive(entries.ToArray());
+        var (_, result) = VerifyFixture(path);
+        Assert.IsTrue(result.Findings.Any(f => f.Contains("Mitosis.pri")),
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void MissingCliExecutableIsReported()
+    {
+        var entries = RequiredEntries().ToList();
+        entries.RemoveAll(e => e.EntryName == "cli/mitosis.exe");
+        var path = WriteArchive(entries.ToArray());
+        var (_, result) = VerifyFixture(path);
+        Assert.IsTrue(result.Findings.Any(f => f.Contains("cli/mitosis.exe")),
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void CliDepsJsonIsRequired()
+    {
+        var entries = RequiredEntries().ToList();
+        entries.RemoveAll(e => e.EntryName == "cli/mitosis.deps.json");
+        var path = WriteArchive(entries.ToArray());
+        var (_, result) = VerifyFixture(path);
+        Assert.IsTrue(result.Findings.Any(f => f.Contains("cli/mitosis.deps.json")),
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void CliArchitectureIsVerified()
+    {
+        var path = WriteArchive(RequiredEntries(
+            cliExeBytes: PeFixture.Build(machine: PeChecks.MachineArm64)));
+        var (_, result) = VerifyFixture(path);
+        Assert.IsTrue(result.Findings.Any(f =>
+                f.Contains("cli/mitosis.exe") && f.Contains("ARM64")),
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void CliWithoutIconPasses()
+    {
+        // The CLI is a console executable: no icon resource is expected, unlike
+        // the GUI exe.
+        var path = WriteArchive(RequiredEntries(
+            cliExeBytes: PeFixture.Build(withIcon: false)));
+        var (_, result) = VerifyFixture(path);
+        Assert.IsTrue(result.Passed,
+            "findings: " + string.Join("; ", result.Findings));
+        Directory.Delete(Path.GetDirectoryName(path)!, true);
+    }
+
+    [TestMethod]
+    public void CliVersionMustAgreeWithTheArchive()
+    {
+        var path = WriteArchive(RequiredEntries());
+        var (_, result) = VerifyFixture(path, audit: exePath =>
+            exePath.EndsWith(Path.Combine("cli", "mitosis.exe"), StringComparison.OrdinalIgnoreCase)
+                ? ("2.0.0.0", "2.0.0+" + FullHash)
+                : ("1.2.3.0", "1.2.3+" + FullHash));
+        Assert.IsTrue(result.Findings.Any(f =>
+                f.Contains("does not equal the built version 2.0.0")),
             "findings: " + string.Join("; ", result.Findings));
         Directory.Delete(Path.GetDirectoryName(path)!, true);
     }

@@ -6,7 +6,7 @@ namespace Mitosis.Windows.Platform.Tests;
 [TestClass]
 public sealed class StartupDiagnosticsTests
 {
-    [DataTestMethod]
+    [TestMethod]
     [DataRow(unchecked((int)0x80070002))]
     [DataRow(unchecked((int)0x80004005))]
     public void DescribeMissingAppSdk_NamesPrerequisiteAndHresult(int hresult)

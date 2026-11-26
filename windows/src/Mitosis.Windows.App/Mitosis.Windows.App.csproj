@@ -29,6 +29,27 @@
     <ProjectReference Include="..\Mitosis.Infrastructure\Mitosis.Infrastructure.csproj" />
     <ProjectReference Include="..\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj" />
   </ItemGroup>
+  <!-- Windows App SDK 2.5.1 bug (microsoft/WindowsAppSDK#6720): dotnet publish
+       for an unpackaged WinUI app generates the app's PRI in the build output
+       but never adds it to ResolvedFileToPublish - that wiring exists only in
+       the MSIX targets, which this project does not import. Without the PRI the
+       published exe dies at startup with XamlParseException. This target adds
+       the already-generated file to the publish list; the Exists() guard makes
+       it inert if a future SDK wires this itself. DependsOnTargets is
+       intentionally the property (empty on this path), matching the SDK's own
+       AddProjectPriToResolvedFileToPublish - GenerateProjectPriFile is a target
+       that does not exist in an unpackaged build. -->
+  <Target Name="PublishProjectPriForUnpackagedWinUI"
+          BeforeTargets="ComputeResolvedFilesToPublishList"
+          DependsOnTargets="$(GenerateProjectPriFile)">
+    <ItemGroup>
+      <ResolvedFileToPublish Include="$(ProjectPriFullPath)"
+                             Condition="Exists('$(ProjectPriFullPath)')">
+        <RelativePath>$(ProjectPriFileName)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
   <ItemGroup>
     <!-- Original assets, referenced in place; the Assets tree is never modified. -->
     <Content Include="..\..\..\Assets\Brand\mascot-poses\pose-empty.png">

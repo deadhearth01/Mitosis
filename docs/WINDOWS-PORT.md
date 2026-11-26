@@ -290,7 +290,7 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   unpackaged + framework-dependent + x64 (csproj evidence in
   `docs/WINDOWS-RELEASE.md`), published to a reproducible, SHA-anchored zipped
   release candidate (`windows/artifacts/Mitosis-windows-x64-<sha>.zip`,
-  ≈39 MB) via the same pinned recipe CI executes: `publish-release-candidate`
+  currently ≈46 MB) via the same pinned recipe CI executes: `publish-release-candidate`
   in `windows-ci.yml` runs after tests and uploads the artifact with 14-day
   retention (nothing is published externally or attached to a release page).
   Startup diagnostics for missing prerequisites were made path-free and
@@ -456,6 +456,23 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   dismissed. The v0.2.3 release currently ships only the macOS zip, so the check
   names the product release line without offering a Windows download; install
   and self-update remain deferred (`W53`). See `docs/WINDOWS-UPDATES.md`.
+- Stage 26: unsigned distribution package — **partly complete**. The release
+  archive now bundles the read-only CLI in `cli\` (the root collides on
+  case-insensitive NTFS), the publish recipe compares CLI/app version metadata
+  and smoke-runs `cli\mitosis.exe version`, and the verifier requires the CLI's
+  three runtime files, audits it as x64, and checks its version against the
+  archive name. Launch-testing the published tree for the first time exposed a
+  real artifact defect: the Windows App SDK does not publish the generated
+  `Mitosis.pri` for unpackaged apps, so the published exe died with
+  `XamlParseException` while the build output worked. The app project now wires
+  the PRI into `ResolvedFileToPublish` (microsoft/WindowsAppSDK#6720) and both
+  the recipe and verifier require it. Observed on the development machine: the
+  publish tree and a freshly unzipped archive start and exit cleanly; the
+  bundled CLI reports the app's version; the verifier passes. 6 new verifier
+  tests; 478/478 green, zero build warnings. The installer itself (per-user
+  install/uninstall, prerequisite detection), clean-VM runs, PATH installation,
+  signing, and public distribution remain open; the last four are
+  authorization-gated. See `docs/WINDOWS-RELEASE.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

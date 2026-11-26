@@ -18,12 +18,12 @@ The clone engine is framework only: the production strategy catalog is empty and
 every provisioning gate is closed. Nothing here clones, launches, or modifies an
 application. Local diagnostics (a bounded, redacted log, a copyable environment
 report, and crash hooks), single-instance activation (one window per user
-session), a read-only CLI (`version`, `list`, `profiles`, `doctor`), and a
-manual, read-only update-availability check against GitHub Releases are
-implemented. Closing the main window quits. The update banner opens only when a
-newer release exists and offers its release page; nothing downloads or installs.
-Tray integration, combined CLI packaging, an installer, signing, and self-update
-remain later stages. See
+session), a read-only CLI (`version`, `list`, `profiles`, `doctor`) that ships in
+`cli/` inside the release zip, and a manual, read-only update-availability check
+against GitHub Releases are implemented. Closing the main window quits. The
+update banner opens only when a newer release exists and offers its release page;
+nothing downloads or installs. An installer, signing, self-update, and tray
+integration remain later stages. See
 [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md) for
 current status and gaps.
 
@@ -183,8 +183,9 @@ dotnet run --project src/Mitosis.Cli -c Release -- doctor
 dotnet publish src/Mitosis.Cli/Mitosis.Cli.csproj -c Release -r win-x64 --self-contained false -o artifacts/cli
 ```
 
-The CLI is not yet inside the GUI release zip and no PATH change is made; both
-are packaging-stage decisions. Details and runtime evidence:
+The CLI ships in `cli\` inside the release zip since Stage 26, so one unzipped
+folder supports both `Mitosis.exe` and `cli\mitosis.exe`. No PATH change is
+made; run it by explicit path. Details and runtime evidence:
 `docs/WINDOWS-CLI.md`.
 
 ## Continuous integration (Stage 11)
@@ -197,7 +198,9 @@ verifies the actual archive with `windows/tools/ReleaseVerifier` (ZIP
 enumeration + extraction, required files, x64 executable, embedded icon,
 version coherence, `SHA-256` sidecar) before uploading the
 `windows-release-candidate` artifact (the zip plus its `.sha256` sidecar, both
-14 days). Stage 20 hardened the verifier against hostile input: documented
+14 days). The recipe also bundles the read-only CLI in `cli\` and smoke-runs it,
+and both the recipe and verifier require `Mitosis.pri` (Stage 26). Stage 20
+hardened the verifier against hostile input: documented
 resource limits (archive/expanded size, entry count, sidecar size), strict
 two-token sidecar binding, traversal/absolute/drive/Windows-ambiguous entry
 rejection, metered extraction with guaranteed scratch cleanup, and

@@ -8,7 +8,7 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 472/472 green (Release, .NET SDK 10.0.404)
+- **Current suite:** 478/478 green (Release, .NET SDK 10.0.404; 0 warnings)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 9 src projects, 7 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 396 tests |
+| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 478 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -97,13 +97,13 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 472/472; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, update checks |
+| Unit/integration tests | Complete for implemented logic | 478/478; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, update checks |
 | Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
-| Release packaging | Complete and verified structurally | `publish-release.ps1`; SHA sidecar; ~39 MB x64 zip |
-| Artifact verifier | Complete and verified (38 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening in Stage 20 |
+| Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `Mitosis.pri` fix |
+| Artifact verifier | Complete and verified (44 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI rules in Stage 26 |
 | Version metadata | Complete; release stamp decision pending | `Directory.Build.props` (`0.2.2`; product tag is `v0.2.3`) |
 | Application icon | Complete for ≥32 px; small-size glyph open | `app.ico`; `make-icon.ps1` |
-| Documentation | Partially current | Stage docs are detailed; `windows/README.md` is stale (still says Stage 3) |
+| Documentation | Current through Stage 26; manual UI evidence still missing | Stage docs, `windows/README.md`, release/CLI/update docs |
 
 ## 2. Remaining engineering gaps
 
@@ -293,7 +293,8 @@ only started when its dependencies and authorization state allow it.
 - **Definition of done:** Tests green; no auto-update claim; docs updated.
 - **Authorization:** Not required (read-only public network request).
 - **Result:** Implemented, pushed (`58353a0`), and runtime-verified. 76 new tests (472/472
-  green; one pre-existing CS0105 warning remains). The only network read is a GET
+  green; one pre-existing CS0105 warning remained, cleaned up with the other
+  pre-existing test warning in Stage 26). The only network read is a GET
   of `https://api.github.com/repos/deadhearth01/Mitosis/releases?per_page=10`
   with no token, query identity, or telemetry; the response is bounded to 512 KB
   and must be a JSON array. Selection skips drafts, skips prereleases for a
@@ -314,7 +315,7 @@ only started when its dependencies and authorization state allow it.
   deferred. The same verification pass found and fixed the Stage 23 shutdown gap
   described above. See `docs/WINDOWS-UPDATES.md`.
 
-### Stage 26 — Installer and unsigned distribution package (partly eligible)
+### Stage 26 — Installer and unsigned distribution package (partly completed)
 
 - **Objective:** Decide and implement the install story (per-user installer vs
   zip-only), including uninstall and prerequisite checks.
@@ -336,6 +337,24 @@ only started when its dependencies and authorization state allow it.
   run recorded; signing/public distribution still separate.
 - **Authorization:** Building is allowed; installing system-wide, signing, and
   public distribution require explicit authorization.
+- **Result (2026-11-26, partly complete):** The distribution package now bundles
+  the read-only CLI in `cli/` and launch-testing the artifact exposed a real
+  startup defect that structural verification had missed:
+  `dotnet publish` omitted the XAML-compiled `Mitosis.pri` for unpackaged apps
+  (microsoft/WindowsAppSDK#6720), so the published exe threw
+  `XamlParseException` while the build output worked. The app project now wires
+  the PRI into `ResolvedFileToPublish`; the publish recipe requires the PRI,
+  publishes the CLI, compares CLI/app version metadata, and smoke-runs
+  `cli\mitosis.exe version`; the verifier requires the CLI runtime files and the
+  PRI, audits both executables as x64, and checks both versions. 6 new verifier
+  tests and two warning cleanups; 478/478 green, 0 build warnings. Observed on
+  this machine: publish tree and freshly unzipped archive both launch and exit
+  cleanly, the bundled CLI reports the build version, and the verifier passes
+  (45,754,040-byte zip, SHA-256
+  `b012a5df39b6ddfbfa49ed87e1f11542689cad8ed047958893bb0bd012dc45e0`). Still
+  open: choosing/building a per-user installer, uninstall rules, prerequisite
+  detection and clean-VM install runs; no PATH change was made. Installing
+  system-wide, signing, and public distribution still require authorization.
 
 ### Stage 27 — Visual, accessibility, and clean-machine verification (partly blocked)
 
@@ -512,19 +531,20 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` on the Stage 25 tree (1 pre-existing warning) | CI remote run observation |
-| 472 tests pass | Verified | `dotnet test` at the Stage 25 tree, eight test projects | CI remote run observation |
-| Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left | Clean machine; damaged real store; alternate consoles; packaging |
+| Code compiles (Release) | Verified | `dotnet build` on the Stage 26 tree (0 warnings) | CI remote run observation |
+| 478 tests pass | Verified | `dotnet test` at the Stage 26 tree, eight test projects | CI remote run observation |
+| Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Visual focus, minimized restore, second user/session, elevated launch |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
 | Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
 | Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
-| Release zip is structurally sound | Verified | Stage 19/20 verifier + fixture tests | Clean-machine launch |
+| Release zip is structurally sound | Verified | Stage 19/20 verifier + 44 fixture tests; Stage 26 additionally bundled the CLI and requires the PRI | Clean-machine launch |
+| Published artifact launches | Verified (development machine only) | Stage 26: the publish tree and a freshly unzipped archive start, show the main/welcome windows, and exit cleanly; this exposed and fixed the missing `Mitosis.pri` (microsoft/WindowsAppSDK#6720) | Clean Windows 10/11 VM, missing-prerequisite path, another desktop session |
 | UI matches macOS pixels | **Not verified** | Design spec + code | Screenshots/contrast/Narrator |
 | Any clone works | **Not verified / not implemented** | Catalog empty | Authorization + engine + evidence |
-| Installer works | **Not implemented** | Zip only | Stage 26 |
+| Installer works | **Not implemented** | Zip only | Remaining Stage 26 (per-user install/uninstall, prerequisite detection) |
 | Binary is trusted | **Not verified** | Unsigned | Signing decision |
 
 ## 7. Roadmap maintenance

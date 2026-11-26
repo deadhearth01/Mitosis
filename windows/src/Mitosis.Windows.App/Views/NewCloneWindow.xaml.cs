@@ -38,14 +38,22 @@ public sealed partial class NewCloneWindow : Window
         Activated += OnFirstActivated;
         if (Content is FrameworkElement root)
         {
-            root.KeyDown += OnContentKeyDown;
+            // PreviewKeyDown, not KeyDown: the Pick search is an AutoSuggestBox, which
+            // handles Escape (to close its suggestion list) and Enter itself, marking
+            // the event handled so a bubbling window-level handler never sees it
+            // (found in Stage 27: Esc and Enter did nothing while the search had focus).
+            root.PreviewKeyDown += OnContentKeyDown;
         }
     }
 
     private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
     {
         Activated -= OnFirstActivated;
-        PickSearch.Focus(FocusState.Programmatic);
+        // Activated can run before the content has finished loading; a Focus() call
+        // at that moment silently does nothing (found in Stage 27). Defer one
+        // dispatcher cycle so the pick search really owns keyboard focus.
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
+            PickSearch.Focus(FocusState.Programmatic));
     }
 
     public NewCloneWizardViewModel ViewModel { get; }

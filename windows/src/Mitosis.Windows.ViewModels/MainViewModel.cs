@@ -357,6 +357,8 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref isLoadingProfiles, value))
             {
                 RaisePropertyChanged(nameof(ShowProfilesLoading));
+                RaisePropertyChanged(nameof(ShowProfilesError));
+                RaisePropertyChanged(nameof(ShowProfilesEmpty));
             }
         }
     }
@@ -369,6 +371,7 @@ public sealed class MainViewModel : ObservableObject
             if (SetProperty(ref profilesError, value))
             {
                 RaisePropertyChanged(nameof(ShowProfilesError));
+                RaisePropertyChanged(nameof(ShowProfilesEmpty));
             }
         }
     }
@@ -412,7 +415,7 @@ public sealed class MainViewModel : ObservableObject
     public bool ShowOrphanDetail => SelectedOrphan != null;
 
     public string SelectedAppPublisherLine => SelectedApp is { } item
-        ? string.Join(" ·", new[] { item.App.Publisher, item.App.Version }.Where(s => !string.IsNullOrEmpty(s)))
+        ? string.Join(" · ", new[] { item.App.Publisher, item.App.Version }.Where(s => !string.IsNullOrEmpty(s)))
         : string.Empty;
 
     public string SelectedAppSourcesText => SelectedApp is { } item
@@ -744,7 +747,7 @@ public sealed class MainViewModel : ObservableObject
         {
             try
             {
-                var stored = await preferences.LoadAsync(cancellationToken).ConfigureAwait(false);
+                var stored = await preferences.LoadAsync(cancellationToken);
                 NeedsOnboarding = !stored.Onboarded;
             }
             catch (OperationCanceledException)
@@ -759,7 +762,7 @@ public sealed class MainViewModel : ObservableObject
 
         try
         {
-            var found = await discovery.DiscoverAsync(cancellationToken).ConfigureAwait(false);
+            var found = await discovery.DiscoverAsync(cancellationToken);
             var keptAppId = SelectedApp?.App.Id;
             appItems = found.Select(a => new DiscoveredAppItem(a, assessor.Assess(a))).ToList();
             RefreshVisibleGroups();
@@ -770,7 +773,7 @@ public sealed class MainViewModel : ObservableObject
                 try
                 {
                     var keptOrphanId = SelectedOrphan?.Profile.Id;
-                    profileRecords = (await profiles.ListAsync(cancellationToken).ConfigureAwait(false)).ToList();
+                    profileRecords = (await profiles.ListAsync(cancellationToken)).ToList();
                     RefreshVisibleGroups();
                     SelectedOrphan = orphanProfiles.FirstOrDefault(o => o.Profile.Id == keptOrphanId);
                 }
@@ -793,7 +796,7 @@ public sealed class MainViewModel : ObservableObject
                 try
                 {
                     evidenceBundles =
-                        (await evidenceStore.ListAsync(cancellationToken).ConfigureAwait(false)).ToList();
+                        (await evidenceStore.ListAsync(cancellationToken)).ToList();
                 }
                 catch (OperationCanceledException)
                 {

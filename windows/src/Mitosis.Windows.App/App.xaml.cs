@@ -124,7 +124,7 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     private void OnUiUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        diagnosticLog.Write(DiagnosticLevel.Error, "app.unhandled", Describe(e.Exception));
+        diagnosticLog.Write(DiagnosticLevel.Error, "app.unhandled", DescribeUnhandled(e.Exception));
         if (handlingCrash)
         {
             return;
@@ -147,17 +147,20 @@ public partial class App : Microsoft.UI.Xaml.Application
         diagnosticLog.Write(
             DiagnosticLevel.Error,
             "app.domain-unhandled",
-            e.ExceptionObject is Exception exception ? Describe(exception) : "non-exception failure");
+            e.ExceptionObject is Exception exception ? DescribeUnhandled(exception) : "non-exception failure");
     }
 
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        diagnosticLog.Write(DiagnosticLevel.Error, "app.unobserved-task", Describe(e.Exception));
+        diagnosticLog.Write(DiagnosticLevel.Error, "app.unobserved-task", DescribeUnhandled(e.Exception));
         e.SetObserved();
     }
 
-    private static string Describe(Exception exception) =>
-        $"{exception.GetType().FullName}: {exception.Message}";
+    /// <summary>Failure text with the frame list, not just type and message. A
+    /// message alone is sometimes all Windows provides (an empty-message COMException
+    /// is possible), which leaves the log unusable for diagnosis. The file logger
+    /// collapses this to one bounded line.</summary>
+    private static string DescribeUnhandled(Exception exception) => exception.ToString();
 
     private static MainViewModel ComposeMainViewModel()
     {

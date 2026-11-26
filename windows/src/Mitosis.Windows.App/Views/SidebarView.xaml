@@ -34,8 +34,8 @@
             x:Name="SearchBox"
             Grid.Row="1"
             Margin="12,4,12,4"
-            KeyDown="OnSearchKeyDown"
             PlaceholderText="Search"
+            PreviewKeyDown="OnSearchKeyDown"
             QueryIcon="Find"
             Text="{x:Bind ViewModel.SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}">
             <AutomationProperties.Name>Search clones</AutomationProperties.Name>

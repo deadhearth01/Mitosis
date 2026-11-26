@@ -145,8 +145,8 @@ public sealed class OnboardingViewModel : ObservableObject
         ErrorMessage = null;
         try
         {
-            var current = await preferences.LoadAsync(cancellationToken).ConfigureAwait(false);
-            await preferences.SaveAsync(current with { Onboarded = true }, cancellationToken).ConfigureAwait(false);
+            var current = await preferences.LoadAsync(cancellationToken);
+            await preferences.SaveAsync(current with { Onboarded = true }, cancellationToken);
             StartFirstClone = startFirstClone;
             Finished = true;
         }

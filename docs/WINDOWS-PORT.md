@@ -477,6 +477,25 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   green, zero build warnings. Clean-VM runs, MSI/signing, PATH installation, and
   public distribution remain open; the last three are authorization-gated. See
   `docs/WINDOWS-RELEASE.md` and `docs/WINDOWS-INSTALL.md`.
+- Stage 27: visual, accessibility, and manual-interaction evidence - **desktop
+  pass complete; Narrator, contrast, scaling, and clean-VM runs still blocked**.
+  33 screenshots in `docs/evidence/windows-ui/` cover the main window at three
+  sizes, search match/no-match/Esc, app detail with and without profiles,
+  profile removal, the wizard steps, Help, Settings with a live update check,
+  banner dismissal, the onboarding pages, and selection after a wizard close.
+  The pass found and fixed eleven defects: the detail column clipped because a
+  ScrollViewer centres its direct content by desired width; sidebar selection
+  jumped when the ItemsSource was replaced; two AutoSuggestBoxes consumed
+  Escape before the window handler; four secondary windows opened without
+  keyboard focus; view-model `ConfigureAwait(false)` continuations could crash
+  startup with `RPC_E_WRONG_THREAD`; profiles empty/error states were silent;
+  the publisher separator lost its space; sidebar rows had no accessible name;
+  onboarding page 1 used the wrong grid column; and packaged apps with an
+  empty display name were listed. Selection now survives search and wizard
+  close, Esc clears the query, and every secondary window focuses its first
+  control. Narrator speech, high-contrast themes, 150/200% text scaling, a
+  second Windows user, and clean VMs were not run. 497/497 tests green, zero
+  warnings.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

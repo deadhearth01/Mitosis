@@ -101,6 +101,17 @@ public sealed class HelpViewModelTests
     }
 
     [TestMethod]
+    public void TopicToString_IsTheAccessibleTopicName()
+    {
+        var model = new HelpViewModel();
+
+        foreach (var topic in model.Topics)
+        {
+            Assert.AreEqual(topic.Title, topic.ToString(), "WinUI names an unnamed list item from ToString().");
+        }
+    }
+
+    [TestMethod]
     public void ClearingTheSelection_ShowsAnEmptyPage()
     {
         var model = new HelpViewModel();

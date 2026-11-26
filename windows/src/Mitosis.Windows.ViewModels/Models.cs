@@ -56,7 +56,14 @@ public sealed record CloneItem(
     string MemoryCaption,
     string CpuText,
     string CpuCaption,
-    bool HasLinkSchemes);
+    bool HasLinkSchemes)
+{
+    /// <summary>Accessible name of a sidebar row. WinUI's ListViewItem falls back to the
+    /// data item's ToString() when the row has no explicit automation name, so this is
+    /// the text a screen reader announces while arrowing the list: label plus status,
+    /// matching what the row shows.</summary>
+    public override string ToString() => $"{Label}, {BusyText ?? MainViewModel.StatusText(this)}";
+}
 
 /// <summary>A sidebar group with its currently visible clones.</summary>
 public sealed class CloneGroupView
@@ -88,6 +95,9 @@ public sealed record DiscoveredAppItem(DiscoveredApp App, CompatibilityAssessmen
     }
 
     public string StatusText => MainViewModel.AssessmentStatusText(Assessment.Status);
+
+    /// <summary>The sidebar row's accessible name (see <see cref="CloneItem.ToString"/>).</summary>
+    public override string ToString() => $"{App.DisplayName}, {StatusText}";
 }
 
 /// <summary>A sidebar group of discovered applications, keyed by initial letter.</summary>
@@ -118,6 +128,9 @@ public sealed record OrphanProfileItem(CloneProfile Profile)
     }
 
     public string StateText => MainViewModel.ProfileStateText(Profile.State);
+
+    /// <summary>The sidebar row's accessible name (see <see cref="CloneItem.ToString"/>).</summary>
+    public override string ToString() => $"{Profile.Name}, {StateText}";
 }
 
 /// <summary>Request for the view to show an explanatory dialog (engine actions are

@@ -68,6 +68,14 @@ public sealed class AppxPackageSource : IInstalledAppSource
                 continue;
             }
 
+            // A registration with no display name cannot be shown, searched, or chosen;
+            // the registry source already skips these, and Windows ships system packages
+            // with an empty name.
+            if (string.IsNullOrWhiteSpace(entry.DisplayName))
+            {
+                continue;
+            }
+
             var warnings = new List<string>();
             var displayName = entry.DisplayName;
             if (displayName.StartsWith("ms-resource:", StringComparison.OrdinalIgnoreCase))

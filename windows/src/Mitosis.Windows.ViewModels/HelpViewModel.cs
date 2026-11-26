@@ -101,6 +101,10 @@ public sealed class HelpTopic
 
     public static IReadOnlyList<HelpTopic> All => WindowsTopics;
 
+    /// <summary>The topic list's accessible name: WinUI falls back to ToString(), whose
+    /// default would announce the type name instead of the topic.</summary>
+    public override string ToString() => Title;
+
     private static HelpTopic[] CreateTopics() => new[]
     {
         new HelpTopic(

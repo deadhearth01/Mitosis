@@ -214,6 +214,20 @@ public sealed class AppxPackageSourceTests
     }
 
     [TestMethod]
+    public async Task SkipsPackagesWithoutADisplayName()
+    {
+        var enumerator = new FakeAppxEnumerator();
+        enumerator.Entries.Add(Entry("blank", string.Empty));
+        enumerator.Entries.Add(Entry("spaces", "   "));
+        enumerator.Entries.Add(Entry("app", "Real App"));
+        var source = new AppxPackageSource(enumerator);
+
+        var records = await source.CollectAsync(TestContext.CancellationToken);
+
+        CollectionAssert.AreEqual(new[] { "Real App" }, records.Select(r => r.DisplayName).ToList());
+    }
+
+    [TestMethod]
     public async Task FlagsSystemPackagesAndWarnsOnResourceNames()
     {
         var enumerator = new FakeAppxEnumerator();

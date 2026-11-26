@@ -1,9 +1,11 @@
-# Windows UI verification protocol (Stage 12, extended in Stages 13–25)
+# Windows UI verification protocol (Stage 12, extended in Stages 13–27)
 
 Repeatable manual verification for the WinUI 3 shell. Automated tests cover
 ViewModel logic only — nothing here substitutes for eyes and keyboard.
-No screenshots have been captured in this environment; every scenario below is
-**pending** unless an observed result is recorded in §2.
+Screenshots and desktop observations were first captured in Stage 27
+(`docs/evidence/windows-ui/`); a scenario is **pending** unless §2 records
+an observed result, and the Stage 27 pass record in §5 names what remains
+unverified.
 
 ## 1. Environment record (fill per session)
 
@@ -20,9 +22,23 @@ native adaptation or a parity defect.
   details card alignment, maintenance rows.
 - S2: main window at 820×520 minimum and at 1600×900 wide: wrapping, overflow,
   truncation, empty-area behavior.
+  - **Observed 2026-11-27 (dark theme, 100% scale):** 820×520 and 1600×900 were
+    captured (`main-820x520-dark.png`, `main-1600x900-dark.png`). At 820 the
+    app-detail column was wider than the viewport and shifted right; the fix wraps
+    each detail page in a full-width `Grid` with
+    `HorizontalContentAlignment="Stretch"` and disables horizontal scrolling. After
+    the fix the 780-wide panel sits at x=12 in a 1060-wide window and fills a
+    narrower viewport without clipping (`app-detail-fixed-dark.png`,
+    `app-detail-820x520-dark.png`).
 - S3: sidebar search (matches, no-match state), selection highlight, group
   headers, bottom button, right-click menu with disabled items on a
   missing-original entry.
+  - **Observed 2026-11-27:** a matching query filters the list and keeps the
+    detail page (`search-match-dark.png`); a query that matches nothing shows
+    `No results for "zzz"` with the spelling hint while the selected app stays on
+    the right (`search-no-match-dark.png`); clearing the box restores the full
+    grouped list with the same row highlighted (`search-esc-cleared-dark.png`).
+    The right-click menu and group headers were not re-checked in this pass.
 - S4: clone detail (preview mode): header, status pill, notice variants, tiles,
   details rows, links card toggle, maintenance rows.
 - S5: app detail: metadata rows, compatibility reasons, `Still needed` list,
@@ -45,6 +61,11 @@ native adaptation or a parity defect.
   page (`ms-settings:privacy`); "Report a Problem…" opens the repository issue
   chooser in a browser; topic list, scroll, Esc, and title-bar close work;
   compare against `help-*.png` references (pixel parity pending — W66).
+  - **Observed 2026-11-27:** F1 and the sidebar Help button each opened one
+    Help window focused on the topic list; Down moved the selection from
+    "Getting started" to "Which apps work" and the page followed
+    (`help-dark.png`). The Permissions/Troubleshooting action buttons were not
+    clicked in this pass.
 - S11: Settings window (W03/W36/W37): opens at 540 wide via Ctrl+, and the
   sidebar Settings button; General tab shows Storage (data folder path shown as
   text; "Show in File Explorer" opens the folder, creating it if needed);
@@ -53,6 +74,12 @@ native adaptation or a parity defect.
   re-enables it (macOS window-local state); after clicking, the next launch
   shows the welcome flow again; no other toggles exist by design (update/tray/
   CLI/mode rows deferred); compare against `settings-*.png` (pending — W66).
+  - **Observed 2026-11-27:** Ctrl+, opened one 540-wide Settings window
+    (`settings-dark.png`); switching tabs changed the height while the width
+    stayed 540 (a resize request to 760 wide was refused); keyboard focus starts
+    on the General tab and Tab reaches "Show in File Explorer". A real update
+    check reported 0.2.3 (`settings-update-check-dark.png`). The store reveal and
+    Show Tips Again actions were not re-run.
 - S12: Onboarding (W39): first launch after deleting `preferences.json` shows
   the 580×460 welcome; pages advance via Next/dots, Back works, Back is
   unavailable on page 1; title-bar close, Esc, and Alt+F4 do nothing while
@@ -61,6 +88,11 @@ native adaptation or a parity defect.
   locked/unwritable preference store keeps the window open with the inline
   store error and allows retry without losing the choice; removing
   `preferences.json` again re-shows the flow (deterministic).
+  - **Observed 2026-11-27:** with `Onboarded` reset, the 580×460 welcome flow drew all
+    three pages with Next/Back/Later and focus on Next; page 1 had previously
+    been placed in the wrong grid column and now composes correctly
+    (`onboarding-page1..3-dark.png`). "Choose an App" and the locked-store retry
+    path were not re-run.
 - S13: keyboard reach over the new windows (W44): F1 opens Help from the main
   window; Ctrl+, opens Settings; both sidebar buttons carry accessible names
   and tooltips; Tab order inside Help (topics → page → button) and Settings
@@ -70,6 +102,9 @@ native adaptation or a parity defect.
   Aero Snap respect it; 820×520 shows usable sidebar + detail proportions
   (reference: sidebar 210/240); large sizes (1600×900+) keep the layout
   composed; maximize on a single display ok.
+  - **Observed 2026-11-27:** 1060×720, 820×520 (the code floor), and 1600×900 were
+    captured; the layout composes at all three and the detail column no longer
+    clips. An explicit drag below the floor was not repeated this pass.
 - S15: repeated Settings/Help opening (W02/W03/W05/W44): press F1, then F1
   again while Help is focused — no second Help window appears and the existing
   one stays put; press Ctrl+, while Settings is already open — same single
@@ -78,11 +113,19 @@ native adaptation or a parity defect.
   — buttons reset per window state (no stale "Tips Are On"); closing Help or
   Settings returns keyboard focus to the main window; Help and Settings open
   simultaneously without conflict.
+  - **Observed 2026-11-27:** F1 twice and Ctrl+, twice produced exactly one
+    window each; F1 while Help had focus did nothing; closing Help or Settings
+    returned keyboard focus to the selected sidebar row. Help and Settings were
+    also open together without conflict.
 - S16: fixed-size windows (W27/W39 adaptation): the welcome window cannot be
   resized or maximized (580×460 fixed); the New Clone wizard stays 700×680
   through every step with maximize disabled; Esc/Enter still navigate within
   the wizard; the Settings window keeps a fixed width (540) while its height
   follows the General/Advanced tab (tab switch re-sizes height).
+  - **Observed 2026-11-27:** the wizard refused a resize away from 700×680 and is
+    non-maximizable; Settings kept width 540 while height followed the tab; Help
+    refused 600×400 and honored 900×700 (700×500 floor). The welcome window is
+    fixed by code and was not resized.
 - S17: keyboard shortcuts and collisions (W05/W44): F1 and Ctrl+, work from
   the main window with focus anywhere in it; Ctrl+N opens the wizard exactly
   once per press (no double window from accelerator + router); Ctrl+F focuses
@@ -90,6 +133,10 @@ native adaptation or a parity defect.
   main window does nothing unexpected; F1 while Settings/Help is the active
   window has no route (documented: shortcuts are main-window scoped; revisit
   in a later stage when a global command surface exists).
+  - **Observed 2026-11-27:** F1, Ctrl+,, Ctrl+F, Ctrl+N, and Esc (wizard and
+    search) all worked with the list focused; Ctrl+F and Ctrl+, also worked while
+    the search box had focus. F1 did nothing while Settings was active, matching
+    the documented main-window scope. Ctrl+N produced one window per press.
 - S18: restoration deferral record (W10): no persistence is expected — resize
   and move the main window, close and relaunch: the window opens at the
   1060×720 default again. This is the accepted, documented behavior until a
@@ -98,6 +145,12 @@ native adaptation or a parity defect.
   clone), then type a query that filters its row out — the detail page keeps
   showing the selection, no empty-state flash; clear the query (or press Esc
   in the search box) — the hidden row comes back already highlighted.
+  - **Observed 2026-11-27:** selecting Android Studio, typing a query that
+    filtered it out, and pressing Esc kept the same detail page throughout, with
+    the row highlighted again after the query cleared (`search-match-dark.png`,
+    `search-esc-cleared-dark.png`); no empty-state flash. Closing the wizard no
+    longer resets the detail page to the first app
+    (`selection-after-wizard-cancel-dark.png`).
 - S20: no-results honesty (W25): with no query and an empty discovery
   result, the sidebar shows the applications empty state only (never the
   "no results" phrase); type a query matching nothing — the sidebar shows
@@ -108,14 +161,26 @@ native adaptation or a parity defect.
   in the field); pressing Esc in an empty search box does nothing; Enter and
   list keys behave as before; Ctrl+F focuses the field and another Ctrl+F on
   a selected row leaves selection intact.
+  - **Observed 2026-11-27:** Esc now clears a non-empty query while focus stays
+    in the box (`search-esc-cleared-dark.png`). The earlier failure was
+    `AutoSuggestBox` consuming Escape in `KeyDown`, so the handler moved to
+    `PreviewKeyDown`.
 - S22: update banner dismissal (W05/P+R): click (or Tab to) the InfoBar close
   button and press Space — the banner hides and does not reappear during the
   session (macOS "Hide until next launch", MainWindow.swift:94-103); relaunch
   brings a new banner back; the banner's close button is reachable by Tab.
+  - **Observed 2026-11-27:** a real check produced the 0.2.3 banner
+    (`update-banner-dark.png`); its Close button hid it and it stayed hidden for
+    the rest of the session (`update-banner-dismissed-dark.png`).
 - S23: initial focus of secondary windows: opening Help puts keyboard focus
   on the topic list; Settings focuses the General tab item; the welcome
   window focuses Next; the wizard focuses its search (since Stage 12). Tab
   from each starting point traverses all controls in a predictable order.
+  - **Observed 2026-11-27 (UI Automation focus):** Help → topic-list item
+    "Getting started"; Settings → tab "General"; wizard → "Search apps" edit;
+    welcome → "Next" button. The first attempt failed because `Focus()` ran
+    inside `Activated` before loading; all four windows now defer focus to a
+    low-priority dispatcher callback.
 - S24: screen-reader announcements (W64): with Narrator on, a failed
   validation in the wizard name field speaks the error; selecting an
   unsupported app in the picker speaks its reason; a failed profile save
@@ -139,6 +204,11 @@ native adaptation or a parity defect.
     `app.stop`; no process or orphaned window remained. This exposed and closed
     the gap where `Application.Exit()` sometimes skipped a child window and left
     the process alive. Visual focus and minimized restore remain pending.
+  - **Observed 2026-11-27:** a second launch exited with code 0 and left one
+    process; with the primary minimized, the second launch restored and
+    foregrounded it (checked with `IsIconic`/`GetForegroundWindow`). Closing the
+    main window with no secondary window open exited cleanly and logged
+    `app.stop`. A second Windows user was not available.
 - S26: update availability (Stage 25): open Settings ▸ General ▸ Updates — the
   version line shows the running version without `+<sha>`; the status starts with
   “Check GitHub Releases…”; press Check for Updates with network available — the
@@ -174,3 +244,48 @@ never lost after dialog close.
 
 Engine behavior, real isolation, Narrator speech quality (needs a screen-reader
 pass), touch, IME, right-to-left layout, and packaging/Store behavior.
+
+## 5. Stage 27 pass record (2026-11-27)
+
+Environment: Windows 11 build 10.0.26300, 100% display scale, dark theme,
+`Mitosis 0.2.2+2faa989`, main window 1060×720 (also 820×520 and 1600×900),
+Release build with 0 warnings and 497/497 tests green. Screenshots live in
+`docs/evidence/windows-ui/`. Focus and selection observations come from UI
+Automation (control type and accessible name of the focused element), not from
+screenshots. Keyboard input used SendKeys to the foreground window; the app was
+launched from the publish tree with `DOTNET_ROOT` set.
+
+### 5.1 Defects found and fixed in this pass
+
+| # | Observed defect | Fix | Evidence |
+|---|---|---|---|
+| 1 | App-detail/clone-detail/orphan panel shifted right and clipped at 820 wide | Full-width wrapper `Grid`, `HorizontalContentAlignment=Stretch`, horizontal scroll disabled | `app-detail-fixed-dark.png`, `app-detail-820x520-dark.png` |
+| 2 | Detail page jumped to a framework-chosen app when a query replaced the list; closing the wizard reset it to the first app | Forward `SelectionChanged` only while the list holds focus; keep the selected app across reloads | `search-match-dark.png`, `selection-after-wizard-cancel-dark.png` |
+| 3 | Esc did not clear the search query | `PreviewKeyDown` instead of `KeyDown` | `search-esc-cleared-dark.png` |
+| 4 | Wizard ignored Esc/Enter while the pick search had focus | Same `PreviewKeyDown` change | live: Esc closed, Enter advanced |
+| 5 | Settings/Help/wizard/welcome opened with no keyboard focus | Set focus after first layout at low dispatcher priority | focus: General tab, Getting started, Search apps, Next |
+| 6 | Startup could fail with `RPC_E_WRONG_THREAD` (`0x8001010E`) from a view-model continuation on a pool thread | Removed `ConfigureAwait(false)` from the Windows view models; added thread-affinity tests | `ViewModelThreadAffinityTests` |
+| 7 | Profiles empty/error states were not announced when the loading or error flag changed | Raise `ShowProfilesEmpty`/`ShowProfilesError` notifications | `app-detail-profiles-empty-dark.png`; ViewModel test |
+| 8 | Publisher line lost the space before the version separator | `" · "` separator | test `PublisherLine_SeparatesPublisherAndVersion` |
+| 9 | Sidebar rows announced the type or type-plus-status instead of the row label | `ToString()` overrides on the row models | live UIA names, e.g. `Android Studio, Not yet assessed` |
+| 10 | Onboarding page 1 drew its content in the wrong grid column | `Grid.Column` correction | `onboarding-page1..3-dark.png` |
+| 11 | Packaged-app registrations with an empty display name appeared in the list | Skip empty names in the Appx source | `WindowsDiscoveryTests` |
+
+The profiles empty-state screenshot and the removal flow were re-checked live;
+no app was copied, launched, or modified to produce any of this evidence.
+
+### 5.2 What is still not verified
+
+- Narrator speech (no screen-reader audio capture on this machine): S24 stays
+  pending even though names, roles, and states were inspected with UI
+  Automation.
+- High-contrast themes and 150/200% text scaling; the pass used the default
+  dark theme at 100% scale only. A light-theme screenshot exists
+  (`main-1060x720-light.png`) but was not recaptured this pass.
+- Clean Windows 10/11 VMs, a standard (non-admin) account, and a second
+  Windows user/session. S4 clone detail was not opened (preview data only).
+- Touch, IME, right-to-left layout, drag-below-floor for the main window, the
+  wizard validation-error path, Settings store reveal/tips actions, and Help
+  action buttons.
+- A published Windows artifact remains macOS-only upstream, so "View Release"
+  click-through was not exercised.

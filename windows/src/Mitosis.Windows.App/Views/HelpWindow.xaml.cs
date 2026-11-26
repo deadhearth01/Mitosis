@@ -40,7 +40,11 @@ public sealed partial class HelpWindow : Window
     private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
     {
         Activated -= OnFirstActivated;
-        TopicList.Focus(FocusState.Programmatic);
+        // Activated can run before the window's content has finished loading; a
+        // Focus() call at that moment silently does nothing (found in Stage 27).
+        // Low priority runs after the first layout, so the topic list owns focus.
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            () => TopicList.Focus(FocusState.Programmatic));
     }
 
     private void OnOpenTopicUrl(object sender, RoutedEventArgs e)

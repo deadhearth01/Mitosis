@@ -1,4 +1,5 @@
 using Mitosis.Application.Updates;
+using Mitosis.Domain;
 using Mitosis.Windows.ViewModels;
 
 namespace Mitosis.ViewModels.Tests;
@@ -7,6 +8,8 @@ namespace Mitosis.ViewModels.Tests;
 public sealed class MainViewModelTests
 {
     private static MainViewModel Create() => PreviewData.CreateMain();
+
+    public TestContext TestContext { get; set; } = null!;
 
     [TestMethod]
     public void InitialState_SelectsNothingAndShowsBanner()
@@ -320,5 +323,59 @@ public sealed class MainViewModelTests
         Assert.IsFalse(model.OpenCloneCommand.CanExecute(null));
         Assert.IsFalse(model.DeleteCommand.CanExecute(null));
         Assert.IsTrue(model.NewCloneCommand.CanExecute(null));
+    }
+
+    /// <summary>WinUI's ListViewItem falls back to the data item's ToString() for its
+    /// accessible name; a record dump would put paths and internal state in the
+    /// accessibility tree (found in Stage 27). Each row type names itself the way it reads.</summary>
+    [TestMethod]
+    public void RowToString_IsTheAccessibleName()
+    {
+        var clone = PreviewData.CreateClones().First(c => c.Name == "Signal (Work)");
+        Assert.AreEqual("Work, Running", clone.ToString());
+
+        var app = new DiscoveredAppItem(DiscoveredApps.Make("Android Studio"), new FakeAssessor().Assess(DiscoveredApps.Make("Android Studio")));
+        Assert.AreEqual("Android Studio, Not yet assessed", app.ToString());
+
+        var orphan = new OrphanProfileItem(CloneProfile.Create("currentuseruninstall:missing", "Slack (Old)"));
+        Assert.AreEqual($"Slack (Old), {orphan.StateText}", orphan.ToString());
+    }
+
+    [TestMethod]
+    public async Task PublisherLine_SeparatesPublisherAndVersion()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("Slack", "Slack Technologies") });
+        var model = new MainViewModel(discovery, new FakeAssessor(), new FakeProfileRepository());
+        await model.LoadAsync(TestContext.CancellationToken);
+
+        model.SelectedApp = model.VisibleAppGroups.SelectMany(g => g.Items).Single();
+
+        Assert.AreEqual("Slack Technologies · 1.0", model.SelectedAppPublisherLine);
+    }
+
+    /// <summary>Found in Stage 27: the error text was set while the loading flag was
+    /// still true, so the retry panel's visibility never re-evaluated when loading
+    /// finished and the panel never appeared.</summary>
+    [TestMethod]
+    public async Task ProfilesFailure_AnnouncesTheErrorStateWhenLoadingFinishes()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("Slack") });
+        var profiles = new FakeProfileRepository { ListFailure = new IOException("boom") };
+        var model = new MainViewModel(discovery, new FakeAssessor(), profiles);
+        var announced = false;
+        model.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(MainViewModel.ShowProfilesError) && model.ShowProfilesError)
+            {
+                announced = true;
+            }
+        };
+
+        await model.LoadAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(model.ShowProfilesError);
+        Assert.IsTrue(announced, "The retry panel must be announced after the loading flag clears.");
     }
 }

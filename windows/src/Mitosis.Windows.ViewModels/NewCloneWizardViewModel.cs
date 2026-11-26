@@ -444,7 +444,7 @@ public sealed class NewCloneWizardViewModel : ObservableObject
         {
             var profile = CloneProfile.Create(
                 SelectedApp.App.Id, ProfileName, BadgeText, SelectedColorHex);
-            var saved = await profiles.AddAsync(profile, cancellationToken).ConfigureAwait(false);
+            var saved = await profiles.AddAsync(profile, cancellationToken);
             if (saved.State != CloneProfileState.Planned)
             {
                 throw new InvalidProfileException("A new profile must stay Planned.");

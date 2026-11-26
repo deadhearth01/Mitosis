@@ -211,7 +211,7 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         SaveError = null;
         try
         {
-            _ = await preferences.LoadAsync(cancellationToken).ConfigureAwait(false);
+            _ = await preferences.LoadAsync(cancellationToken);
         }
         catch (PreferencesStoreException ex)
         {
@@ -228,9 +228,9 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         SaveError = null;
         try
         {
-            var current = await preferences.LoadAsync(cancellationToken).ConfigureAwait(false);
+            var current = await preferences.LoadAsync(cancellationToken);
             await preferences.SaveAsync(
-                current with { ShowTips = true, Onboarded = false }, cancellationToken).ConfigureAwait(false);
+                current with { ShowTips = true, Onboarded = false }, cancellationToken);
             TipsReset = true;
         }
         catch (PreferencesStoreException ex)

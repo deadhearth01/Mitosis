@@ -8,11 +8,11 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 490/490 green (Release, .NET SDK 10.0.404; 0 warnings)
+- **Current suite:** 497/497 green (Release, .NET SDK 10.0.404; 0 warnings)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
-- **Last updated:** 2026-11-26
+- **Last updated:** 2026-11-27
 
 > **Product truth.** The UI shell is largely built. The product is not: nothing on
 > Windows can create, launch, refresh, repair, or delete a real clone. No amount of
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 490 tests |
+| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 497 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -56,20 +56,20 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence / missing part |
 |---|---|---|
-| Main window, sidebar, search, grouping, selection | Implemented, verification pending | Real discovery; Stage 15 interaction tests; pixel/Narrator pass pending |
-| App detail (metadata, compatibility, evidence, profiles) | Implemented, verification pending | `AppDetailView.xaml`; profiles are manageable when `Planned`; pixel pass pending |
+| Main window, sidebar, search, grouping, selection | Verified for observed states; Narrator/contrast pending | Real discovery; Stage 15 interaction tests; Stage 27 desktop evidence: search match/no-match/Esc, selection preserved, 820×520-1600×900 |
+| App detail (metadata, compatibility, evidence, profiles) | Verified for observed states; Narrator/contrast pending | `AppDetailView.xaml`; empty/with-profile/removal states observed and screenshotted; layout clipping fixed (Stage 27) |
 | Clone detail page | Partially implemented | Only reachable through explicit preview data; all engine actions are honest placeholders |
 | New Clone wizard | Partially implemented | Metadata-only save works; app-detail entry opens it preselected (Stage 21); macOS picker segments/mode picker/launch check deferred |
 | Badge editing | Partially implemented | Wizard inline editor plus `Planned`-profile re-badging (Stage 21); provisioned profiles still read-only |
 | Profile lifecycle management | Implemented, verification pending (metadata only) | Rename, re-badge, and remove for `Planned` records on app and orphan detail; non-`Planned` refused; dialog/Narrator checks pending |
 | Settings | Partially implemented | General/Advanced subset; manual GitHub release check added (Stage 25); tray, clone auto-update, default mode, CLI installer deliberately absent |
 | Help | Implemented, verification pending | Nine topics, honest Windows copy |
-| Onboarding | Implemented, verification pending | Three pages, persisted once |
-| Window lifecycle and keyboard routing | Implemented, verification pending | Minimum sizes, focus return, F1/Ctrl+,/Ctrl+F; keypress observation pending |
+| Onboarding | Verified for observed states | Three pages, Next/Back/Later, fixed 580×460, focus on Next (Stage 27 screenshots); column defect fixed; Narrator pending |
+| Window lifecycle and keyboard routing | Verified for observed scenarios | Fixed wizard/Settings sizes, Help 700×500 floor, first focus in all secondary windows, F1/Ctrl+,/Ctrl+F/Ctrl+N routing, focus return (Stage 27); Narrator/contrast pending |
 | Tray / menu-bar equivalent | Deferred by decision | `docs/WINDOWS-PORT.md` § Stage 14 |
 | Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
-| Accessibility | Partially implemented | Names, live regions, focus targets; Narrator and contrast passes pending |
-| Visual parity | Implemented, verification pending | No screenshots captured; `WINDOWS-UI-VERIFICATION.md` scenarios pending |
+| Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, control names checked with UI Automation (Stage 27); Narrator speech, contrast, and text scaling not run |
+| Visual parity | Verified for captured states; macOS pixel diff pending | 33 screenshots in `docs/evidence/windows-ui/`; Stage 27 recorded defects and fixes; no side-by-side macOS comparison yet |
 
 ### 1.3 Clone engine and Windows integration
 
@@ -97,7 +97,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 490/490; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, installer scripts, update checks |
+| Unit/integration tests | Complete for implemented logic | 497/497; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity |
 | Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
 | Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `install.ps1`; `Mitosis.pri` fix |
 | Artifact verifier | Complete and verified (45 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI + installer rules in Stage 26 |
@@ -125,7 +125,7 @@ is eligible now, deferred, or authorization-gated.
 | G11 | Install | Per-user script installer added (Stage 26); no MSI/signing | `WINDOWS-INSTALL.md` | Manual prerequisites replaced by detected ones; Start-menu/uninstall entry provided; clean-VM run and system-wide install pending | Complete for the unsigned per-user model |
 | G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
 | G13 | Compatibility | Only Windows 11 25H2 ever exercised | Release checklist | Unknown behavior on 10/24H2/23H2 | Blocked by environment |
-| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | `WINDOWS-UI-VERIFICATION.md` | Visual/a11y parity unproven | Eligible with a desktop session |
+| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | Stage 27 added 33 screenshots plus UIA/keyboard observations (`WINDOWS-UI-VERIFICATION.md` §2/§5) and fixed 11 UI defects | Visual/a11y parity unproven | Narrator, contrast, 150/200% scaling, clean-VM runs remain |
 | G15 | Stats | Detail tiles are static preview values | `PreviewData` | Misleading only if shown as live; currently preview-gated | Depends on engine |
 | G16 | Link routing | Toggle is UI-only | `ShowLinksCard` / `LinkRoutingOn` | Users may expect routing | Depends on engine/protocol handler |
 | G17 | Background | No refresh agent or scheduled task | No code | Clones would age silently | Depends on engine |
@@ -390,7 +390,7 @@ only started when its dependencies and authorization state allow it.
   `PATH` installation, and public distribution — all authorization-gated. See
   `docs/WINDOWS-INSTALL.md`.
 
-### Stage 27 — Visual, accessibility, and clean-machine verification (partly blocked)
+### Stage 27 — Visual, accessibility, and clean-machine verification (partly blocked; desktop pass complete)
 
 - **Objective:** Execute the manual protocol and close W65/W66 plus the pending
   interaction scenarios.
@@ -409,6 +409,28 @@ only started when its dependencies and authorization state allow it.
   differences classified cosmetic/minor/major.
 - **Authorization:** Not required for local UI checks; VM provisioning may need
   environment access.
+- **Result (2026-11-27):** Desktop pass executed on the development machine
+  (Windows 11 25H2, 100% scale, dark theme): 33 screenshots in
+  `docs/evidence/windows-ui/` cover 1060×720/820×520/1600×900, search
+  match/no-match/Esc, app detail with and without profiles, profile removal,
+  the wizard steps, Help, Settings/update check, the update banner and its
+  dismissal, the three onboarding pages, and selection after a wizard close.
+  Eleven defects were reproduced and fixed: detail-column clipping (the
+  ScrollViewer centred its direct content by desired width), selection jumping
+  when `ItemsSource` is replaced, Esc swallowed by two `AutoSuggestBox`es,
+  missing first focus in four secondary windows, an `RPC_E_WRONG_THREAD`
+  startup crash from `ConfigureAwait(false)`, silent profiles empty/error
+  states, the publisher separator, sidebar accessible names, the onboarding
+  column, and packages with an empty display name. Logic changes carry
+  regression tests (including `ViewModelThreadAffinityTests`). Live checks
+  confirmed one Help/Settings window per open, fixed wizard/Settings sizes,
+  the Help size floor, F1/Ctrl+,/Ctrl+F/Ctrl+N routing, selection surviving
+  search and Esc, banner dismissal, single-instance raise with minimized
+  restore, and clean shutdown.
+  Narrator speech, high-contrast themes, 150/200% text scaling, clean-VM
+  installs, and a second Windows user were not run; this stage therefore
+  stays **partly blocked**. Suite 497/497, 0 warnings; the archive was
+  republished and verified.
 
 ### Stage 28 — Clone engine authorization and strategy implementation (blocked)
 
@@ -534,15 +556,17 @@ These are separate milestones. Passing one does not imply the next.
    update channel, privacy statement, license/trademark compliance, and capacity
    to support users.
 
-**Current position:** Stages 21–26 closed the metadata-profile dead end, the
-blind-support gap, duplicate-process risk, the missing automation/support path,
-the static update banner, and the missing install story. The UI shell is between
-feature complete and functionally verified; the product is not at feature
-complete because the clone engine is absent. The port is installable per-user and
-shipped in a launch-tested archive, but not signed or clean-machine verified. Next
-eligible work is the manual UI/accessibility protocol (desktop evidence already
-available) or tray/background decisions, with clean-VM, signing, system-wide
-install, and public distribution still authorization-gated.
+**Current position:** Stages 21-27 closed the metadata-profile dead end, the
+support-tooling gap, duplicate-process risk, the missing automation path, the
+static update banner, the missing install story, and most of the manual UI
+evidence gap. The UI shell now has desktop evidence for its main interaction
+paths, but the product is still not at feature complete because the clone
+engine is absent, and Narrator/contrast/scaling/clean-VM verification remains
+open. The port is installable per-user and shipped in a launch-tested archive,
+but not signed or clean-machine verified. Next eligible work is the
+Narrator/contrast/scaling pass and tray/background decisions, with clean-VM,
+signing, system-wide install, and public distribution still
+authorization-gated.
 
 ## 5. Authorization boundaries
 
@@ -567,10 +591,11 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` on the Stage 26 tree (0 warnings) | CI remote run observation |
-| 490 tests pass | Verified | `dotnet test` at the Stage 26 tree, eight test projects | CI remote run observation |
+| Code compiles (Release) | Verified | `dotnet build` on the Stage 27 tree (0 warnings) | CI remote run observation |
+| 497 tests pass | Verified | `dotnet test` at the Stage 27 tree, eight test projects | CI remote run observation |
+| Manual UI protocol | Verified for observed scenarios (desktop) | 33 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5; 11 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
-| Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Visual focus, minimized restore, second user/session, elevated launch |
+| Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
 | Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
 | Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
@@ -578,7 +603,7 @@ operations are allowed without additional authorization.
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
 | Release zip is structurally sound | Verified | Stage 19/20 verifier + 45 fixture tests; Stage 26 additionally bundled the CLI, requires the PRI, and requires `install.ps1` | Clean-machine launch |
 | Published artifact launches | Verified (development machine only) | Stage 26: the publish tree and a freshly unzipped archive start, show the main/welcome windows, and exit cleanly; this exposed and fixed the missing `Mitosis.pri` (microsoft/WindowsAppSDK#6720) | Clean Windows 10/11 VM, missing-prerequisite path, another desktop session |
-| UI matches macOS pixels | **Not verified** | Design spec + code | Screenshots/contrast/Narrator |
+| UI matches macOS pixels | **Not verified** | Stage 27 screenshots of Windows states; no macOS side-by-side diff | macOS pixel diff; contrast; Narrator |
 | Any clone works | **Not verified / not implemented** | Catalog empty | Authorization + engine + evidence |
 | Installer works | Verified (development machine, logic + runtime) | `install.ps1`: dry run, install/reinstall/`-Force`, unsafe-path and unowned-folder refusal, recorded-file-only uninstall, data preservation and `-RemoveUserData`, missing-marker refusal, real shortcut + HKCU entry inspected and removed; 11 behavioral tests | Clean Windows 10/11 VM, standard user, PowerShell 7, SmartScreen/AV |
 | Binary is trusted | **Not verified** | Unsigned | Signing decision |

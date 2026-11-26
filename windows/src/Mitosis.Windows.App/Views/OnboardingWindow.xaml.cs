@@ -60,18 +60,24 @@ public sealed partial class OnboardingWindow : Window
     private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
     {
         Activated -= OnFirstActivated;
-        if (NextButton.Visibility == Visibility.Visible)
+        // Activated can run before the content has finished loading; a Focus() call
+        // at that moment silently does nothing (found in Stage 27). Low priority runs
+        // after the first layout and activation work.
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () =>
         {
-            NextButton.Focus(FocusState.Programmatic);
-        }
-        else if (ChooseAppButton.Visibility == Visibility.Visible)
-        {
-            ChooseAppButton.Focus(FocusState.Programmatic);
-        }
-        else
-        {
-            LaterButton.Focus(FocusState.Programmatic);
-        }
+            if (NextButton.Visibility == Visibility.Visible)
+            {
+                NextButton.Focus(FocusState.Programmatic);
+            }
+            else if (ChooseAppButton.Visibility == Visibility.Visible)
+            {
+                ChooseAppButton.Focus(FocusState.Programmatic);
+            }
+            else
+            {
+                LaterButton.Focus(FocusState.Programmatic);
+            }
+        });
     }
 
     /// <summary>Raised with true when the user chose Choose an App; the owner opens

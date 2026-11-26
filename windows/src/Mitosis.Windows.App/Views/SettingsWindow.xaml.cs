@@ -64,7 +64,12 @@ public sealed partial class SettingsWindow : Window
     private void OnFirstActivated(object sender, Microsoft.UI.Xaml.WindowActivatedEventArgs args)
     {
         Activated -= OnFirstActivated;
-        GeneralTab.Focus(FocusState.Programmatic);
+        // Activated can run before the window's content has finished loading; a
+        // Focus() call at that moment silently does nothing (found in Stage 27:
+        // the Settings tab never received keyboard focus). Low priority runs after
+        // the first layout and activation work, so the tab really gets focus.
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low,
+            () => GeneralTab.Focus(FocusState.Programmatic));
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)

@@ -61,6 +61,47 @@
                             Text="Mitosis keeps clone profiles and compatibility evidence here. Clone folders arrive with the cloning engine."
                             TextWrapping="Wrap" />
                         <TextBlock
+                            Style="{StaticResource MitosisSectionTitleStyle}"
+                            Margin="0,8,0,0"
+                            Text="Diagnostics" />
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Text="Log folder" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                IsTextSelectionEnabled="True"
+                                Text="{x:Bind ViewModel.LogFolderPath, Mode=OneWay}"
+                                TextWrapping="Wrap" />
+                            <Button
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Grid.RowSpan="2"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Show log folder in File Explorer"
+                                Command="{x:Bind ViewModel.RevealLogFolderCommand, Mode=OneWay}"
+                                Content="Show in File Explorer" />
+                        </Grid>
+                        <Button
+                            x:Name="CopyDiagnosticsButton"
+                            Command="{x:Bind ViewModel.CopyDiagnosticsCommand, Mode=OneWay}"
+                            Content="Copy diagnostics" />
+                        <TextBlock
+                            x:Name="CopyConfirmation"
+                            AutomationProperties.LiveSetting="Polite"
+                            FontSize="12"
+                            Foreground="{ThemeResource SystemFillColorSuccessBrush}"
+                            Text="Diagnostics copied to the clipboard."
+                            Visibility="Collapsed" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="Logs record app start/stop and unexpected errors only. They stay on this PC and never include application data, credentials, or file contents."
+                            TextWrapping="Wrap" />
+                        <TextBlock
                             FontSize="12"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Text="Update checking, the tray icon, and the command-line installer are not implemented on Windows yet, so they are not listed here."

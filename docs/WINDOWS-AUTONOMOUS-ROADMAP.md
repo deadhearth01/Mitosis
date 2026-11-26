@@ -8,7 +8,7 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 339/339 green (Release, .NET SDK 10.0.404)
+- **Current suite:** 353/353 green (Release, .NET SDK 10.0.404)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 8 src projects, 6 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 339 tests |
+| Solution/project boundaries (.NET 10, 8 src projects, 6 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 353 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -86,7 +86,7 @@ source, test, or artifact that establishes it.
 | Background refresh agent | **Missing** | Depends on engine |
 | CLI (`mitosis.exe`) | **Missing** | No console project |
 | Single-instance activation | **Missing** | No mutex/`AppInstance` handling; multiple instances can start |
-| Structured logging / diagnostics | **Missing** | No logger, no log file, no doctor report |
+| Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; manual dialog checks pending |
 | Update check / self-update | **Missing** | Static banner version; no network check |
 | Installer / uninstaller | **Missing** | Unpackaged zip only |
 | Code signing | **Missing / requires authorization** | Unsigned; SmartScreen expected |
@@ -118,7 +118,7 @@ is eligible now, deferred, or authorization-gated.
 | G4 | Data safety | No delete/clean/relink semantics for real clones | Engine absent | Cannot safely remove data | Authorization-gated |
 | G5 | Profiles | Saved profiles had no rename, re-badge, or removal path | `Planned`-profile Edit/Remove added in Stage 21; provisioned profiles remain read-only | Future provisioned records must be managed by the engine, not metadata code | Complete for `Planned` (Stage 21) |
 | G6 | Wizard entry | App-detail “New Clone…” showed a placeholder | `CreateCloneFromAppCommand` now raises `NewCloneRequested`; preview keeps the placeholder | A primary path works | Complete (Stage 21) |
-| G7 | Diagnostics | No structured logs, crash report, or doctor output | No logger/`UnhandledException` handling | Support and engine debugging would be blind | Eligible (Stage 22) |
+| G7 | Diagnostics | No structured logs, crash report, or doctor output | `FileDiagnosticLog`, `DoctorReport`, crash hooks, Settings diagnostics added in Stage 22; store-health fields move to the CLI doctor (Stage 24) | Support and engine debugging would be blind | Complete (Stage 22), verification pending |
 | G8 | Process integrity | Multiple app instances can run concurrently | No mutex/`AppInstance` code | Duplicate windows, concurrent store access, confusing onboarding | Eligible (Stage 23) |
 | G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | No console project | Automation and support path missing | Eligible (Stage 24) |
 | G10 | Updates | No update check; banner is static preview data | `BannerVersion` hardcoded | Users cannot learn about releases | Eligible (Stage 25) |
@@ -173,7 +173,7 @@ only started when its dependencies and authorization state allow it.
   with an engine-dependent message; the app-detail “New Clone…” action opens the
   wizard preselected. Manual dialog/Narrator checks remain pending.
 
-### Stage 22 — Diagnostics, logging, and crash reporting (eligible)
+### Stage 22 — Diagnostics, logging, and crash reporting (completed)
 
 - **Objective:** Add a safe, local diagnostic trail and a user-facing failure path.
 - **Current problem:** No logs, no crash handler, no doctor-style report; engine
@@ -193,6 +193,13 @@ only started when its dependencies and authorization state allow it.
 - **Definition of done:** Tests green; logs capped; docs describe what is and is
   not recorded.
 - **Authorization:** Not required (local diagnostics only).
+- **Result:** Implemented and pushed; 353/353 tests green. Ships a bounded,
+  home-redacted file log (`%LOCALAPPDATA%\Mitosis\Logs`, 512 KB × 3), startup/stop
+  and crash hooks with a plain Win32 failure dialog, a copyable environment report,
+  and Settings reveal/copy actions. Store health and discovery counts were not
+  included in this report; they move to the read-only CLI doctor (Stage 24), where
+  the values can be queried honestly. Crash-dialog, clipboard, Explorer reveal, and
+  visual checks remain manual. See `docs/WINDOWS-DIAGNOSTICS.md`.
 
 ### Stage 23 — Single-instance activation and store hardening (eligible)
 
@@ -412,11 +419,12 @@ These are separate milestones. Passing one does not imply the next.
    update channel, privacy statement, license/trademark compliance, and capacity
    to support users.
 
-**Current position:** Stage 21 closed the metadata-profile dead end. The UI shell
-is between feature complete and functionally verified; the product is not at
-feature complete because the clone engine is absent. The port is not installable,
-signed, or clean-machine verified. Next eligible work is local diagnostics
-(Stage 22), then single-instance activation and a read-only CLI.
+**Current position:** Stages 21–22 closed the metadata-profile dead end and the
+blind-support gap. The UI shell is between feature complete and functionally
+verified; the product is not at feature complete because the clone engine is
+absent. The port is not installable, signed, or clean-machine verified. Next
+eligible work is single-instance activation (Stage 23), then a read-only CLI with
+the fuller doctor report (Stage 24).
 
 ## 5. Authorization boundaries
 
@@ -442,8 +450,9 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` at `6f8e3de` | CI remote run observation |
-| 339 tests pass | Verified | `dotnet test` at the Stage 21 tree | CI remote run observation |
+| 353 tests pass | Verified | `dotnet test` at the Stage 22 tree | CI remote run observation |
 | Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
+| Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
 | Release zip is structurally sound | Verified | Stage 19/20 verifier + fixture tests | Clean-machine launch |
@@ -477,5 +486,6 @@ After every stage:
 | 20 | Verifier/security hardening | `2ef60d0` | 329 | Hostile-input limits |
 | — | Merge `origin/main` `v0.2.3` | `6f8e3de` | 329 | No Windows source changes |
 | 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
+| 22 | Local diagnostics and crash safety | `pending` | 353 | Bounded redacted log; report; Settings actions |
 
 Stages 21+ are appended as they complete.

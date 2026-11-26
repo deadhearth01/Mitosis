@@ -398,6 +398,18 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   tests; 339/339 green. No application files, logins, or data touched; catalog
   still empty; gates closed. See `docs/WINDOWS-PROFILES.md` §10 and
   `docs/UI-PARITY-MATRIX.md` (Stage 21 notes).
+- Stage 22: local diagnostics and crash safety — **implemented, verification
+  pending**. Adds a best-effort append-only log at
+  `%LOCALAPPDATA%\Mitosis\Logs` (one line per event, home paths redacted to `~`,
+  512 KB × 3 files, disabled instead of throwing on filesystem failure), startup
+  and shutdown entries, UI-thread / `AppDomain` / unobserved-task exception hooks,
+  and a Win32 failure dialog that names the log folder and exits instead of leaking
+  a stack trace. Settings ▸ General ▸ Diagnostics shows the log folder, reveals it
+  in File Explorer, and copies a plain environment report (app/runtime/OS/App SDK
+  versions, data-folder writability, paths). No network, telemetry, application
+  data, or credentials are involved. Store health and discovery counts move to the
+  read-only CLI doctor in Stage 24. 14 new tests; 353/353 green. See
+  `docs/WINDOWS-DIAGNOSTICS.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

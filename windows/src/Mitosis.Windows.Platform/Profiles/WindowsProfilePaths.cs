@@ -24,4 +24,8 @@ public static class WindowsProfilePaths
 
     /// <summary>Preference store path (onboarded flag, tips flag).</summary>
     public static string PreferencesDirectory() => DataDirectory();
+
+    /// <summary>Local diagnostic logs. Bounded, append-only, and never uploaded;
+    /// the folder is created lazily when the first entry is written.</summary>
+    public static string LogDirectory() => Path.Combine(DataDirectory(), "Logs");
 }

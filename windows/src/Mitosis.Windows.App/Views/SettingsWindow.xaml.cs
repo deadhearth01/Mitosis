@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Windowing;
 using System.ComponentModel;
 using System.IO;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Graphics;
 using Windows.System;
 using Mitosis.Windows.ViewModels;
@@ -13,12 +14,13 @@ namespace Mitosis.Windows.App.Views;
 
 /// <summary>Mitosis Settings (macOS 540-wide, General/Advanced tab window). Tab
 /// heights follow the macOS content heights (General 470 px, Advanced 260 px) plus
-/// the top switcher. General shows the application data folder with a real reveal
-/// action; Advanced carries Show Tips Again. The view model performs the saves and
-/// reports persistence errors; the window mirrors that state for visible feedback.</summary>
+/// the top switcher; the Windows-only Diagnostics section adds to General. General
+/// shows the application data folder and local log folder with real reveal actions;
+/// Advanced carries Show Tips Again. The view model performs the saves and reports
+/// persistence errors; the window mirrors that state for visible feedback.</summary>
 public sealed partial class SettingsWindow : Window
 {
-    private const int GeneralClientHeight = 510;
+    private const int GeneralClientHeight = 660;
     private const int AdvancedClientHeight = 300;
 
     public SettingsWindow(SettingsViewModel viewModel)
@@ -39,10 +41,14 @@ public sealed partial class SettingsWindow : Window
 
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         ViewModel.RevealDataFolderRequested += OnRevealDataFolderRequested;
+        ViewModel.RevealLogFolderRequested += OnRevealLogFolderRequested;
+        ViewModel.CopyDiagnosticsRequested += OnCopyDiagnosticsRequested;
         Closed += (_, _) =>
         {
             ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
             ViewModel.RevealDataFolderRequested -= OnRevealDataFolderRequested;
+            ViewModel.RevealLogFolderRequested -= OnRevealLogFolderRequested;
+            ViewModel.CopyDiagnosticsRequested -= OnCopyDiagnosticsRequested;
         };
         UpdateSavedState();
         _ = ViewModel.LoadAsync();
@@ -103,5 +109,26 @@ public sealed partial class SettingsWindow : Window
             // Honest no-op: a failed reveal never changes state; the folder path is
             // selectable text above the button for manual navigation.
         }
+    }
+
+    private async void OnRevealLogFolderRequested(object? sender, EventArgs e)
+    {
+        try
+        {
+            Directory.CreateDirectory(ViewModel.LogFolderPath);
+            await Launcher.LaunchFolderPathAsync(ViewModel.LogFolderPath);
+        }
+        catch
+        {
+            // Same honest no-op: the log folder path stays selectable above.
+        }
+    }
+
+    private void OnCopyDiagnosticsRequested(object? sender, string report)
+    {
+        var package = new DataPackage();
+        package.SetText(report);
+        Clipboard.SetContent(package);
+        CopyConfirmation.Visibility = Visibility.Visible;
     }
 }

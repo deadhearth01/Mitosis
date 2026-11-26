@@ -1,5 +1,6 @@
 namespace Mitosis.Windows.ViewModels;
 
+using Mitosis.Application.Diagnostics;
 using Mitosis.Application.Preferences;
 
 /// <summary>Settings window state. Only flags with a real, testable effect are exposed
@@ -12,30 +13,60 @@ using Mitosis.Application.Preferences;
 ///     on the next launch, reversible by completing the welcome flow again.
 ///   General ▸ Storage: the application's own data folder with a reveal action;
 ///     informational only (macOS Location row adapted — no clone folder exists).
+///   General ▸ Diagnostics: the local log folder with a reveal action and a
+///     copyable environment report. Local-only; no application data or credentials.
 /// Data folder is supplied at composition and never guessed here.</summary>
 public sealed class SettingsViewModel : ObservableObject
 {
     private readonly IAppPreferencesStore preferences;
+    private readonly DoctorFacts diagnosticsFacts;
     private bool tipsReset;
     private string? saveError;
 
-    public SettingsViewModel(IAppPreferencesStore preferences, string dataFolderPath)
+    public SettingsViewModel(
+        IAppPreferencesStore preferences,
+        string dataFolderPath,
+        DoctorFacts? diagnostics = null)
     {
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
         DataFolderPath = string.IsNullOrWhiteSpace(dataFolderPath)
             ? throw new ArgumentException("Data folder path must not be empty.", nameof(dataFolderPath))
             : dataFolderPath;
 
+        diagnosticsFacts = diagnostics ?? new DoctorFacts(
+            AppVersion: "unknown",
+            RuntimeVersion: "unknown",
+            OperatingSystem: "unknown",
+            Architecture: "unknown",
+            WindowsAppSdkVersion: "unknown",
+            DataDirectory: DataFolderPath,
+            DataDirectoryWritable: false,
+            LogDirectory: Path.Combine(DataFolderPath, "Logs"));
+        LogFolderPath = string.IsNullOrWhiteSpace(diagnosticsFacts.LogDirectory)
+            ? Path.Combine(DataFolderPath, "Logs")
+            : diagnosticsFacts.LogDirectory;
+
         ShowTipsAgainCommand = new RelayCommand(
             async _ => await ShowTipsAgainAsync(CancellationToken.None),
             _ => !TipsReset);
         RevealDataFolderCommand = new RelayCommand(() =>
             RevealDataFolderRequested?.Invoke(this, EventArgs.Empty));
+        RevealLogFolderCommand = new RelayCommand(() =>
+            RevealLogFolderRequested?.Invoke(this, EventArgs.Empty));
+        CopyDiagnosticsCommand = new RelayCommand(() =>
+            CopyDiagnosticsRequested?.Invoke(this, DiagnosticsReport));
     }
 
     /// <summary>Application-owned storage folder shown as plain text (macOS shows the
     /// clones directory). Revealed via the App layer on user request only.</summary>
     public string DataFolderPath { get; }
+
+    /// <summary>Local diagnostic log folder, shown as selectable text.</summary>
+    public string LogFolderPath { get; }
+
+    /// <summary>Plain-text environment report copied to the clipboard on request.
+    /// Home paths are redacted; application data is never read.</summary>
+    public string DiagnosticsReport => DoctorReport.Build(diagnosticsFacts);
 
     public bool TipsReset
     {
@@ -60,9 +91,19 @@ public sealed class SettingsViewModel : ObservableObject
 
     public RelayCommand RevealDataFolderCommand { get; }
 
+    public RelayCommand RevealLogFolderCommand { get; }
+
+    public RelayCommand CopyDiagnosticsCommand { get; }
+
     /// <summary>Raised when the user asks to reveal the data folder; the window opens
     /// File Explorer (creating the directory first, like macOS revealClones does).</summary>
     public event EventHandler? RevealDataFolderRequested;
+
+    /// <summary>Raised when the user asks to reveal the local log folder.</summary>
+    public event EventHandler? RevealLogFolderRequested;
+
+    /// <summary>Carries the report text so the window can copy it to the clipboard.</summary>
+    public event EventHandler<string>? CopyDiagnosticsRequested;
 
     /// <summary>Verifies the store can be read and surfaces damage honestly. macOS
     /// starts every Settings window with the button enabled (tipsReset is window-local

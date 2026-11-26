@@ -1,3 +1,4 @@
+using Mitosis.Application.Diagnostics;
 using Mitosis.Application.Preferences;
 using Mitosis.Windows.ViewModels;
 
@@ -10,8 +11,12 @@ public sealed class SettingsViewModelTests
 {
     private const string DataFolder = @"C:\Users\me\AppData\Local\Mitosis";
 
-    private static SettingsViewModel Model(FakePreferencesStore? store = null) =>
-        new(store ?? new FakePreferencesStore(), DataFolder);
+    private static SettingsViewModel Model(FakePreferencesStore? store = null, DoctorFacts? facts = null) =>
+        new(store ?? new FakePreferencesStore(), DataFolder, facts);
+
+    private static DoctorFacts Facts() => new(
+        "0.2.2+test", ".NET 10.0.4", "Windows 11", "X64", "2.5.1",
+        DataFolder, true, Path.Combine(DataFolder, "Logs"));
 
     [TestMethod]
     public void Constructor_KeepsTheSuppliedDataFolder()
@@ -129,6 +134,47 @@ public sealed class SettingsViewModelTests
         model.RevealDataFolderCommand.Execute(null);
 
         Assert.AreEqual(2, raised, "Each click asks the window to reveal exactly once.");
+    }
+
+    [TestMethod]
+    public void Diagnostics_ExposeTheLogFolderAndReport()
+    {
+        var model = Model(facts: Facts());
+
+        Assert.AreEqual(Path.Combine(DataFolder, "Logs"), model.LogFolderPath);
+        var report = model.DiagnosticsReport;
+        StringAssert.Contains(report, "Application version: 0.2.2+test");
+        StringAssert.Contains(report, "Runtime: .NET 10.0.4");
+        StringAssert.Contains(report, @"Log folder: " + Path.Combine(DataFolder, "Logs"));
+        StringAssert.Contains(report, "Not recorded: application data, credentials, file contents, or network activity.");
+    }
+
+    [TestMethod]
+    public void Diagnostics_DefaultFactsStayInsideTheDataFolder()
+    {
+        var model = Model();
+
+        Assert.AreEqual(Path.Combine(DataFolder, "Logs"), model.LogFolderPath);
+        StringAssert.Contains(model.DiagnosticsReport, "Application version: unknown");
+        StringAssert.Contains(model.DiagnosticsReport, "Data folder writable: no");
+    }
+
+    [TestMethod]
+    public void DiagnosticsCommands_RaiseTheirRequests()
+    {
+        var model = Model(facts: Facts());
+        var reveals = 0;
+        string? copied = null;
+        model.RevealLogFolderRequested += (_, _) => reveals++;
+        model.CopyDiagnosticsRequested += (_, text) => copied = text;
+
+        model.RevealLogFolderCommand.Execute(null);
+        model.CopyDiagnosticsCommand.Execute(null);
+
+        Assert.AreEqual(1, reveals);
+        Assert.IsNotNull(copied);
+        StringAssert.Contains(copied, "Mitosis diagnostics");
+        StringAssert.Contains(copied, "Application version: 0.2.2+test");
     }
 
     private sealed class ToggleablePreferencesStore : IAppPreferencesStore

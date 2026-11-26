@@ -16,9 +16,11 @@ and removed as metadata records. Sample data survives only behind the explicit
 
 The clone engine is framework only: the production strategy catalog is empty and
 every provisioning gate is closed. Nothing here clones, launches, or modifies an
-application. Tray integration, a CLI, an installer, and signing remain later
-stages. See [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md)
-for current status and gaps.
+application. Local diagnostics (a bounded, redacted log, a copyable environment
+report, and crash hooks) are implemented. Tray integration, a CLI, an installer,
+and signing remain later stages. See
+[docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md) for
+current status and gaps.
 
 ## Prerequisites
 
@@ -140,6 +142,17 @@ atomic saves, integrity-checked). Recording what must be proven is implemented;
 proving it requires separately authorized live testing. App detail shows a
 verification summary per application. Details: `docs/WINDOWS-EVIDENCE-BUNDLES.md`.
 
+## Local diagnostics (Stage 22)
+
+Logs live in `%LOCALAPPDATA%\Mitosis\Logs` (`mitosis.log` plus two rotated
+archives, 512 KB each). They record app start/stop and unexpected exceptions only;
+home paths are redacted to `~`, line breaks are collapsed, and a filesystem failure
+disables the logger instead of affecting the app. Settings ▸ General ▸ Diagnostics
+reveals the folder and copies a plain environment report (versions, OS,
+architecture, data-folder writability, paths). Nothing is uploaded and no
+application data or credentials are read. Details:
+`docs/WINDOWS-DIAGNOSTICS.md`.
+
 ## Continuous integration (Stage 11)
 
 Pushes to `WindowsVersion` and pull requests run `.github/workflows/windows-ci.yml`
@@ -176,5 +189,6 @@ running window against `Assets/Screenshots/clone-light.png` / `clone-dark.png` a
 pill glyph choices (compile-safe `Symbol` enum), sidebar width 240, icon tiles are
 initial letters (real badged icons arrive with the engine), minimum window size not
 enforced, and no tray integration, installer, or signing yet. Screenshots,
-Narrator runs, contrast themes, and keypress observation remain pending
+Narrator runs, contrast themes, keypress observation, the crash dialog, clipboard
+delivery, and File Explorer reveal remain pending
 (`docs/WINDOWS-UI-VERIFICATION.md`).

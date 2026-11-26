@@ -555,3 +555,31 @@ closed.
 - Not implemented: editing or removing provisioned profiles, any engine call, any
   application-data deletion, and any change to the store's atomicity or duplicate
   rules.
+
+## Stage 22 local diagnostics and crash safety notes
+
+Implemented in Stage 22, local only. No network, telemetry, application data,
+credentials, or file contents are read or transmitted.
+
+- Settings ▸ General ▸ Diagnostics: log-folder path (selectable), **Show in File
+  Explorer**, and **Copy diagnostics**. The copy action places a plain environment
+  report on the clipboard. Failure of either platform action is an honest no-op;
+  the path stays selectable. W36/W37 (Settings) remain Partially implemented
+  because the macOS update/tray/CLI settings still have no Windows component.
+- W40 (failure reporting): a UI-thread exception now writes a local log entry,
+  shows a plain Win32 dialog naming the log folder, and exits; `AppDomain` and
+  unobserved-task failures are logged. No stack trace is shown to the user.
+- Accessibility: the diagnostics section uses ordinary text and buttons;
+  `AutomationProperties.Name` is set on the reveal action, and the copy confirmation
+  is a polite live region. Narrator/visual checks remain pending (S22–S24,
+  W65/W66).
+- Tests: 14 new (home redaction in both slash styles and case, line/space hygiene
+  and caps, report fields/writability, rotation bounds and newest-entry retention,
+  disabled-on-failure, constructor limits, Settings commands/events). Suite 353/353
+  green; the Release build succeeds with the two pre-existing warnings (CS0105
+  duplicate using, MSTEST0044 obsolete test attribute).
+- Not verified: the real crash dialog, clipboard delivery, Explorer reveal, and the
+  taller General tab. These are manual checks only.
+- Deferred: store-health/discovery counts in the report (Stage 24 doctor), engine
+  feature logs, cross-process log locking (Stage 23), export/zip, and remote
+  reporting.

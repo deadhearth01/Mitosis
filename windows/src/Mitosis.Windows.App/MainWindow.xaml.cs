@@ -7,6 +7,7 @@ using System.ComponentModel;
 using Windows.Graphics;
 using Windows.System;
 using Windows.UI.Core;
+using Mitosis.Application.Diagnostics;
 using Mitosis.Windows.ViewModels;
 using Mitosis.Windows.App.Views;
 using Mitosis.Windows.Platform.Input;
@@ -17,11 +18,13 @@ namespace Mitosis.Windows.App;
 public sealed partial class MainWindow : Window
 {
     private readonly string? dataFolderPath;
+    private readonly DoctorFacts? diagnostics;
 
-    public MainWindow(MainViewModel viewModel, string? dataFolderPath = null)
+    public MainWindow(MainViewModel viewModel, string? dataFolderPath = null, DoctorFacts? diagnostics = null)
     {
         ViewModel = viewModel;
         this.dataFolderPath = dataFolderPath;
+        this.diagnostics = diagnostics;
         InitializeComponent();
         Title = "Mitosis";
         ApplyMainWindowLimits();
@@ -171,7 +174,8 @@ public sealed partial class MainWindow : Window
                     ViewModel.PreferencesStore
                         ?? throw new InvalidOperationException("Settings need the preference store."),
                     dataFolderPath
-                        ?? throw new InvalidOperationException("Settings were composed without a data folder.")));
+                        ?? throw new InvalidOperationException("Settings were composed without a data folder."),
+                    diagnostics));
             settingsWindow.Closed += (_, _) =>
             {
                 settingsWindow = null;

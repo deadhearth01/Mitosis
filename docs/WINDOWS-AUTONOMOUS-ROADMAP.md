@@ -486,6 +486,6 @@ After every stage:
 | 20 | Verifier/security hardening | `2ef60d0` | 329 | Hostile-input limits |
 | — | Merge `origin/main` `v0.2.3` | `6f8e3de` | 329 | No Windows source changes |
 | 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
-| 22 | Local diagnostics and crash safety | `pending` | 353 | Bounded redacted log; report; Settings actions |
+| 22 | Local diagnostics and crash safety | `e36fdec` | 353 | Bounded redacted log; report; Settings actions |
 
 Stages 21+ are appended as they complete.

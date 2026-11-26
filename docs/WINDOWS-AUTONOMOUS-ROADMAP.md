@@ -337,8 +337,9 @@ only started when its dependencies and authorization state allow it.
   run recorded; signing/public distribution still separate.
 - **Authorization:** Building is allowed; installing system-wide, signing, and
   public distribution require explicit authorization.
-- **Result (2026-11-26, partly complete):** The distribution package now bundles
-  the read-only CLI in `cli/` and launch-testing the artifact exposed a real
+- **Result (2026-11-26, partly complete, pushed `18dd7d6`):** The distribution
+  package now bundles the read-only CLI in `cli/` and launch-testing the artifact
+  exposed a real
   startup defect that structural verification had missed:
   `dotnet publish` omitted the XAML-compiled `Mitosis.pri` for unpackaged apps
   (microsoft/WindowsAppSDK#6720), so the published exe threw
@@ -576,5 +577,6 @@ After every stage:
 | 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
 | 24 | Read-only CLI and doctor report | `6dbb0c5` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
 | 25 | Update availability check | `58353a0` | 472 | Manual GitHub read; live banner; shutdown child-window fix |
+| 26 | CLI in release zip + PRI publish fix | `18dd7d6` | 478 | `cli/` layout; launch-tested artifact; installer still open |
 
 Stages 21+ are appended as they complete.

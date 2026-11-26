@@ -349,7 +349,7 @@ only started when its dependencies and authorization state allow it.
   `cli\mitosis.exe version`; the verifier requires the CLI runtime files and the
   PRI, audits both executables as x64, and checks both versions. 6 new verifier
   tests and two warning cleanups; 478/478 green, 0 build warnings.
-- **Result, installer half (2026-11-27):** No Inno Setup, WiX, or NSIS is
+- **Result, installer half (2026-11-27, pushed `3ac2d86`):** No Inno Setup, WiX, or NSIS is
   installed, and adding one is a tooling decision, so the install story is a
   dependency-free per-user script instead: `windows/scripts/install.ps1` ships as
   `install.ps1` in the archive root and is both installer and uninstaller. It
@@ -612,6 +612,6 @@ After every stage:
 | 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
 | 24 | Read-only CLI and doctor report | `6dbb0c5` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
 | 25 | Update availability check | `58353a0` | 472 | Manual GitHub read; live banner; shutdown child-window fix |
-| 26 | CLI in release zip, PRI fix, per-user installer | `18dd7d6` | 490 | `cli/` layout; launch-tested artifact; `install.ps1`; clean-VM run pending |
+| 26 | CLI in release zip, PRI fix, per-user installer | `18dd7d6`, `3ac2d86` | 490 | `cli/` layout; launch-tested artifact; `install.ps1`; clean-VM run pending |
 
 Stages 21+ are appended as they complete.

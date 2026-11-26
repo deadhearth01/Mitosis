@@ -8,7 +8,7 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 363/363 green (Release, .NET SDK 10.0.404)
+- **Current suite:** 396/396 green (Release, .NET SDK 10.0.404)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 8 src projects, 6 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 363 tests |
+| Solution/project boundaries (.NET 10, 9 src projects, 7 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build; 396 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -84,9 +84,9 @@ source, test, or artifact that establishes it.
 | Live stats (disk/data/memory/CPU) | **Missing** | Static placeholder tiles in preview; no collector |
 | Link routing / protocol handler | Partially implemented (UI only) | Toggle holds state; no interception |
 | Background refresh agent | **Missing** | Depends on engine |
-| CLI (`mitosis.exe`) | **Missing** | No console project |
+| CLI (`mitosis.exe`) | Implemented and runtime-verified | Separate read-only console project: `version`, `list`, `profiles`, `doctor` (+`--json`); no clone/launch/delete commands | Combined release-archive packaging and PATH install |
 | Single-instance activation | Implemented and runtime-verified | Per-user named mutex + focus/ack events; second launch redirected and exits; crash recovery and shutdown hand-over observed | Visual foreground on a desktop session; minimized restore |
-| Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; cross-process log lock; manual dialog checks pending |
+| Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; cross-process log lock; CLI doctor adds store/log/discovery state; manual dialog checks pending |
 | Update check / self-update | **Missing** | Static banner version; no network check |
 | Installer / uninstaller | **Missing** | Unpackaged zip only |
 | Code signing | **Missing / requires authorization** | Unsigned; SmartScreen expected |
@@ -97,7 +97,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 329/329; covers domain, stores, discovery, view models, shortcuts, verifier |
+| Unit/integration tests | Complete for implemented logic | 396/396; covers domain, stores, discovery, view models, shortcuts, verifier, CLI |
 | Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
 | Release packaging | Complete and verified structurally | `publish-release.ps1`; SHA sidecar; ~39 MB x64 zip |
 | Artifact verifier | Complete and verified (38 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening in Stage 20 |
@@ -118,9 +118,9 @@ is eligible now, deferred, or authorization-gated.
 | G4 | Data safety | No delete/clean/relink semantics for real clones | Engine absent | Cannot safely remove data | Authorization-gated |
 | G5 | Profiles | Saved profiles had no rename, re-badge, or removal path | `Planned`-profile Edit/Remove added in Stage 21; provisioned profiles remain read-only | Future provisioned records must be managed by the engine, not metadata code | Complete for `Planned` (Stage 21) |
 | G6 | Wizard entry | App-detail “New Clone…” showed a placeholder | `CreateCloneFromAppCommand` now raises `NewCloneRequested`; preview keeps the placeholder | A primary path works | Complete (Stage 21) |
-| G7 | Diagnostics | No structured logs, crash report, or doctor output | `FileDiagnosticLog`, `DoctorReport`, crash hooks, Settings diagnostics added in Stage 22; store-health fields move to the CLI doctor (Stage 24) | Support and engine debugging would be blind | Complete (Stage 22), verification pending |
+| G7 | Diagnostics | No structured logs, crash report, or doctor output | `FileDiagnosticLog`, `DoctorReport`, crash hooks, Settings diagnostics added in Stage 22; CLI `doctor` adds store/log/discovery state in Stage 24 | Support and engine debugging would be blind | Complete (Stages 22, 24), UI verification pending |
 | G8 | Process integrity | Multiple app instances can run concurrently | Per-user named mutex + activation events added in Stage 23; second launch is redirected and exits | Duplicate windows, concurrent store access, confusing onboarding | Complete (Stage 23), runtime-verified |
-| G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | No console project | Automation and support path missing | Eligible (Stage 24) |
+| G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | Read-only console project added in Stage 24 (`version`, `list`, `profiles`, `doctor`, `--json`) | Automation and support path missing | Complete (Stage 24), runtime-verified |
 | G10 | Updates | No update check; banner is static preview data | `BannerVersion` hardcoded | Users cannot learn about releases | Eligible (Stage 25) |
 | G11 | Install | Zip-only; no installer/uninstaller | `WINDOWS-RELEASE.md` | Manual prerequisites; no Start-menu/uninstall story | Partly authorization-gated |
 | G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
@@ -232,25 +232,41 @@ only started when its dependencies and authorization state allow it.
   process holding the instance. Visual foreground focus and minimized restore remain
   manual. See `docs/WINDOWS-SINGLE-INSTANCE.md`.
 
-### Stage 24 — Read-only CLI and doctor report (eligible)
+### Stage 24 — Read-only CLI and doctor report (completed)
 
 - **Objective:** Ship `mitosis.exe` with read-only commands: `version`, `list`,
   `profiles`, `doctor`. No clone, launch, delete, or mutation commands.
 - **Current problem:** No CLI; macOS has one and Windows support/automation has no
   path.
 - **Evidence:** No console project; `WINDOWS-PORT.md` W46/W55 marked missing.
-- **Implementation:** Console project in the solution; shares discovery, stores,
-  and diagnostics; machine-readable `--json` where useful; explicit “not
-  implemented on Windows yet” for engine commands; packaging decision documented.
+- **Implementation:** New `Mitosis.Cli` console project (`mitosis.exe`, separate
+  assembly name because Windows filenames are case-insensitive) sharing discovery,
+  the JSON profile store, and diagnostics with the app. Pure argument parser;
+  `--json` on every command; fixed-width text tables; exit codes 0/1/2. `doctor`
+  extends `DoctorReport` with store readability/count, log files/bytes/latest,
+  discovered-app count, and writability, and redacts home paths. Read-only by
+  construction; only the writability probe creates and deletes one zero-byte file,
+  and when the data folder is absent the probe runs in the nearest existing parent
+  rather than creating it.
 - **Dependencies:** Stage 22 diagnostics for `doctor`.
-- **Risks:** Shipping a second binary; PATH installation. Keep zip-local, no
-  system PATH change without authorization.
-- **Automated tests:** Command parsing, output shape, exit codes, no-write
-  guarantees.
+- **Risks:** Shipping a second binary; PATH installation. Mitigated by keeping the
+  CLI out of the GUI zip for now (archive layout and verifier contract unchanged)
+  and making no PATH change; both are documented in `docs/WINDOWS-CLI.md`.
+- **Automated tests:** 31 CLI tests (parsing, text/JSON output, empty and failure
+  paths, no-store-write and no-data-folder guarantees) plus 2 `DoctorReport`
+  local-state tests.
 - **Manual verification:** Run from the publish tree.
 - **Definition of done:** Tests green; commands honest; docs updated.
 - **Authorization:** Not required for read-only local commands; PATH/system
   installation remains out of scope.
+- **Result:** Implemented, pushed, and runtime-verified. 33 new tests (396/396
+  green, 0 warnings). Observed: `version` reported `0.2.2+6f9ee6b`; `list` found
+  127 applications in about 1.5 s; `profiles` reported none; `doctor` text and JSON
+  agreed on profile/log/discovery counts; `clone Slack` exited 1 as an unknown
+  command; the existing log file's SHA-256 was unchanged, no profile store was
+  created, and no probe file was left behind. Combined release-archive packaging
+  and PATH install are deferred to the installer/distribution stage. See
+  `docs/WINDOWS-CLI.md`.
 
 ### Stage 25 — Update availability check (eligible)
 
@@ -278,7 +294,10 @@ only started when its dependencies and authorization state allow it.
 - **Evidence:** `WINDOWS-RELEASE.md` deployment model.
 - **Implementation:** Per-user installer script (e.g. Inno Setup or WiX) built
   locally; prerequisite detection; uninstall removes app files only, never user
-  profile data without explicit choice; no system-wide install by default.
+  profile data without explicit choice; no system-wide install by default. Decide
+  whether the read-only CLI ships beside the app (for example a `cli/` subfolder)
+  and extend the verifier and docs if it does; no PATH change without explicit
+  authorization.
 - **Dependencies:** Stages 21–25; signing decision.
 - **Risks:** Installer writing outside per-user scope; leftover files; false
   prerequisite claims. Test in a disposable VM.
@@ -432,12 +451,13 @@ These are separate milestones. Passing one does not imply the next.
    update channel, privacy statement, license/trademark compliance, and capacity
    to support users.
 
-**Current position:** Stages 21–23 closed the metadata-profile dead end, the
-blind-support gap, and duplicate-process risk. The UI shell is between feature
-complete and functionally verified; the product is not at feature complete because
-the clone engine is absent. The port is not installable, signed, or clean-machine
-verified. Next eligible work is the read-only CLI with the fuller doctor report
-(Stage 24), then tray/background behavior or engine prerequisites as evidence
+**Current position:** Stages 21–24 closed the metadata-profile dead end, the
+blind-support gap, duplicate-process risk, and the missing automation/support
+path. The UI shell is between feature complete and functionally verified; the
+product is not at feature complete because the clone engine is absent. The port
+is not installable, signed, or clean-machine verified, and the CLI is not yet in
+the release archive. Next eligible work is the update-availability check
+(Stage 25), then tray/background behavior or engine prerequisites as evidence
 allows.
 
 ## 5. Authorization boundaries
@@ -464,7 +484,8 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` at `6f8e3de` | CI remote run observation |
-| 363 tests pass | Verified | `dotnet test` at the Stage 23 tree | CI remote run observation |
+| 396 tests pass | Verified | `dotnet test` at the Stage 24 tree | CI remote run observation |
+| Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left | Clean machine; damaged real store; alternate consoles; packaging |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines | Visual focus, minimized restore, second user/session, elevated launch |
 | Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
 | Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
@@ -503,5 +524,6 @@ After every stage:
 | 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
 | 22 | Local diagnostics and crash safety | `e36fdec` | 353 | Bounded redacted log; report; Settings actions |
 | 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
+| 24 | Read-only CLI and doctor report | `pending` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
 
 Stages 21+ are appended as they complete.

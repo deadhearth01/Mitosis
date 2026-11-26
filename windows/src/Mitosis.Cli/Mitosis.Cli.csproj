@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>Mitosis.Cli</RootNamespace>
+    <!-- Distributed as a separate console binary. It is deliberately not named
+         Mitosis.exe: Windows filenames are case-insensitive, so bundling both an
+         app and a CLI under the same name in one folder is impossible. Packaging
+         is documented in docs/WINDOWS-CLI.md. -->
+    <AssemblyName>mitosis</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mitosis.Application\Mitosis.Application.csproj" />
+    <ProjectReference Include="..\Mitosis.Compatibility\Mitosis.Compatibility.csproj" />
+    <ProjectReference Include="..\Mitosis.Domain\Mitosis.Domain.csproj" />
+    <ProjectReference Include="..\Mitosis.Infrastructure\Mitosis.Infrastructure.csproj" />
+    <ProjectReference Include="..\Mitosis.Windows.Platform\Mitosis.Windows.Platform.csproj" />
+  </ItemGroup>
+</Project>

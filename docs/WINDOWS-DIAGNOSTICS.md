@@ -106,8 +106,9 @@ application data, credentials, or file contents.
 
 ## 8. Explicitly deferred
 
-- Store-health and discovery counts in the report (planned with the read-only CLI
-  doctor in Stage 24).
+- Store-health and discovery counts in the **GUI copy report**. The read-only CLI
+  `doctor` prints them (Stage 24, `docs/WINDOWS-CLI.md`); the Settings clipboard
+  report stays environment-only.
 - Per-feature log calls for the clone engine (no engine exists).
 - Log export/zip, retention-by-age, and any remote reporting.
 - Forwarding launch arguments to the running instance (no activation kinds exist).

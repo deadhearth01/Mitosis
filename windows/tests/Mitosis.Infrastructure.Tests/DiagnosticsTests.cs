@@ -76,6 +76,7 @@ public sealed class DoctorReportTests
         StringAssert.Contains(report, @"Data folder: ~\AppData\Local\Mitosis");
         StringAssert.Contains(report, @"Log folder: ~\AppData\Local\Mitosis\Logs");
         Assert.IsFalse(report.Contains("Alice"), "The account name must not survive in a shared report.");
+        StringAssert.Contains(report, "Recorded: app/runtime versions and Mitosis data paths only.");
         StringAssert.Contains(report, "Not recorded: application data, credentials, file contents, or network activity.");
     }
 
@@ -97,6 +98,51 @@ public sealed class DoctorReportTests
         StringAssert.Contains(report, "Application version: unknown");
         StringAssert.Contains(report, "Runtime: unknown");
         StringAssert.Contains(report, "Windows App SDK: unknown");
+    }
+
+    [TestMethod]
+    public void Build_WithLocalState_RendersCountsAndHonestProblems()
+    {
+        var state = new DoctorLocalState(
+            ProfileStoreReadable: true,
+            ProfileCount: 2,
+            ProfileStoreProblem: null,
+            LogFileCount: 3,
+            LogBytes: 512 * 1024,
+            LatestLogEntryUtc: DateTimeOffset.Parse("2026-11-26T09:30:00Z"),
+            DiscoveredApplicationCount: 141,
+            DiscoveryProblem: null);
+
+        var report = DoctorReport.Build(Facts(), @"C:\Users\Alice", null, state);
+
+        StringAssert.Contains(report, "Local state");
+        StringAssert.Contains(report, "Profiles: 2 (store readable)");
+        StringAssert.Contains(report, "Logs: 3 files, 512.0 KB");
+        StringAssert.Contains(report, "latest 2026-11-26T09:30:00Z");
+        StringAssert.Contains(report, "Discovered applications: 141");
+        StringAssert.Contains(report, "Recorded: app/runtime versions, Mitosis data paths, and local counts only.");
+        StringAssert.Contains(report, "Not recorded: application data, credentials, file contents, or network activity.");
+    }
+
+    [TestMethod]
+    public void Build_WithBrokenLocalState_DoesNotHideTheFailure()
+    {
+        var state = new DoctorLocalState(
+            ProfileStoreReadable: false,
+            ProfileCount: 0,
+            ProfileStoreProblem: "ProfileStoreException",
+            LogFileCount: 0,
+            LogBytes: 0,
+            LatestLogEntryUtc: null,
+            DiscoveredApplicationCount: null,
+            DiscoveryProblem: "UnauthorizedAccessException",
+            LogProblem: "UnauthorizedAccessException");
+
+        var report = DoctorReport.Build(Facts(), null, null, state);
+
+        StringAssert.Contains(report, "Profiles: unreadable (ProfileStoreException)");
+        StringAssert.Contains(report, "Logs: unavailable (UnauthorizedAccessException)");
+        StringAssert.Contains(report, "Discovered applications: unavailable (UnauthorizedAccessException)");
     }
 }
 

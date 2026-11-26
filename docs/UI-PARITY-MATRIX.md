@@ -84,7 +84,7 @@ Nothing here is marked verified from a name or README alone.
 | # | Item | macOS evidence | Status | Windows requirement / adaptation |
 |---|---|---|---|---|
 | W45 | Discovery scan + support capsules | `AppCatalog.swift`, `ModeDecider.swift` | V | **W**: Start Menu/registry/Uninstall-key scan; same capsule UI |
-| W46 | `doctor` report | `MitosisCLI.swift` (Doctor) | V | Same report shape; Windows checks |
+| W46 | `doctor` report | `MitosisCLI.swift` (Doctor) | V | Same report shape; Windows checks; CLI adds store/log/discovery state (Stage 24) |
 | W47 | Verified create + launch check + rollback | `CloneWorkflow.swift`, `CloneBuilder.swift` | V | Same semantics; Windows launch/liveness APIs (W) |
 | W48 | Identity vs compatibility modes + override | `ModeDecider.swift`, `CloneRequest.modeOverride` | V | Same model; Windows mechanism TBD (stages 3–8) |
 | W49 | Refresh (manual/auto/agent), skip-running, defer-mid-update, restore-on-failure | `CloneMaintenance.swift`, `AutoRefreshAgent.swift`, `AppModel.swift:186-218` | V | Same; Task Scheduler instead of launchd (W) |
@@ -93,7 +93,7 @@ Nothing here is marked verified from a name or README alone.
 | W52 | Stats + live usage + cache cleaning | `StatsCollector.swift` | V | Same tiles; ETW/PDH/process APIs (W) |
 | W53 | Self-update (checksum + signature, in-place or command fallback) | `SelfUpdater.swift`, `UpdateChecker.swift`, `UpdateActions.swift` | V | **W**: MSIX/Store/sideload strategy decision (Stage 12+) |
 | W54 | Link routing (toggle/status/chooser/restore) | `LinkRouter*.swift`, `MitosisRouter/main.swift` | V | Same UX; protocol-handler registration (W) |
-| W55 | CLI: list/doctor/clone/stats/clean/refresh/delete/open/links | `MitosisCLI.swift` | V | Same surface (Stage 10); `mitosis.exe` + PATH |
+| W55 | CLI: list/doctor/clone/stats/clean/refresh/delete/open/links | `MitosisCLI.swift` | P | Read-only subset (version/list/profiles/doctor, `--json`); engine commands, PATH, archive packaging deferred |
 | W56 | Workspaces (spec: hidden until 0.3) | Not in source | D | Out of scope for v1 |
 | W57 | Light mode for sandboxed apps (README roadmap) | Not in source | D | Out of scope for v1 |
 
@@ -606,3 +606,28 @@ Implemented in Stage 23; no UI surface was added, so no parity row changed.
 - Not verified: visual foreground/focus, minimized-window restore, a second
   Windows user/session, and elevated launches. Manual checks are S25 in
   `docs/WINDOWS-UI-VERIFICATION.md`.
+
+## Stage 24 read-only CLI notes
+
+Implemented in Stage 24. The CLI is a console surface, so no window parity row
+changed except W46/W55 above.
+
+- New `Mitosis.Cli` project builds `mitosis.exe` with `version`, `list`,
+  `profiles`, `doctor`, and `help`; `--json` is available on every data command.
+  The binary is deliberately not `Mitosis.exe` (case-insensitive filenames).
+- `list` reports discovered applications with scope, primary source, and the same
+  compatibility verdict as the UI. `profiles` reports metadata records and says
+  explicitly that none is a provisioned clone. `doctor` prints the Stage 22 report
+  plus profile-store, log, discovery, and writability state.
+- Read-only: `doctor` writes one zero-byte probe file and deletes it (in the
+  nearest existing parent if the data folder is missing, so the folder is never
+  created); all other commands write nothing. Tests assert no `profiles.json` and
+  no data folder is created, and a runtime check confirmed the log SHA-256 was
+  unchanged with no probe file left behind.
+- Not implemented by design: clone, stats, clean, refresh, delete, open, links.
+  Unknown commands exit 1 with a usage hint; they are never silently accepted.
+- Packaging: the CLI is not in the GUI zip yet (a `cli/` subfolder and verifier
+  changes are needed) and no PATH change is made. Deferred to Stage 26.
+- Tests: 31 CLI tests + 2 `DoctorReport` local-state tests; suite 396/396 green.
+- Runtime evidence: 127 applications in about 1.5 s; `doctor` text/JSON agreed;
+  `clone Slack` exited 1; data folder unchanged. See `docs/WINDOWS-CLI.md`.

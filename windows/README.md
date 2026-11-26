@@ -17,9 +17,10 @@ and removed as metadata records. Sample data survives only behind the explicit
 The clone engine is framework only: the production strategy catalog is empty and
 every provisioning gate is closed. Nothing here clones, launches, or modifies an
 application. Local diagnostics (a bounded, redacted log, a copyable environment
-report, and crash hooks) and single-instance activation (one window per user
-session) are implemented. Closing the main window quits. Tray integration, a CLI,
-an installer, and signing remain later stages. See
+report, and crash hooks), single-instance activation (one window per user
+session), and a read-only CLI (`version`, `list`, `profiles`, `doctor`) are
+implemented. Closing the main window quits. Tray integration, combined CLI
+packaging, an installer, and signing remain later stages. See
 [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md) for
 current status and gaps.
 
@@ -45,7 +46,7 @@ then restore works offline of any template: plain `dotnet build` / `dotnet test`
 
 ```text
 windows/
-  Mitosis.sln                 solution (8 src projects, 6 test projects, verifier)
+  Mitosis.sln                 solution (9 src projects, 7 test projects, verifier)
   global.json                 pins .NET SDK 10.0.100+ and MSTest.Sdk 4.5.1
   Directory.Build.props       shared compiler settings (nullable + implicit usings)
   src/
@@ -57,14 +58,15 @@ windows/
     Mitosis.CloneEngine/      clone creation, launching, refresh, recovery (net10.0)
     Mitosis.Windows.ViewModels/ hand-rolled MVVM state for the shell, preview data, commands (net10.0)
     Mitosis.Windows.App/      WinUI 3 application: main window, sidebar, detail, theme (unpackaged WinExe)
+    Mitosis.Cli/              read-only console CLI: version, list, profiles, doctor (net10.0-windows)
   tests/
     Mitosis.Domain.Tests/          domain primitives and profile lifecycle
-    Mitosis.Application.Tests/     application-layer contracts
     Mitosis.Infrastructure.Tests/  JSON stores and persistence
     Mitosis.Compatibility.Tests/   compatibility assessment
     Mitosis.CloneEngine.Tests/     planner/gate framework (no execution)
     Mitosis.ViewModels.Tests/      shell view models (discovery, profiles, wizard, settings)
     Mitosis.Windows.Platform.Tests/ Windows-specific discovery and app-host tests
+    Mitosis.Cli.Tests/             CLI parsing, text/JSON output, read-only guarantees
   tools/
     ReleaseVerifier/          release-candidate archive verification console tool (Stage 19)
 ```
@@ -163,6 +165,23 @@ instance leaves only an abandoned mutex, which the next launch recovers. Closing
 the main window quits the process even when the welcome, Help, or Settings window
 is open, and releases the lock immediately. Details and observed runtime results:
 `docs/WINDOWS-SINGLE-INSTANCE.md`.
+
+## Read-only CLI (Stage 24)
+
+`mitosis.exe` is a separate console binary with `version`, `list`, `profiles`,
+`doctor`, and `help`; every command except help accepts `--json`. It shares
+discovery, the JSON profile store, and diagnostics with the app, and it cannot
+clone, launch, modify, or delete anything. Exit codes are 0 (success), 1 (bad
+usage), and 2 (a read-only operation failed). Run it from its build/publish tree:
+
+```powershell
+dotnet run --project src/Mitosis.Cli -c Release -- doctor
+dotnet publish src/Mitosis.Cli/Mitosis.Cli.csproj -c Release -r win-x64 --self-contained false -o artifacts/cli
+```
+
+The CLI is not yet inside the GUI release zip and no PATH change is made; both
+are packaging-stage decisions. Details and runtime evidence:
+`docs/WINDOWS-CLI.md`.
 
 ## Continuous integration (Stage 11)
 

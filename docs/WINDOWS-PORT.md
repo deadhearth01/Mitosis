@@ -425,6 +425,23 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   122–215 ms with one process remaining, force-kill/relaunch recovers, and graceful
   close exits 0. Visual focus and minimized restore remain manual. See
   `docs/WINDOWS-SINGLE-INSTANCE.md`.
+- Stage 24: read-only CLI and doctor report — **implemented and
+  runtime-verified**. New `Mitosis.Cli` console project builds `mitosis.exe`
+  (separate assembly name; Windows filenames are case-insensitive) and shares
+  discovery, the JSON profile store, and diagnostics with the app. Commands:
+  `version`, `list`, `profiles`, `doctor`, plus `help`; every command except help
+  accepts `--json`; exit codes 0/1/2. `list` prints discovered applications with
+  scope/source/compatibility; `profiles` prints metadata records and states that
+  none is a provisioned clone; `doctor` extends the Stage 22 report with profile
+  store readability/count, log files/bytes/newest entry, discovered-app count, and
+  writability. Nothing writes: `version`/`list`/`profiles` perform no writes, and
+  `doctor` probes writability with one zero-byte file that is deleted immediately
+  (in the nearest existing parent when the data folder is absent, so the folder is
+  never created). 33 new tests; 396/396 green. Observed: 127 apps in about 1.5 s,
+  `doctor` text/JSON agreed, unknown commands exit 1, and the existing log hash
+  was unchanged. The CLI is
+  not yet in the GUI release archive (layout/verifier change deferred to the
+  packaging stage) and no PATH change is made. See `docs/WINDOWS-CLI.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

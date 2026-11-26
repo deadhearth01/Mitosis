@@ -502,6 +502,6 @@ After every stage:
 | — | Merge `origin/main` `v0.2.3` | `6f8e3de` | 329 | No Windows source changes |
 | 21 | Profile lifecycle + wizard handoff | `0e2b523` | 339 | Metadata-only edit/remove; app-detail entry |
 | 22 | Local diagnostics and crash safety | `e36fdec` | 353 | Bounded redacted log; report; Settings actions |
-| 23 | Single-instance activation and shutdown | `pending` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
+| 23 | Single-instance activation and shutdown | `29d6812` | 363 | Mutex + focus/ack events; log write lock; quit on main close |
 
 Stages 21+ are appended as they complete.

@@ -1,13 +1,13 @@
 namespace Mitosis.Windows.ViewModels;
 
+using System.ComponentModel;
 using Mitosis.Application.Diagnostics;
 using Mitosis.Application.Preferences;
 
 /// <summary>Settings window state. Only flags with a real, testable effect are exposed
-/// (Stage 13 rules): unimplemented macOS settings — menu bar/tray, update checking,
-/// clone auto-update, the command-line installer, the default-clone-mode picker —
-/// have deliberately no controls, because no Windows component can honor them yet.
-/// Implemented content:
+/// (Stage 13 rules): unimplemented macOS settings — menu bar/tray, clone auto-update,
+/// the command-line installer, the default-clone-mode picker — have deliberately no
+/// controls, because no Windows component can honor them yet. Implemented content:
 ///   Advanced ▸ Show Tips Again: ShowTips=true + Onboarded=false (macOS
 ///     SettingsView.swift:156-166), persisted to the preference store; effect visible
 ///     on the next launch, reversible by completing the welcome flow again.
@@ -15,20 +15,30 @@ using Mitosis.Application.Preferences;
 ///     informational only (macOS Location row adapted — no clone folder exists).
 ///   General ▸ Diagnostics: the local log folder with a reveal action and a
 ///     copyable environment report. Local-only; no application data or credentials.
+///   General ▸ Updates: a manual, read-only GitHub Releases check (Stage 25). No
+///     automatic check, download, or install.
 /// Data folder is supplied at composition and never guessed here.</summary>
-public sealed class SettingsViewModel : ObservableObject
+public sealed class SettingsViewModel : ObservableObject, IDisposable
 {
     private readonly IAppPreferencesStore preferences;
     private readonly DoctorFacts diagnosticsFacts;
+    private readonly CancellationTokenSource lifetime = new();
     private bool tipsReset;
+    private bool disposed;
     private string? saveError;
 
     public SettingsViewModel(
         IAppPreferencesStore preferences,
         string dataFolderPath,
-        DoctorFacts? diagnostics = null)
+        DoctorFacts? diagnostics = null,
+        UpdatesViewModel? updates = null)
     {
         this.preferences = preferences ?? throw new ArgumentNullException(nameof(preferences));
+        Updates = updates;
+        if (updates is not null)
+        {
+            updates.PropertyChanged += OnUpdatesPropertyChanged;
+        }
         DataFolderPath = string.IsNullOrWhiteSpace(dataFolderPath)
             ? throw new ArgumentException("Data folder path must not be empty.", nameof(dataFolderPath))
             : dataFolderPath;
@@ -49,12 +59,65 @@ public sealed class SettingsViewModel : ObservableObject
         ShowTipsAgainCommand = new RelayCommand(
             async _ => await ShowTipsAgainAsync(CancellationToken.None),
             _ => !TipsReset);
+        CheckForUpdatesCommand = new RelayCommand(
+            async _ => await CheckForUpdatesForThisWindowAsync().ConfigureAwait(true),
+            _ => CanCheckForUpdates);
         RevealDataFolderCommand = new RelayCommand(() =>
             RevealDataFolderRequested?.Invoke(this, EventArgs.Empty));
         RevealLogFolderCommand = new RelayCommand(() =>
             RevealLogFolderRequested?.Invoke(this, EventArgs.Empty));
         CopyDiagnosticsCommand = new RelayCommand(() =>
             CopyDiagnosticsRequested?.Invoke(this, DiagnosticsReport));
+    }
+
+    /// <summary>Shared manual update-check state, or null when Settings was composed
+    /// without a release feed (tests and design-only previews).</summary>
+    public UpdatesViewModel? Updates { get; }
+
+    public bool CanCheckForUpdates => Updates is not null && !Updates.IsChecking;
+
+    /// <summary>The running version without build metadata, for the Updates row.</summary>
+    public string CurrentVersionText => Updates?.CurrentVersion ?? "unknown";
+
+    /// <summary>Plain sentence describing the last check (never a fabricated "up to
+    /// date"); also suitable for a live region.</summary>
+    public string UpdateStatusText =>
+        Updates?.StatusText ?? "Update checking is not available in this build.";
+
+    public bool IsCheckingForUpdates => Updates?.IsChecking ?? false;
+
+    public string CheckForUpdatesLabel => IsCheckingForUpdates ? "Checking…" : "Check for Updates";
+
+    /// <summary>True only when the last successful check found a newer release with a
+    /// usable HTTP(S) page.</summary>
+    public bool HasUpdateLink => UpdateReleaseUrl is not null;
+
+    /// <summary>A validated HTTP(S) page for the release, or null when none is known.
+    /// Typed as <see cref="Uri"/> so the XAML binding cannot pass a malformed value to the
+    /// shell.</summary>
+    public Uri? UpdateReleaseUrl =>
+        Uri.TryCreate(Updates?.ReleaseUrl, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
+            ? uri
+            : null;
+
+    /// <summary>Starts one manual check. Settings shows the status; the main window's
+    /// banner updates through the shared view model.</summary>
+    public Task CheckForUpdatesAsync(CancellationToken cancellationToken = default) =>
+        Updates?.CheckAsync(cancellationToken) ?? Task.CompletedTask;
+
+    /// <summary>Command path: cancels silently when the window closes mid-check, so a
+    /// closing window can never surface an unhandled cancellation.</summary>
+    private async Task CheckForUpdatesForThisWindowAsync()
+    {
+        try
+        {
+            await CheckForUpdatesAsync(lifetime.Token).ConfigureAwait(true);
+        }
+        catch (OperationCanceledException)
+        {
+            // The window closed; there is nobody left to show a status to.
+        }
     }
 
     /// <summary>Application-owned storage folder shown as plain text (macOS shows the
@@ -89,6 +152,8 @@ public sealed class SettingsViewModel : ObservableObject
 
     public RelayCommand ShowTipsAgainCommand { get; }
 
+    public RelayCommand CheckForUpdatesCommand { get; }
+
     public RelayCommand RevealDataFolderCommand { get; }
 
     public RelayCommand RevealLogFolderCommand { get; }
@@ -104,6 +169,39 @@ public sealed class SettingsViewModel : ObservableObject
 
     /// <summary>Carries the report text so the window can copy it to the clipboard.</summary>
     public event EventHandler<string>? CopyDiagnosticsRequested;
+
+    /// <summary>Detaches from the shared update state. The window closes once; without
+    /// this, every reopened Settings window would stay subscribed to the feed state.</summary>
+    public void Dispose()
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        disposed = true;
+        lifetime.Cancel();
+        lifetime.Dispose();
+        if (Updates is not null)
+        {
+            Updates.PropertyChanged -= OnUpdatesPropertyChanged;
+        }
+    }
+
+    private void OnUpdatesPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        RaisePropertyChanged(nameof(CanCheckForUpdates));
+        RaisePropertyChanged(nameof(CurrentVersionText));
+        RaisePropertyChanged(nameof(UpdateStatusText));
+        RaisePropertyChanged(nameof(IsCheckingForUpdates));
+        RaisePropertyChanged(nameof(CheckForUpdatesLabel));
+        RaisePropertyChanged(nameof(HasUpdateLink));
+        RaisePropertyChanged(nameof(UpdateReleaseUrl));
+        if (e.PropertyName is nameof(UpdatesViewModel.IsChecking))
+        {
+            CheckForUpdatesCommand.RaiseCanExecuteChanged();
+        }
+    }
 
     /// <summary>Verifies the store can be read and surfaces damage honestly. macOS
     /// starts every Settings window with the button enabled (tipsReset is window-local

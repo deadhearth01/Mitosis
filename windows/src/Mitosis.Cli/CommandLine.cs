@@ -1,4 +1,4 @@
-using System.Reflection;
+using Mitosis.Application;
 
 namespace Mitosis.Cli;
 
@@ -133,18 +133,4 @@ public static class HelpText
         application or its data. Cloning and other engine commands are not
         implemented on Windows yet, so they are not accepted at all.
         """;
-}
-
-/// <summary>Single source for the version shown by the CLI. Mirrors the app's rule:
-/// the informational version (which may carry a +git suffix) wins over the assembly
-/// version, and nothing is fabricated when neither exists.</summary>
-public static class ProductVersion
-{
-    public static string Describe(Assembly assembly)
-    {
-        ArgumentNullException.ThrowIfNull(assembly);
-        return assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? assembly.GetName().Version?.ToString()
-            ?? "unknown";
-    }
 }

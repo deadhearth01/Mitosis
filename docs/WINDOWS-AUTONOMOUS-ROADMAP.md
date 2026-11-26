@@ -8,7 +8,7 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 396/396 green (Release, .NET SDK 10.0.404)
+- **Current suite:** 472/472 green (Release, .NET SDK 10.0.404)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
@@ -62,7 +62,7 @@ source, test, or artifact that establishes it.
 | New Clone wizard | Partially implemented | Metadata-only save works; app-detail entry opens it preselected (Stage 21); macOS picker segments/mode picker/launch check deferred |
 | Badge editing | Partially implemented | Wizard inline editor plus `Planned`-profile re-badging (Stage 21); provisioned profiles still read-only |
 | Profile lifecycle management | Implemented, verification pending (metadata only) | Rename, re-badge, and remove for `Planned` records on app and orphan detail; non-`Planned` refused; dialog/Narrator checks pending |
-| Settings | Partially implemented | General/Advanced subset; tray, updates, default mode, CLI installer deliberately absent |
+| Settings | Partially implemented | General/Advanced subset; manual GitHub release check added (Stage 25); tray, clone auto-update, default mode, CLI installer deliberately absent |
 | Help | Implemented, verification pending | Nine topics, honest Windows copy |
 | Onboarding | Implemented, verification pending | Three pages, persisted once |
 | Window lifecycle and keyboard routing | Implemented, verification pending | Minimum sizes, focus return, F1/Ctrl+,/Ctrl+F; keypress observation pending |
@@ -87,7 +87,7 @@ source, test, or artifact that establishes it.
 | CLI (`mitosis.exe`) | Implemented and runtime-verified | Separate read-only console project: `version`, `list`, `profiles`, `doctor` (+`--json`); no clone/launch/delete commands | Combined release-archive packaging and PATH install |
 | Single-instance activation | Implemented and runtime-verified | Per-user named mutex + focus/ack events; second launch redirected and exits; crash recovery and shutdown hand-over observed | Visual foreground on a desktop session; minimized restore |
 | Structured logging / diagnostics | Implemented, verification pending | `FileDiagnosticLog` + `DoctorReport` + crash hooks; Settings reveal/copy; cross-process log lock; CLI doctor adds store/log/discovery state; manual dialog checks pending |
-| Update check / self-update | **Missing** | Static banner version; no network check |
+| Update availability check | Implemented and runtime-verified | Manual GitHub Releases read with 15 s timeout/cancellation; banner only when strictly newer; no download, install, or auto-check (Stage 25); click-through and a published Windows artifact remain unverified |
 | Installer / uninstaller | **Missing** | Unpackaged zip only |
 | Code signing | **Missing / requires authorization** | Unsigned; SmartScreen expected |
 | Clean-machine validation | **Blocked by environment** | Only Windows 11 25H2 dev machine used |
@@ -97,7 +97,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 396/396; covers domain, stores, discovery, view models, shortcuts, verifier, CLI |
+| Unit/integration tests | Complete for implemented logic | 472/472; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, update checks |
 | Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
 | Release packaging | Complete and verified structurally | `publish-release.ps1`; SHA sidecar; ~39 MB x64 zip |
 | Artifact verifier | Complete and verified (38 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening in Stage 20 |
@@ -121,7 +121,7 @@ is eligible now, deferred, or authorization-gated.
 | G7 | Diagnostics | No structured logs, crash report, or doctor output | `FileDiagnosticLog`, `DoctorReport`, crash hooks, Settings diagnostics added in Stage 22; CLI `doctor` adds store/log/discovery state in Stage 24 | Support and engine debugging would be blind | Complete (Stages 22, 24), UI verification pending |
 | G8 | Process integrity | Multiple app instances can run concurrently | Per-user named mutex + activation events added in Stage 23; second launch is redirected and exits | Duplicate windows, concurrent store access, confusing onboarding | Complete (Stage 23), runtime-verified |
 | G9 | CLI | No `mitosis.exe`; no list/doctor/version commands | Read-only console project added in Stage 24 (`version`, `list`, `profiles`, `doctor`, `--json`) | Automation and support path missing | Complete (Stage 24), runtime-verified |
-| G10 | Updates | No update check; banner is static preview data | `BannerVersion` hardcoded | Users cannot learn about releases | Eligible (Stage 25) |
+| G10 | Updates | No update check; banner was static preview data | Manual GitHub Releases check added in Stage 25 (`UpdateChecker`, `GitHubReleaseFeed`, Settings action, live banner) | Users cannot learn about releases | Complete (Stage 25), runtime-verified; install/self-update still deferred |
 | G11 | Install | Zip-only; no installer/uninstaller | `WINDOWS-RELEASE.md` | Manual prerequisites; no Start-menu/uninstall story | Partly authorization-gated |
 | G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
 | G13 | Compatibility | Only Windows 11 25H2 ever exercised | Release checklist | Unknown behavior on 10/24H2/23H2 | Blocked by environment |
@@ -231,6 +231,15 @@ only started when its dependencies and authorization state allow it.
   is open — the runtime check exposed that the old shutdown path left an orphaned
   process holding the instance. Visual foreground focus and minimized restore remain
   manual. See `docs/WINDOWS-SINGLE-INSTANCE.md`.
+- **Follow-up (2026-11-26, found during Stage 25 verification):** closing the main
+  window while Help or Settings was open could still leave that window and the
+  process alive, because the welcome window vetoes closes and
+  `Application.Exit()` sometimes skipped a remaining window. Shutdown now marks the
+  process as quitting, closes every secondary window explicitly, and only then
+  calls `Exit()`; the welcome guard ignores closes during shutdown. Six repeated
+  trials (Help only, Settings only, both orders, repeated) all exited; one combined
+  trial checked for updates, found 0.2.3, then closed the main window with Settings
+  still open and exited cleanly.
 
 ### Stage 24 — Read-only CLI and doctor report (completed)
 
@@ -268,12 +277,11 @@ only started when its dependencies and authorization state allow it.
   and PATH install are deferred to the installer/distribution stage. See
   `docs/WINDOWS-CLI.md`.
 
-### Stage 25 — Update availability check (eligible)
+### Stage 25 — Update availability check (completed)
 
 - **Objective:** Tell the user when a newer GitHub release exists; no automatic
   download or install.
 - **Current problem:** The update banner uses a hardcoded preview version.
-- **Evidence:** `PreviewData.BannerVersion`; no `HttpClient` in `windows/src`.
 - **Implementation:** Opt-in/manual check against the repository’s public releases;
   version comparison; timeout/cancellation; no telemetry; honest offline/error
   states; banner only when a newer version exists.
@@ -284,6 +292,27 @@ only started when its dependencies and authorization state allow it.
 - **Manual verification:** Check with network on/off.
 - **Definition of done:** Tests green; no auto-update claim; docs updated.
 - **Authorization:** Not required (read-only public network request).
+- **Result:** Implemented, pushed, and runtime-verified. 76 new tests (472/472
+  green; one pre-existing CS0105 warning remains). The only network read is a GET
+  of `https://api.github.com/repos/deadhearth01/Mitosis/releases?per_page=10`
+  with no token, query identity, or telemetry; the response is bounded to 512 KB
+  and must be a JSON array. Selection skips drafts, skips prereleases for a
+  stable build, requires an HTTP(S) release page and a strictly newer parseable
+  tag, and mirrors the macOS `Versioning.swift`/`UpdateChecker.pick` rules.
+  Settings ▸ General ▸ Updates owns the manual button, version line, live status,
+  and View Release link; the main InfoBar appears only after a real newer release
+  is found, opens the release page through the OS, and stays dismissed for the
+  session. Preview data keeps its sample banner and honest placeholder. Observed
+  on the development machine: Version `0.2.2` checked against the real GitHub
+  feed and reported 0.2.3 with the correct release URL; re-checking as `0.2.3`
+  reported up to date; a blocked proxy produced “Couldn't reach GitHub. Check
+  your internet connection.” with no banner or link; the banner updated live,
+  dismissed, and the app exited cleanly with no error log entries. The current
+  v0.2.3 release ships only the macOS zip, so the Windows banner names the
+  product release line and links the release page without implying a Windows
+  download; no Windows artifact is published yet. Self-update/install remains
+  deferred. The same verification pass found and fixed the Stage 23 shutdown gap
+  described above. See `docs/WINDOWS-UPDATES.md`.
 
 ### Stage 26 — Installer and unsigned distribution package (partly eligible)
 
@@ -451,14 +480,14 @@ These are separate milestones. Passing one does not imply the next.
    update channel, privacy statement, license/trademark compliance, and capacity
    to support users.
 
-**Current position:** Stages 21–24 closed the metadata-profile dead end, the
-blind-support gap, duplicate-process risk, and the missing automation/support
-path. The UI shell is between feature complete and functionally verified; the
-product is not at feature complete because the clone engine is absent. The port
-is not installable, signed, or clean-machine verified, and the CLI is not yet in
-the release archive. Next eligible work is the update-availability check
-(Stage 25), then tray/background behavior or engine prerequisites as evidence
-allows.
+**Current position:** Stages 21–25 closed the metadata-profile dead end, the
+blind-support gap, duplicate-process risk, the missing automation/support path,
+and the static update banner. The UI shell is between feature complete and
+functionally verified; the product is not at feature complete because the clone
+engine is absent. The port is not installable, signed, or clean-machine verified,
+and neither the CLI nor the update check is in the release archive yet. Next
+eligible work is tray/background decisions or the installer package (Stage 26),
+with clean-VM, signing, and public distribution still authorization-gated.
 
 ## 5. Authorization boundaries
 
@@ -483,10 +512,11 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` at `6dbb0c5` | CI remote run observation |
-| 396 tests pass | Verified | `dotnet test` at the Stage 24 tree | CI remote run observation |
+| Code compiles (Release) | Verified | `dotnet build` on the Stage 25 tree (1 pre-existing warning) | CI remote run observation |
+| 472 tests pass | Verified | `dotnet test` at the Stage 25 tree, eight test projects | CI remote run observation |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left | Clean machine; damaged real store; alternate consoles; packaging |
-| Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines | Visual focus, minimized restore, second user/session, elevated launch |
+| Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Visual focus, minimized restore, second user/session, elevated launch |
+| Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
 | Planned-profile edit/remove | Verified (logic) | 10 ViewModel tests; store/domain tests | Dialog focus, Enter/Esc, Narrator, visuals |
 | Local diagnostics log/report | Verified (logic) | 14 tests: redaction, rotation, report, failure, commands | Crash dialog, clipboard, Explorer reveal, visuals |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |

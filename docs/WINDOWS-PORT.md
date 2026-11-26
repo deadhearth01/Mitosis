@@ -442,6 +442,20 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   was unchanged. The CLI is
   not yet in the GUI release archive (layout/verifier change deferred to the
   packaging stage) and no PATH change is made. See `docs/WINDOWS-CLI.md`.
+- Stage 25: update availability check — **implemented and runtime-verified**.
+  A manual Settings action reads the repository's public GitHub release list once
+  (fixed GET, no token or telemetry, 512 KB cap, 15 s timeout, canceled when the
+  window closes). Drafts and prereleases (for a stable build) are skipped, the
+  release page must be HTTP(S), and only a strictly newer parseable tag can win;
+  comparison mirrors macOS `Versioning.swift`, including build metadata removal.
+  The main InfoBar opens only on a real newer release, offers the release page
+  through the OS, and stays dismissed for the session. Preview data keeps its
+  sample banner and placeholder. 76 new tests; 472/472 green. Observed: 0.2.2
+  found 0.2.3 with the correct URL, 0.2.3 reported up to date, a blocked proxy
+  produced an honest failure with no banner, and the live banner updated and
+  dismissed. The v0.2.3 release currently ships only the macOS zip, so the check
+  names the product release line without offering a Windows download; install
+  and self-update remain deferred (`W53`). See `docs/WINDOWS-UPDATES.md`.
 - Stages 3–8: compatibility, cloning, process management, verification and recovery.
 - Stages 9–11: UI parity completion, CLI, integration and quality hardening.
 - Stages 12–15: security, CI/CD, release testing and public release.

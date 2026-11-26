@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Mitosis.Application;
 using Mitosis.Application.Diagnostics;
 using Mitosis.Windows.Platform.Profiles;
 

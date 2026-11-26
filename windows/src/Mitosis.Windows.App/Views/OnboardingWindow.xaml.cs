@@ -80,8 +80,9 @@ public sealed partial class OnboardingWindow : Window
 
     private void OnClosing(Microsoft.UI.Windowing.AppWindow sender, Microsoft.UI.Windowing.AppWindowClosingEventArgs args)
     {
-        // Deterministic non-dismissable rule: only a finished flow releases the guard.
-        if (!viewModel.Finished)
+        // Deterministic non-dismissable rule for the user: only a finished flow releases
+        // the guard. Application shutdown is not a user dismissal and must always win.
+        if (!viewModel.Finished && !App.IsShuttingDown)
         {
             args.Cancel = true;
         }

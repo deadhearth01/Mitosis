@@ -1,5 +1,6 @@
 using Mitosis.Application.Diagnostics;
 using Mitosis.Application.Preferences;
+using Mitosis.Application.Updates;
 using Mitosis.Windows.ViewModels;
 
 namespace Mitosis.ViewModels.Tests;
@@ -175,6 +176,94 @@ public sealed class SettingsViewModelTests
         Assert.IsNotNull(copied);
         StringAssert.Contains(copied, "Mitosis diagnostics");
         StringAssert.Contains(copied, "Application version: 0.2.2+test");
+    }
+
+    [TestMethod]
+    public async Task Updates_ForwardTheSharedCheckState()
+    {
+        var updates = new UpdatesViewModel(
+            new StubUpdateChecker(_ => Task.FromResult(
+                UpdateCheckResult.Available("0.2.2", "0.2.3", "https://example.test/v0.2.3"))),
+            "0.2.2+6f9ee6b");
+        var model = new SettingsViewModel(
+            new FakePreferencesStore(), DataFolder, Facts(), updates);
+
+        Assert.IsTrue(model.CanCheckForUpdates);
+        Assert.AreEqual("0.2.2", model.CurrentVersionText);
+        Assert.IsFalse(model.HasUpdateLink);
+        StringAssert.Contains(model.UpdateStatusText, "Check GitHub Releases");
+
+        await model.CheckForUpdatesAsync();
+
+        Assert.IsTrue(model.HasUpdateLink);
+        Assert.AreEqual(new Uri("https://example.test/v0.2.3"), model.UpdateReleaseUrl);
+        StringAssert.Contains(model.UpdateStatusText, "0.2.3 is available");
+        Assert.AreEqual("Check for Updates", model.CheckForUpdatesLabel);
+    }
+
+    [TestMethod]
+    public async Task Dispose_StopsForwardingTheSharedState()
+    {
+        var updates = new UpdatesViewModel(
+            new StubUpdateChecker(_ => Task.FromResult(UpdateCheckResult.UpToDate("0.2.2"))),
+            "0.2.2");
+        var model = new SettingsViewModel(
+            new FakePreferencesStore(), DataFolder, Facts(), updates);
+        model.Dispose();
+
+        var forwarded = false;
+        model.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(SettingsViewModel.UpdateStatusText))
+            {
+                forwarded = true;
+            }
+        };
+
+        await updates.CheckAsync();
+
+        Assert.IsFalse(forwarded, "A closed Settings window must not keep listening.");
+    }
+
+    [TestMethod]
+    public async Task Checking_DisablesTheSettingsButtonUntilTheCheckEnds()
+    {
+        var pending = new TaskCompletionSource<UpdateCheckResult>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var updates = new UpdatesViewModel(
+            new StubUpdateChecker(_ => pending.Task), "0.2.2");
+        var model = new SettingsViewModel(
+            new FakePreferencesStore(), DataFolder, Facts(), updates);
+
+        var running = model.CheckForUpdatesAsync();
+
+        Assert.IsFalse(model.CanCheckForUpdates);
+        Assert.IsFalse(model.CheckForUpdatesCommand.CanExecute(null));
+        Assert.AreEqual("Checking…", model.CheckForUpdatesLabel);
+
+        pending.SetResult(UpdateCheckResult.UpToDate("0.2.2"));
+        await running;
+
+        Assert.IsTrue(model.CanCheckForUpdates);
+        Assert.IsTrue(model.CheckForUpdatesCommand.CanExecute(null));
+    }
+
+    [TestMethod]
+    public void WithoutAFeed_SettingsSaysSoInsteadOfFakingACheck()
+    {
+        var model = Model();
+
+        Assert.IsFalse(model.CanCheckForUpdates);
+        Assert.IsFalse(model.CheckForUpdatesCommand.CanExecute(null));
+        StringAssert.Contains(model.UpdateStatusText, "not available");
+        Assert.IsFalse(model.HasUpdateLink);
+    }
+
+    private sealed class StubUpdateChecker(
+        Func<CancellationToken, Task<UpdateCheckResult>> check) : IUpdateChecker
+    {
+        public Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken = default) =>
+            check(cancellationToken);
     }
 
     private sealed class ToggleablePreferencesStore : IAppPreferencesStore

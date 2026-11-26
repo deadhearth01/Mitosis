@@ -20,7 +20,7 @@ namespace Mitosis.Windows.App.Views;
 /// persistence errors; the window mirrors that state for visible feedback.</summary>
 public sealed partial class SettingsWindow : Window
 {
-    private const int GeneralClientHeight = 660;
+    private const int GeneralClientHeight = 740;
     private const int AdvancedClientHeight = 300;
 
     public SettingsWindow(SettingsViewModel viewModel)
@@ -49,6 +49,7 @@ public sealed partial class SettingsWindow : Window
             ViewModel.RevealDataFolderRequested -= OnRevealDataFolderRequested;
             ViewModel.RevealLogFolderRequested -= OnRevealLogFolderRequested;
             ViewModel.CopyDiagnosticsRequested -= OnCopyDiagnosticsRequested;
+            ViewModel.Dispose();
         };
         UpdateSavedState();
         _ = ViewModel.LoadAsync();

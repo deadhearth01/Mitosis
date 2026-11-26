@@ -126,6 +126,8 @@ Stage 1 status. All shell data is explicit preview data; engine actions show hon
 - W01: window 1060×720, title `Mitosis`. Subtitle count shown in sidebar header instead
   of the title bar (provisional); minimum size not enforced (gap).
 - W08: update `InfoBar` with Update Now (placeholder) + dismiss. Implemented.
+  Stage 25 adds the real manual availability check and a View Release banner;
+  preview data keeps the sample banner.
 - W11–W14: groups, rows (initial-letter tiles stand in for badged icons), search,
   New Clone button with tooltip. Implemented on preview data.
 - W15: Ctrl+F focuses search. Implemented.
@@ -282,8 +284,10 @@ pixel-level parity is claimed anywhere.
   keyboard paths present; Narrator pass pending). W65, W66 Missing (no
   screenshots or screen-reader runs in this environment).
 - Engine/CLI: W45 Implemented and verified (discovery + smoke counts). W46–W51
-  Missing. W52 Partially (static tiles). W53 Missing. W54 Partially (toggle UI
-  only). W55 Missing. W56, W57 Not applicable (future roadmap items).
+  Missing. W52 Partially (static tiles). W53 Partially (manual GitHub
+  availability check; no download or install). W54 Partially (toggle UI only).
+  W55 Partially (read-only CLI; engine commands and packaging deferred).
+  W56, W57 Not applicable (future roadmap items).
 
 Stage 12 fixes: decorative art hidden from the accessibility tree (macOS parity),
 swatch accessible names, wizard initial focus, font-family cleanup. No safety
@@ -309,10 +313,10 @@ comparison stays pending (W66, S10–S12 in `docs/WINDOWS-UI-VERIFICATION.md`).
   in File Explorer via `Launcher`); Advanced ▸ Show Tips Again matches macOS
   semantics (persists `ShowTips=true`, `Onboarded=false`; reappears next launch;
   window-local disabled state like `SettingsView.swift:141`).
-- W36 (Settings General): Partially by design. The macOS rows without any
-  Windows effect remain absent: menu-bar/tray toggle, update check + Check Now +
-  status, auto-update clones, clones location, and the command-line installer
-  (no Windows CLI exists). Toggles are not shown before they can do something.
+- W36 (Settings General): Partially. The macOS rows without any Windows effect
+  remain absent: menu-bar/tray toggle, auto-update clones, clones location, and
+  the command-line installer. Stage 25 adds the real update check, status, and
+  release link; toggles are not shown before they can do something.
 - W37 (Settings Advanced): Partially by design. Show Tips Again implemented
   against the real preference store; the default-clone-mode picker is deferred
   because no Windows default mode is honored by any code path yet.
@@ -631,3 +635,34 @@ changed except W46/W55 above.
 - Tests: 31 CLI tests + 2 `DoctorReport` local-state tests; suite 396/396 green.
 - Runtime evidence: 127 applications in about 1.5 s; `doctor` text/JSON agreed;
   `clone Slack` exited 1; data folder unchanged. See `docs/WINDOWS-CLI.md`.
+
+## Stage 25 update-availability notes
+
+Implemented in Stage 25; W08, W36, and W53 above now reflect it.
+
+- Settings ? General ? Updates shows the running version (build metadata
+  stripped), a Check for Updates button, a live status sentence, and a View
+  Release link only when a newer release exists. No automatic or timed check;
+  no download, install, or relaunch.
+- The request is one fixed GitHub API GET with no token, account, query identity,
+  or telemetry; the response is capped at 512 KB, must be a JSON array, uses a
+  15 s timeout, and is canceled when Settings closes.
+- Selection mirrors the macOS checker: skip drafts; skip prereleases unless the
+  running build is a prerelease; require an absolute HTTP(S) page; take the
+  newest strictly newer tag. Version comparison follows `Versioning.swift`
+  (optional `v`, 1�4 numeric components, dotted prerelease, `+build` ignored).
+- The main InfoBar opens only after a real newer release is found, says
+  "Mitosis X is available.", and its View Release action opens the release page
+  through the OS after an HTTP(S) check. A dismissal lasts for the session.
+  Preview data still shows its sample 0.3.0 banner with Update Now and the
+  honest placeholder.
+- Failure is a first-class state: timeout, blocked network, malformed JSON,
+  non-200, and oversized responses produce fixed readable messages with no
+  invented version, no banner, and no link.
+- Window artifact caveat: v0.2.3 currently publishes only the macOS zip. The
+  Windows banner therefore tracks the product release line and links the release
+  page; it does not imply a Windows download. Self-update remains deferred.
+- Tests: 76 new across Domain/Application/Infrastructure/ViewModels; suite
+  472/472 green. Runtime: real feed reported 0.2.3 for a 0.2.2 build, up to date
+  for 0.2.3, and an honest failure through a blocked proxy; banner updated and
+  dismissed in the live app. See `docs/WINDOWS-UPDATES.md`.

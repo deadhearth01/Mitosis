@@ -9,13 +9,13 @@
     <Grid RowDefinitions="Auto,*">
         <InfoBar
             Grid.Row="0"
-            Title="{x:Bind BannerTitle, Mode=OneTime}"
+            Title="{x:Bind ViewModel.BannerTitle, Mode=OneWay}"
             CloseButtonClick="OnUpdateBannerClosed"
             IsOpen="{x:Bind ViewModel.ShowUpdateBanner, Mode=OneWay}"
             Message="A new version of Mitosis is available."
             Severity="Informational">
             <InfoBar.ActionButton>
-                <Button Command="{x:Bind ViewModel.InstallUpdateCommand, Mode=OneWay}" Content="Update Now" />
+                <Button Command="{x:Bind ViewModel.UpdateBannerCommand, Mode=OneWay}" Content="{x:Bind ViewModel.UpdateBannerActionText, Mode=OneWay}" />
             </InfoBar.ActionButton>
         </InfoBar>
 

@@ -18,9 +18,12 @@ The clone engine is framework only: the production strategy catalog is empty and
 every provisioning gate is closed. Nothing here clones, launches, or modifies an
 application. Local diagnostics (a bounded, redacted log, a copyable environment
 report, and crash hooks), single-instance activation (one window per user
-session), and a read-only CLI (`version`, `list`, `profiles`, `doctor`) are
-implemented. Closing the main window quits. Tray integration, combined CLI
-packaging, an installer, and signing remain later stages. See
+session), a read-only CLI (`version`, `list`, `profiles`, `doctor`), and a
+manual, read-only update-availability check against GitHub Releases are
+implemented. Closing the main window quits. The update banner opens only when a
+newer release exists and offers its release page; nothing downloads or installs.
+Tray integration, combined CLI packaging, an installer, signing, and self-update
+remain later stages. See
 [docs/WINDOWS-AUTONOMOUS-ROADMAP.md](../docs/WINDOWS-AUTONOMOUS-ROADMAP.md) for
 current status and gaps.
 
@@ -46,7 +49,7 @@ then restore works offline of any template: plain `dotnet build` / `dotnet test`
 
 ```text
 windows/
-  Mitosis.sln                 solution (9 src projects, 7 test projects, verifier)
+  Mitosis.sln                 solution (9 src projects, 8 test projects, verifier)
   global.json                 pins .NET SDK 10.0.100+ and MSTest.Sdk 4.5.1
   Directory.Build.props       shared compiler settings (nullable + implicit usings)
   src/
@@ -60,11 +63,12 @@ windows/
     Mitosis.Windows.App/      WinUI 3 application: main window, sidebar, detail, theme (unpackaged WinExe)
     Mitosis.Cli/              read-only console CLI: version, list, profiles, doctor (net10.0-windows)
   tests/
-    Mitosis.Domain.Tests/          domain primitives and profile lifecycle
-    Mitosis.Infrastructure.Tests/  JSON stores and persistence
+    Mitosis.Domain.Tests/          domain primitives, profile lifecycle, version comparison
+    Mitosis.Application.Tests/     update checker outcomes and product-version source
+    Mitosis.Infrastructure.Tests/  JSON stores, persistence, GitHub release feed
     Mitosis.Compatibility.Tests/   compatibility assessment
     Mitosis.CloneEngine.Tests/     planner/gate framework (no execution)
-    Mitosis.ViewModels.Tests/      shell view models (discovery, profiles, wizard, settings)
+    Mitosis.ViewModels.Tests/      shell view models (discovery, profiles, wizard, settings, updates)
     Mitosis.Windows.Platform.Tests/ Windows-specific discovery and app-host tests
     Mitosis.Cli.Tests/             CLI parsing, text/JSON output, read-only guarantees
   tools/

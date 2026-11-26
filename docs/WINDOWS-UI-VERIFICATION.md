@@ -1,9 +1,9 @@
-# Windows UI verification protocol (Stage 12, extended in Stages 13–16)
+# Windows UI verification protocol (Stage 12, extended in Stages 13–25)
 
 Repeatable manual verification for the WinUI 3 shell. Automated tests cover
 ViewModel logic only — nothing here substitutes for eyes and keyboard.
 No screenshots have been captured in this environment; every scenario below is
-**pending** until performed.
+**pending** unless an observed result is recorded in §2.
 
 ## 1. Environment record (fill per session)
 
@@ -133,6 +133,32 @@ native adaptation or a parity defect.
   starts; after each step confirm the log contains `app.instance`,
   `app.secondary-exit` (second launch), and `app.stop` (graceful close). Repeat
   with a different Windows user or session if available.
+  - **Observed 2026-11-26 (four scenarios, process/log inspection):** closing the
+    main window with Help open, Settings open, both open in either order, and
+    with no secondary window all ended the process within 6 s and logged
+    `app.stop`; no process or orphaned window remained. This exposed and closed
+    the gap where `Application.Exit()` sometimes skipped a child window and left
+    the process alive. Visual focus and minimized restore remain pending.
+- S26: update availability (Stage 25): open Settings ▸ General ▸ Updates — the
+  version line shows the running version without `+<sha>`; the status starts with
+  “Check GitHub Releases…”; press Check for Updates with network available — the
+  status becomes either “up to date” or “Mitosis X is available”, and only in the
+  latter case does a View Release link appear and the main-window banner open.
+  While the check is running the button label changes to “Checking…” and the
+  button is disabled. Close the banner — it stays hidden for the session. Retry
+  with the process network blocked or a broken proxy — the status is
+  “Couldn't reach GitHub. Check your internet connection.”, with no link and no
+  banner. Confirm no profile store or log entry is created by the check itself
+  and that the app exits cleanly.
+  - **Observed 2026-11-26 (partial, UIAutomation + process/log inspection, no
+    screenshot/Narrator):** version showed `0.2.2`; the check button disabled
+    itself while the check ran (its visible label switches to “Checking…”; the
+    accessible name stays fixed); a real check reported `0.2.3` and revealed
+    View Release; the main banner showed “Mitosis 0.2.3 is available.”; its close
+    button dismissed it; a process-level blocked proxy produced the honest
+    connection failure with no banner or link; closing the main window with
+    Settings still open exited cleanly with no error log entries. Clicking View
+    Release, Narrator order, pixels/contrast, and a second network remain pending.
 
 ## 3. Accessibility checks
 

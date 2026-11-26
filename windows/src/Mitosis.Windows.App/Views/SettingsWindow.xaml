@@ -102,9 +102,47 @@
                             Text="Logs record app start/stop and unexpected errors only. They stay on this PC and never include application data, credentials, or file contents."
                             TextWrapping="Wrap" />
                         <TextBlock
+                            Style="{StaticResource MitosisSectionTitleStyle}"
+                            Margin="0,8,0,0"
+                            Text="Updates" />
+                        <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" RowSpacing="8">
+                            <TextBlock
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Text="Version" />
+                            <TextBlock
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                IsTextSelectionEnabled="True"
+                                Text="{x:Bind ViewModel.CurrentVersionText, Mode=OneWay}" />
+                            <Button
+                                x:Name="CheckForUpdatesButton"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Grid.RowSpan="2"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Check GitHub for a newer Mitosis release"
+                                Command="{x:Bind ViewModel.CheckForUpdatesCommand, Mode=OneWay}"
+                                Content="{x:Bind ViewModel.CheckForUpdatesLabel, Mode=OneWay}" />
+                        </Grid>
+                        <TextBlock
+                            x:Name="UpdateStatus"
+                            AutomationProperties.LiveSetting="Polite"
                             FontSize="12"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="Update checking, the tray icon, and the command-line installer are not implemented on Windows yet, so they are not listed here."
+                            Text="{x:Bind ViewModel.UpdateStatusText, Mode=OneWay}"
+                            TextWrapping="Wrap" />
+                        <HyperlinkButton
+                            x:Name="ViewReleaseLink"
+                            Margin="0,-4,0,0"
+                            Content="View Release"
+                            NavigateUri="{x:Bind ViewModel.UpdateReleaseUrl, Mode=OneWay}"
+                            Visibility="{x:Bind ViewModel.HasUpdateLink, Mode=OneWay}" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="The check reads GitHub's public release list only when you press the button. It sends no account or usage data, downloads nothing, and installs nothing."
                             TextWrapping="Wrap" />
                     </StackPanel>
 
@@ -134,6 +172,11 @@
                             FontSize="12"
                             Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                             Text="The default-clone-mode picker arrives with the cloning engine."
+                            TextWrapping="Wrap" />
+                        <TextBlock
+                            FontSize="12"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            Text="The tray icon and the command-line installer are not implemented on Windows yet, so they are not listed here."
                             TextWrapping="Wrap" />
                     </StackPanel>
 

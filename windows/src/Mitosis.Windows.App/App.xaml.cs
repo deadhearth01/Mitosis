@@ -1,15 +1,17 @@
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.UI.Xaml;
 using Microsoft.Win32;
+using Mitosis.Application;
 using Mitosis.Application.Diagnostics;
 using Mitosis.Application.Discovery;
 using Mitosis.Application.Preferences;
+using Mitosis.Application.Updates;
 using Mitosis.Compatibility;
 using Mitosis.Domain;
 using Mitosis.Infrastructure.Evidence;
 using Mitosis.Infrastructure.Preferences;
 using Mitosis.Infrastructure.Profiles;
+using Mitosis.Infrastructure.Updates;
 using Mitosis.Windows.Platform.Discovery;
 using Mitosis.Windows.Platform.Profiles;
 using Mitosis.Windows.Platform.Startup;
@@ -27,6 +29,11 @@ public partial class App : Microsoft.UI.Xaml.Application
     private readonly SingleInstanceCoordinator? instanceCoordinator;
     private Window? window;
     private bool handlingCrash;
+
+    /// <summary>True once the main window has closed and the app is quitting. Windows that
+    /// normally refuse an early close (the welcome flow) must not veto an application
+    /// shutdown, or the process outlives its instance lock.</summary>
+    internal static bool IsShuttingDown { get; private set; }
 
     /// <summary>The composition root (Program) owns diagnostics and the instance lock,
     /// so this class does not create a second logger or a second lock.</summary>
@@ -68,7 +75,11 @@ public partial class App : Microsoft.UI.Xaml.Application
 
             // Mitosis is a single-main-window app: closing that window quits, even if
             // a welcome/help/settings window is still open. Without this, the process
-            // outlives its instance lock and keeps orphaned windows alive.
+            // outlives its instance lock and keeps orphaned windows alive. Closing the
+            // children explicitly is not redundant: Application.Exit() was observed
+            // leaving one of them open (and the process alive) depending on order.
+            IsShuttingDown = true;
+            (window as MainWindow)?.CloseSecondaryWindows();
             Exit();
         };
         window.Activate();
@@ -79,9 +90,7 @@ public partial class App : Microsoft.UI.Xaml.Application
     private static DoctorFacts DescribeEnvironment()
     {
         var assembly = typeof(App).Assembly;
-        var version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
-            ?? assembly.GetName().Version?.ToString()
-            ?? "unknown";
+        var version = ProductVersion.Describe(assembly);
         var dataDirectory = WindowsProfilePaths.DataDirectory();
         return new DoctorFacts(
             version,
@@ -152,6 +161,11 @@ public partial class App : Microsoft.UI.Xaml.Application
 
     private static MainViewModel ComposeMainViewModel()
     {
+        var version = ProductVersion.Describe(typeof(App).Assembly);
+        var updates = new UpdatesViewModel(
+            new UpdateChecker(new GitHubReleaseFeed(version), version),
+            version);
+
         var reader = new RegistryKeyReader();
         var sources = new IInstalledAppSource[]
         {
@@ -171,6 +185,7 @@ public partial class App : Microsoft.UI.Xaml.Application
             new CompatibilityAssessor(Array.Empty<CompatibilityStrategy>()),
             new JsonCloneProfileRepository(WindowsProfilePaths.ProfileDirectory()),
             new JsonEvidenceStore(WindowsProfilePaths.EvidenceDirectory()),
-            new JsonAppPreferencesStore(WindowsProfilePaths.PreferencesDirectory()));
+            new JsonAppPreferencesStore(WindowsProfilePaths.PreferencesDirectory()),
+            updates);
     }
 }

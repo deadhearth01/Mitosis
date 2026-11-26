@@ -1,3 +1,4 @@
+using Mitosis.Application.Updates;
 using Mitosis.Windows.ViewModels;
 
 namespace Mitosis.ViewModels.Tests;
@@ -213,7 +214,7 @@ public sealed class MainViewModelTests
         model.EditBadgeCommand.Execute(null);
         model.FindAppCommand.Execute(null);
         model.RevealCloneCommand.Execute(null);
-        model.InstallUpdateCommand.Execute(null);
+        model.UpdateBannerCommand.Execute(null);
         model.NewCloneCommand.Execute(null);
 
         Assert.AreEqual(9, requests.Count);
@@ -248,6 +249,49 @@ public sealed class MainViewModelTests
         model.DismissBannerCommand.Execute(null);
 
         Assert.IsFalse(model.ShowUpdateBanner);
+    }
+
+    [TestMethod]
+    public async Task RealModel_ShowsTheBannerOnlyAfterANewerReleaseIsFound()
+    {
+        var updates = new UpdatesViewModel(
+            new StubUpdateChecker(_ => Task.FromResult(
+                UpdateCheckResult.Available("0.2.2", "0.2.3", "https://example.test/v0.2.3"))),
+            "0.2.2+6f9ee6b");
+        var model = new MainViewModel(
+            Array.Empty<AppGroupItem>(), Array.Empty<CloneItem>(), isPreview: false, updates: updates);
+
+        Assert.IsFalse(model.ShowUpdateBanner, "A real run starts with no fabricated banner.");
+
+        var opened = new List<string>();
+        model.OpenReleaseRequested += (_, url) => opened.Add(url);
+
+        await updates.CheckAsync();
+
+        Assert.IsTrue(model.ShowUpdateBanner);
+        Assert.AreEqual("Mitosis 0.2.3 is available.", model.BannerTitle);
+        Assert.AreEqual("View Release", model.UpdateBannerActionText);
+
+        model.UpdateBannerCommand.Execute(null);
+
+        CollectionAssert.AreEqual(new[] { "https://example.test/v0.2.3" }, opened);
+    }
+
+    [TestMethod]
+    public void PreviewBanner_KeepsTheMacWordingAndOpensNothing()
+    {
+        var model = Create();
+
+        Assert.IsTrue(model.ShowUpdateBanner);
+        Assert.AreEqual("Update Now", model.UpdateBannerActionText);
+        Assert.IsNull(model.UpdateReleaseUrl, "Preview never carries a real release link.");
+    }
+
+    private sealed class StubUpdateChecker(
+        Func<CancellationToken, Task<UpdateCheckResult>> check) : IUpdateChecker
+    {
+        public Task<UpdateCheckResult> CheckAsync(CancellationToken cancellationToken = default) =>
+            check(cancellationToken);
     }
 
     [TestMethod]

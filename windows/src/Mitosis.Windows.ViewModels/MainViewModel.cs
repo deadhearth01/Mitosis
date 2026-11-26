@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Globalization;
 using Mitosis.Application.Discovery;
 using Mitosis.Application.Evidence;
@@ -40,15 +41,23 @@ public sealed class MainViewModel : ObservableObject
     private string? discoveryError;
     private bool needsOnboarding;
     private readonly IAppPreferencesStore? preferences;
+    private readonly UpdatesViewModel? updates;
+    private bool previewUpdateBanner;
+    private string previewBannerVersion = string.Empty;
 
     public MainViewModel(IEnumerable<AppGroupItem> groups, IEnumerable<CloneItem> clones, bool isPreview,
-        bool showUpdateBanner = false, string bannerVersion = "")
+        bool showUpdateBanner = false, string bannerVersion = "", UpdatesViewModel? updates = null)
     {
         this.groups = groups.ToList();
         this.clones = clones.ToList();
         IsPreview = isPreview;
-        ShowUpdateBanner = showUpdateBanner;
-        BannerVersion = bannerVersion;
+        previewUpdateBanner = showUpdateBanner;
+        previewBannerVersion = bannerVersion;
+        this.updates = updates;
+        if (updates is not null)
+        {
+            updates.PropertyChanged += OnUpdatesPropertyChanged;
+        }
 
         NewCloneCommand = new RelayCommand(() =>
         {
@@ -91,9 +100,37 @@ public sealed class MainViewModel : ObservableObject
         RevealDataCommand = new RelayCommand(
             () => RaisePlaceholder("Show Data Folder", "Data folders need real clones, which are not implemented yet."),
             () => SelectedClone != null);
-        DismissBannerCommand = new RelayCommand(() => ShowUpdateBanner = false);
-        InstallUpdateCommand = new RelayCommand(
-            () => RaisePlaceholder("Update Mitosis", "Self-update arrives with packaging in a later stage. Nothing was changed."));
+        DismissBannerCommand = new RelayCommand(() =>
+        {
+            if (previewUpdateBanner)
+            {
+                previewUpdateBanner = false;
+                RaiseBannerState();
+            }
+            else
+            {
+                updates?.Dismiss();
+            }
+        });
+        UpdateBannerCommand = new RelayCommand(
+            () =>
+            {
+                if (IsPreview)
+                {
+                    RaisePlaceholder("Update Mitosis",
+                        "This is preview data, so no release page is opened.");
+                    return;
+                }
+
+                if (updates?.ReleaseUrl is { Length: > 0 } url)
+                {
+                    OpenReleaseRequested?.Invoke(this, url);
+                    return;
+                }
+
+                RaisePlaceholder("Update Mitosis",
+                    "No release page is available. Check for updates in Settings first.");
+            });
         RefreshAppsCommand = new RelayCommand(async _ => await LoadAsync());
         ShowPreviewCommand = new RelayCommand(ShowPreview);
         CreateCloneFromAppCommand = new RelayCommand(
@@ -119,8 +156,10 @@ public sealed class MainViewModel : ObservableObject
     /// see <see cref="ShowPreviewCommand"/> for the explicit opt-in fallback.</summary>
     public MainViewModel(
         IAppDiscoveryService discovery, ICompatibilityAssessor assessor, ICloneProfileRepository profiles,
-        IEvidenceStore? evidenceStore = null, IAppPreferencesStore? preferences = null)
-        : this(Enumerable.Empty<AppGroupItem>(), Enumerable.Empty<CloneItem>(), isPreview: false)
+        IEvidenceStore? evidenceStore = null, IAppPreferencesStore? preferences = null,
+        UpdatesViewModel? updates = null)
+        : this(Enumerable.Empty<AppGroupItem>(), Enumerable.Empty<CloneItem>(), isPreview: false,
+            updates: updates)
     {
         this.discovery = discovery;
         this.assessor = assessor;
@@ -132,9 +171,26 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>True while entries come from <see cref="PreviewData"/> rather than discovery.</summary>
     public bool IsPreview { get; private set; }
 
-    public bool ShowUpdateBanner { get; private set; }
+    /// <summary>The shared manual update-check state, or null when composed without one.
+    /// Settings and the banner read the same instance, so one check updates both.</summary>
+    public UpdatesViewModel? Updates => updates;
 
-    public string BannerVersion { get; private set; }
+    /// <summary>True when a real check found a newer release, or while preview data asks
+    /// for the sample banner. Preview and real state are never mixed.</summary>
+    public bool ShowUpdateBanner => previewUpdateBanner || (!IsPreview && (updates?.ShowsBanner ?? false));
+
+    public string BannerVersion =>
+        previewUpdateBanner ? previewBannerVersion
+        : IsPreview ? string.Empty
+        : updates?.LatestVersion ?? string.Empty;
+
+    public string BannerTitle => $"Mitosis {BannerVersion} is available.";
+
+    /// <summary>Preview keeps the macOS "Update Now" wording but only explains itself.
+    /// A real update only offers the release page; nothing is downloaded or installed.</summary>
+    public string UpdateBannerActionText => previewUpdateBanner ? "Update Now" : "View Release";
+
+    public string? UpdateReleaseUrl => IsPreview ? null : updates?.ReleaseUrl;
 
     public event EventHandler<DialogRequest>? DialogRequested;
 
@@ -146,6 +202,10 @@ public sealed class MainViewModel : ObservableObject
 
     /// <summary>Raised when Settings should open (Ctrl+, / sidebar button).</summary>
     public event EventHandler? ShowSettingsRequested;
+
+    /// <summary>Raised when the user asks to open the available release page. The window
+    /// launches the URL through the OS; the view model never does network or shell work.</summary>
+    public event EventHandler<string>? OpenReleaseRequested;
 
     public string SearchText
     {
@@ -615,7 +675,7 @@ public sealed class MainViewModel : ObservableObject
 
     public RelayCommand DismissBannerCommand { get; }
 
-    public RelayCommand InstallUpdateCommand { get; }
+    public RelayCommand UpdateBannerCommand { get; }
 
     public RelayCommand RefreshAppsCommand { get; }
 
@@ -775,8 +835,9 @@ public sealed class MainViewModel : ObservableObject
         selectedApp = null;
         selectedOrphan = null;
         IsPreview = true;
-        ShowUpdateBanner = preview.ShowUpdateBanner;
-        BannerVersion = preview.BannerVersion;
+        previewUpdateBanner = preview.ShowUpdateBanner;
+        previewBannerVersion = preview.BannerVersion;
+        RaiseBannerState();
         DiscoveryError = null;
         ProfilesError = null;
         SearchText = string.Empty;
@@ -836,6 +897,17 @@ public sealed class MainViewModel : ObservableObject
         RevealCloneCommand.RaiseCanExecuteChanged();
         RevealOriginalCommand.RaiseCanExecuteChanged();
         RevealDataCommand.RaiseCanExecuteChanged();
+    }
+
+    private void OnUpdatesPropertyChanged(object? sender, PropertyChangedEventArgs e) => RaiseBannerState();
+
+    private void RaiseBannerState()
+    {
+        RaisePropertyChanged(nameof(ShowUpdateBanner));
+        RaisePropertyChanged(nameof(BannerVersion));
+        RaisePropertyChanged(nameof(BannerTitle));
+        RaisePropertyChanged(nameof(UpdateBannerActionText));
+        RaisePropertyChanged(nameof(UpdateReleaseUrl));
     }
 
     private void RaisePlaceholder(string action, string message) =>

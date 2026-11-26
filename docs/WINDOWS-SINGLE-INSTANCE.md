@@ -75,9 +75,14 @@ treated as a crash.
 ## 4. Shutdown behavior
 
 - Closing the main window writes `app.stop`, stops the listener, releases the
-  instance lock, shuts the Windows App SDK bootstrap down, and calls
+  instance lock, shuts the Windows App SDK bootstrap down, marks the process as
+  shutting down, closes every secondary window explicitly, and calls
   `Application.Exit()`. Mitosis is a single-main-window app: closing that window
   quits even if the welcome, Help, or Settings window is still open.
+- The explicit child close is deliberate. `Application.Exit()` alone was observed
+  leaving a remaining child window (and the process) alive, depending on which
+  windows were open and in what order. The welcome flow also refuses an early
+  close unless the flow finished; that guard now yields to application shutdown.
 - Releasing the lock before process exit lets a launch during teardown become the
   new primary immediately instead of waiting for the old process to disappear.
 - A hard crash or force-kill leaves the mutex abandoned; the next launch recovers
@@ -85,8 +90,12 @@ treated as a crash.
 
 The explicit `Application.Exit()` was added after runtime verification found that
 closing the main window while the welcome window was open logged `app.stop` but
-left the process and the orphaned welcome window alive. That pre-existing
-lifecycle bug is now fixed and re-verified.
+left the process and the orphaned welcome window alive. Stage 25 verification then
+found a second case: closing the main window with Help or Settings open could still
+leave that window and the process alive. Shutdown now closes the children itself
+instead of trusting `Exit()` to enumerate them. Six repeated trials (Help only,
+Settings only, both orders, repeated) all exited; the welcome-close guard is
+bypassed only while the app is quitting, never for a user-initiated close.
 
 ## 5. Failure behavior
 

@@ -33,6 +33,7 @@ public sealed partial class MainWindow : Window
         ViewModel.NewCloneRequested += OnNewCloneRequested;
         ViewModel.ShowHelpRequested += OnShowHelpRequested;
         ViewModel.ShowSettingsRequested += OnShowSettingsRequested;
+        ViewModel.OpenReleaseRequested += OnOpenReleaseRequested;
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) =>
         {
@@ -40,6 +41,7 @@ public sealed partial class MainWindow : Window
             ViewModel.NewCloneRequested -= OnNewCloneRequested;
             ViewModel.ShowHelpRequested -= OnShowHelpRequested;
             ViewModel.ShowSettingsRequested -= OnShowSettingsRequested;
+            ViewModel.OpenReleaseRequested -= OnOpenReleaseRequested;
             ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
         };
         UpdateDetailVisibility();
@@ -69,10 +71,29 @@ public sealed partial class MainWindow : Window
     /// or secondary window returns focus to the main window (AppKit default).</summary>
     private void RestoreMainFocus()
     {
-        if (AppWindow is { IsVisible: true })
+        try
         {
-            Activate();
+            if (AppWindow is { IsVisible: true })
+            {
+                Activate();
+            }
         }
+        catch (Exception ex) when (ex is ObjectDisposedException or InvalidOperationException
+            or System.Runtime.InteropServices.COMException)
+        {
+            // The main window is already closing; focus has nowhere to go.
+        }
+    }
+
+    /// <summary>Closes every secondary window on application shutdown. Called before
+    /// <c>Application.Exit()</c> because that call was observed sometimes leaving a
+    /// child window - and therefore the process - alive.</summary>
+    internal void CloseSecondaryWindows()
+    {
+        wizardWindow?.Close();
+        helpWindow?.Close();
+        settingsWindow?.Close();
+        onboardingWindow?.Close();
     }
 
     /// <summary>Surfaces this window when a second launch is redirected to the running
@@ -144,7 +165,25 @@ public sealed partial class MainWindow : Window
 
     public MainViewModel ViewModel { get; }
 
-    public string BannerTitle => $"Mitosis {ViewModel.BannerVersion} is available.";
+    /// <summary>The banner is the only place Mitosis offers a link out. A user click on
+    /// "View Release" opens the release page in the default browser through the OS;
+    /// a malformed or non-HTTP(S) URL is ignored rather than handed to the shell.</summary>
+    private async void OnOpenReleaseRequested(object? sender, string url)
+    {
+        try
+        {
+            if (Uri.TryCreate(url, UriKind.Absolute, out var uri)
+                && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp))
+            {
+                await Launcher.LaunchUriAsync(uri);
+            }
+        }
+        catch
+        {
+            // Honest no-op: the banner still names the version, and the release URL is
+            // available through the GitHub releases page like any other link.
+        }
+    }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
@@ -204,7 +243,8 @@ public sealed partial class MainWindow : Window
                         ?? throw new InvalidOperationException("Settings need the preference store."),
                     dataFolderPath
                         ?? throw new InvalidOperationException("Settings were composed without a data folder."),
-                    diagnostics));
+                    diagnostics,
+                    ViewModel.Updates));
             settingsWindow.Closed += (_, _) =>
             {
                 settingsWindow = null;
@@ -259,6 +299,11 @@ public sealed partial class MainWindow : Window
             window.ShowProfileRequested -= OnShowProfileRequested;
             wizardWindow = null;
             RestoreMainFocus();
+            if (App.IsShuttingDown)
+            {
+                return;
+            }
+
             await ViewModel.LoadAsync();
         }
     }

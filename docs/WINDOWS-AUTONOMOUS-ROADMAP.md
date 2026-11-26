@@ -638,5 +638,6 @@ After every stage:
 | 24 | Read-only CLI and doctor report | `6dbb0c5` | 396 | `version`/`list`/`profiles`/`doctor`; `--json`; no writes |
 | 25 | Update availability check | `58353a0` | 472 | Manual GitHub read; live banner; shutdown child-window fix |
 | 26 | CLI in release zip, PRI fix, per-user installer | `18dd7d6`, `3ac2d86` | 490 | `cli/` layout; launch-tested artifact; `install.ps1`; clean-VM run pending |
+| 27 | Manual UI/accessibility pass and fixes | `6e0b802` | 497 | 33 screenshots; 11 defects fixed; Narrator/contrast/clean VM pending |
 
 Stages 21+ are appended as they complete.

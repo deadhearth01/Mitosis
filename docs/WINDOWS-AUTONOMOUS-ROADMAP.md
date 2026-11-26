@@ -439,9 +439,12 @@ only started when its dependencies and authorization state allow it.
   `WINDOWS-UI-VERIFICATION.md` §5.3. One more defect was fixed: a failed profile
   save left focus on Save and never announced the error, so the dialog now
   focuses the first invalid field and raises an automation notification. Suite
-  497/497, 0 warnings. GitHub Actions run `45903265357` on `d2d3163` completed
-  successfully (restore/build/test and the x64 release-candidate publish),
-  closing the remote-run observation gap for this tree.
+  497/497, 0 warnings. GitHub Actions run `45906908476` on `59a0f9d` completed
+  successfully (restore/build/test and the x64 release-candidate publish). The
+  republished archive `Mitosis-windows-0.2.2-x64-59a0f9d.zip` (94 files,
+  45,762,634 bytes, SHA-256
+  `eeec0264cd12c7c95d4aa91cf4780a1b863a87e88f313677b0f2092e123711e2`) passes the
+  verifier.
 
 ### Stage 28 — Clone engine authorization and strategy implementation (blocked)
 
@@ -602,8 +605,8 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` on the Stage 27 tree (0 warnings); GitHub Actions run `45903265357` succeeded on `d2d3163` | None for this tree |
-| 497 tests pass | Verified | `dotnet test` at the Stage 27 tree, eight test projects; Actions run `45903265357` re-ran restore/build/test and published the RC | None for this tree |
+| Code compiles (Release) | Verified | `dotnet build` on the Stage 27 tree (0 warnings); GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
+| 497 tests pass | Verified | `dotnet test` at the Stage 27 tree, eight test projects; Actions run `45906908476` re-ran restore/build/test and published the RC | None for this tree |
 | Manual UI protocol | Verified for observed scenarios (desktop) | 41 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
@@ -650,5 +653,6 @@ After every stage:
 | 25 | Update availability check | `58353a0` | 472 | Manual GitHub read; live banner; shutdown child-window fix |
 | 26 | CLI in release zip, PRI fix, per-user installer | `18dd7d6`, `3ac2d86` | 490 | `cli/` layout; launch-tested artifact; `install.ps1`; clean-VM run pending |
 | 27 | Manual UI/accessibility pass and fixes | `6e0b802` | 497 | 33 screenshots; 11 defects fixed; Narrator/contrast/clean VM pending |
+| 27 (follow-up) | Dialogs, support actions, wizard paths | `59a0f9d` | 497 | save-error focus + announcement (defect 12); 8 screenshots; edit/remove, diagnostics/reveal/tips, wizard validation verified |
 
 Stages 21+ are appended as they complete.

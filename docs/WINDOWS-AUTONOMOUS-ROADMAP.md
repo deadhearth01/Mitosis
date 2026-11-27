@@ -817,3 +817,8 @@ The OpenDesign agent runtimes could not produce a design on this machine (four
 runs, one plan-only, one adapter failure), so the build used OpenDesign's
 `editorial` design system as its visual foundation. Full evidence and open items:
 `docs/WEBSITE-REDESIGN.md`.
+
+Committed as `f89588b`; Windows CI run `46071824694` completed successfully
+(build, 585 tests, x64 publish). The site deploys from `main` only, so this push
+did not publish it. Line endings: the roadmap stays LF; every `website/` file is
+CRLF without a BOM.

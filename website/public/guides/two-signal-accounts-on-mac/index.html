@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>Two Signal Accounts on One Mac (Signal Desktop for Two Numbers)</title>
   <meta name="description" content="Signal Desktop links to one phone number. Here&#x27;s how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.">
   <meta name="keywords" content="two signal accounts mac, signal desktop multiple accounts, signal desktop two phone numbers, second signal mac">
@@ -22,8 +22,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "How to use two Signal accounts on one Mac", "description": "Signal Desktop links to one phone number. Here's how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.", "url": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/", "datePublished": "2026-10-09", "dateModified": "2026-10-19", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/new-clone-details.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script src="/script.js" defer></script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "How to use two Signal accounts on one Mac", "description": "Signal Desktop links to one phone number. Here's how to run a second copy on your Mac and link it to a second number, so both accounts are open at once.", "url": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/", "datePublished": "2026-10-09", "dateModified": "2026-11-28", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/new-clone-details.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "How to use two Signal accounts on one Mac", "item": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can Signal Desktop use two phone numbers?", "acceptedAnswer": {"@type": "Answer", "text": "Not in one app. A Mitosis clone is a second Signal app, so you can link it to a second phone number while the original stays linked to the first."}}, {"@type": "Question", "name": "Is this secure?", "acceptedAnswer": {"@type": "Answer", "text": "Each copy is the official Signal app with its own data folder. Mitosis doesn't touch your messages; it only gives the copy its own place to keep them."}}, {"@type": "Question", "name": "What happens if I delete the copy?", "acceptedAnswer": {"@type": "Answer", "text": "It moves to the Trash. You can keep or remove its data, and unlink the device from your phone afterwards."}}]}</script>
 </head>
@@ -40,6 +42,9 @@
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 

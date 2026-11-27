@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>Guides: Two Accounts in Mac Apps · Mitosis</title>
   <meta name="description" content="Guides for running two copies of Mac apps, each with its own account: Slack, Signal, Discord, Claude, Codex, Notion, Cursor, VS Code, Figma, Chrome, and more, plus how clones work.">
   <meta name="keywords" content="run two copies of an app mac, multiple accounts mac apps, mac app cloner guides">
@@ -22,7 +22,9 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "CollectionPage", "name": "Mitosis guides", "url": "https://mitosis.theavni.studio/guides/", "hasPart": [{"@type": "TechArticle", "headline": "How to open two copies of the same app on a Mac", "url": "https://mitosis.theavni.studio/guides/open-the-same-app-twice-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Slack accounts at the same time on a Mac", "url": "https://mitosis.theavni.studio/guides/two-slack-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Signal accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-signal-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to be online on two Discord accounts at once on a Mac", "url": "https://mitosis.theavni.studio/guides/two-discord-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Claude accounts on a Mac", "url": "https://mitosis.theavni.studio/guides/two-claude-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Codex accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-codex-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Notion accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-notion-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Cursor accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-cursor-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two VS Code accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-vs-code-instances-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Figma accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Canva accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-canva-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "How to use two Postman accounts on one Mac", "url": "https://mitosis.theavni.studio/guides/two-postman-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "Chrome profiles or a second Chrome app on a Mac?", "url": "https://mitosis.theavni.studio/guides/second-google-chrome-on-mac/"}, {"@type": "TechArticle", "headline": "How to keep work and personal apps separate on one Mac", "url": "https://mitosis.theavni.studio/guides/keep-work-and-personal-apps-separate-on-mac/"}, {"@type": "TechArticle", "headline": "How to test an app with two accounts at once on a Mac", "url": "https://mitosis.theavni.studio/guides/test-your-app-with-two-accounts-on-mac/"}, {"@type": "TechArticle", "headline": "App copies vs a second macOS user account", "url": "https://mitosis.theavni.studio/guides/mitosis-vs-a-second-macos-user/"}, {"@type": "TechArticle", "headline": "What happens to clones when the original app updates", "url": "https://mitosis.theavni.studio/guides/clones-and-app-updates/"}, {"@type": "TechArticle", "headline": "Why a clone gets signed in to the wrong copy, and the fix", "url": "https://mitosis.theavni.studio/guides/sign-in-links-and-clones/"}, {"@type": "TechArticle", "headline": "How much disk space does an app clone use?", "url": "https://mitosis.theavni.studio/guides/how-much-disk-space-a-clone-uses/"}, {"@type": "TechArticle", "headline": "A clone won't open: what to try", "url": "https://mitosis.theavni.studio/guides/a-clone-wont-open/"}, {"@type": "TechArticle", "headline": "Why macOS asks a clone for permissions again", "url": "https://mitosis.theavni.studio/guides/macos-asks-for-permissions-again/"}, {"@type": "TechArticle", "headline": "How to remove clones and uninstall Mitosis", "url": "https://mitosis.theavni.studio/guides/uninstall-mitosis/"}, {"@type": "TechArticle", "headline": "A free Parall alternative for running apps twice on a Mac", "url": "https://mitosis.theavni.studio/parall-alternative/"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}]}</script>
 </head>
@@ -39,6 +41,9 @@
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 

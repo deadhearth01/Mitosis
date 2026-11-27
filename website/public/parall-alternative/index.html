@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>Free Parall Alternative for Mac: Run Multiple Copies of Apps (Mitosis)</title>
   <meta name="description" content="Looking for a free alternative to Parall? Mitosis runs separate copies of your Mac apps, each with its own login, data, and Dock icon, and it&#x27;s free and source-available.">
   <meta name="keywords" content="parall alternative, free parall alternative, parall mac free, app cloner mac free, multiple instances mac">
@@ -22,8 +22,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "A free Parall alternative for running apps twice on a Mac", "description": "Looking for a free alternative to Parall? Mitosis runs separate copies of your Mac apps, each with its own login, data, and Dock icon, and it's free and source-available.", "url": "https://mitosis.theavni.studio/parall-alternative/", "datePublished": "2026-10-09", "dateModified": "2026-10-19", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/parall-alternative/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script src="/script.js" defer></script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "A free Parall alternative for running apps twice on a Mac", "description": "Looking for a free alternative to Parall? Mitosis runs separate copies of your Mac apps, each with its own login, data, and Dock icon, and it's free and source-available.", "url": "https://mitosis.theavni.studio/parall-alternative/", "datePublished": "2026-10-09", "dateModified": "2026-11-28", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/parall-alternative/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Free Parall alternative", "item": "https://mitosis.theavni.studio/parall-alternative/"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is Mitosis free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Mitosis is free for any use, including at work. Its source code is available under the PolyForm Noncommercial license."}}, {"@type": "Question", "name": "Which apps work?", "acceptedAnswer": {"@type": "Answer", "text": "Most Electron and Chromium apps work well, including Slack, Discord, Signal, VS Code, Notion, Claude, and Codex. Apple's own apps aren't supported, and sandboxed apps that need iCloud (like WhatsApp) aren't supported yet."}}, {"@type": "Question", "name": "Can I move my Parall setup over?", "acceptedAnswer": {"@type": "Answer", "text": "Make a Mitosis clone for each app and sign in again inside it. Your original apps aren't changed."}}]}</script>
 </head>
@@ -40,6 +42,9 @@
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 

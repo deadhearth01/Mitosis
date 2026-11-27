@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>What Happens to App Clones When the Original Mac App Updates</title>
   <meta name="description" content="Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here&#x27;s how it works, and what happens if a clone is open.">
   <meta name="keywords" content="app clone update mac, clone app updates automatically, keep cloned app up to date mac">
@@ -22,8 +22,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "What happens to clones when the original app updates", "description": "Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here's how it works, and what happens if a clone is open.", "url": "https://mitosis.theavni.studio/guides/clones-and-app-updates/", "datePublished": "2026-10-09", "dateModified": "2026-10-19", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/clones-and-app-updates/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script src="/script.js" defer></script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "What happens to clones when the original app updates", "description": "Mitosis rebuilds clones automatically when the original app updates, keeping logins and data. Here's how it works, and what happens if a clone is open.", "url": "https://mitosis.theavni.studio/guides/clones-and-app-updates/", "datePublished": "2026-10-09", "dateModified": "2026-11-28", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/screen-light.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/clones-and-app-updates/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "What happens to clones when the original app updates", "item": "https://mitosis.theavni.studio/guides/clones-and-app-updates/"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Do clones update themselves?", "acceptedAnswer": {"@type": "Answer", "text": "No. The original app updates as usual; Mitosis then rebuilds its clones from it."}}, {"@type": "Question", "name": "Will I have to sign in again after an update?", "acceptedAnswer": {"@type": "Answer", "text": "No. Your login lives in the clone's data folder, which an update doesn't touch."}}]}</script>
 </head>
@@ -40,6 +42,9 @@
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 

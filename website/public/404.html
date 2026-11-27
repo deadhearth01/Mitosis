@@ -5,18 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <link rel="icon" type="image/png" href="/assets/favicon.png">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
   <title>Page not found · Mitosis</title>
 </head>
 <body>
-  <main id="main" class="section">
-    <div class="wrap" style="text-align: center; padding-block: 96px;">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="/" aria-label="Mitosis home">
+        <img src="/assets/favicon.png" width="36" height="36" alt="">
+        <span>Mitosis</span>
+      </a>
+      <nav class="site-nav" aria-label="Main">
+        <a href="/guides/">Guides</a>
+        <a href="/#install">Install</a>
+        <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
+      </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
+    </div>
+  </header>
+
+  <main id="main">
+    <div class="wrap not-found">
       <img src="/assets/pose-thinking.png" width="200" height="200" alt="">
-      <h1 style="font-size: 40px; margin-top: 24px;">This page doesn't exist.</h1>
-      <p style="color: var(--muted); font-size: 18px;">It may have moved. The Mitosis home page has everything.</p>
-      <p style="margin-top: 28px;"><a class="button primary" href="/">Go to the home page</a></p>
+      <h1>This page doesn't exist.</h1>
+      <p>It may have moved. The Mitosis home page has everything.</p>
+      <a class="button primary" href="/">Go to the home page</a>
     </div>
   </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p>A <a href="https://theavni.studio/labs">The Avni Studio Labs</a> project</p>
+      <nav aria-label="Footer"><a href="/guides/">Guides</a><a href="/parall-alternative/">Free Parall alternative</a><a href="https://github.com/deadhearth01/Mitosis">GitHub</a></nav>
+    </div>
+  </footer>
+
+  <script src="/script.js" defer></script>
 </body>
 </html>

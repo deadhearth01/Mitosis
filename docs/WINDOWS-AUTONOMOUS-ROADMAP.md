@@ -787,3 +787,33 @@ After every stage:
 | 27 (follow-up 4) | System-component filter, UI smoke harness, plan dry run | `1097881`, `9e42df7`, `a2e6385` | 585 | 34 of 59 rows hidden by default with a Settings toggle and hint; `ui-smoke.ps1` scenarios; read-only plan dialog showing the planner refusal |
 
 Stages 21+ are appended as they complete.
+
+## 8. Website (2026-11-28)
+
+The marketing site at `website/public` was redesigned against a single new design
+system and regenerated from `website/tools/build_site.py` (25 pages). Copy, links,
+anchors, SEO/JSON-LD, and the article class contract are unchanged; it is still
+plain static HTML/CSS/JS with no framework, build step, external font, or new
+dependency.
+
+Scope: `styles.css` (rewritten token set, light and dark palettes, home, guides
+index, article contract, 404, responsive rules), `index.html` (new hero split,
+numbered sections, same words and anchors), `script.js` (guarded selectors,
+clipboard fallback, persisted theme toggle, theme-matched screenshot), `404.html`,
+and the generator's `head()`, `HEADER`, theme colours, and manifest background.
+All 22 guides, the guides index, and the Parall page inherit the redesign from the
+shared stylesheet with no per-page edits.
+
+Verified: the build reproduces every page (`Built 25 pages (version 0.2.3)`); no
+horizontal overflow from 320 px to 1920 px; light and dark both render; the theme
+toggle persists across navigation and swaps the app screenshot; 48 internal links
+return 200 with no broken image sources; the copy button reports success; measured
+text contrast is 5.79:1 or better on every token pair that carries text.
+
+Not verified: macOS visual review, axe/Lighthouse, keyboard-only and screen-reader
+passes, and the no-JavaScript path.
+
+The OpenDesign agent runtimes could not produce a design on this machine (four
+runs, one plan-only, one adapter failure), so the build used OpenDesign's
+`editorial` design system as its visual foundation. Full evidence and open items:
+`docs/WEBSITE-REDESIGN.md`.

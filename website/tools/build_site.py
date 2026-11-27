@@ -669,6 +669,12 @@ PARALL = {
 # ---------------------------------------------------------------------------------------------------------------
 # Templates
 
+THEME_BOOT = (
+    "<script>(function () { var d = document.documentElement; d.classList.add('js');"
+    " try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>"
+)
+
+
 def head(title, description, path, keywords="", extra_ld=(), og_type="article"):
     url = SITE + path
     ld = "".join(f'\n  <script type="application/ld+json">{json.dumps(x, ensure_ascii=False)}</script>' for x in extra_ld)
@@ -679,8 +685,8 @@ def head(title, description, path, keywords="", extra_ld=(), og_type="article"):
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>{html.escape(title)}</title>
   <meta name="description" content="{html.escape(description)}">{kw}
   <link rel="canonical" href="{url}">
@@ -696,7 +702,9 @@ def head(title, description, path, keywords="", extra_ld=(), og_type="article"):
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/styles.css">{ld}
+  {THEME_BOOT}
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/script.js" defer></script>{ld}
 </head>"""
 
 
@@ -713,6 +721,9 @@ HEADER = """<body>
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>"""
 
@@ -928,7 +939,7 @@ def llms_txt():
 def manifest():
     return json.dumps({
         "name": "Mitosis", "short_name": "Mitosis", "start_url": "/", "display": "browser",
-        "background_color": "#ffffff", "theme_color": "#1450A8",
+        "background_color": "#FAF8F4", "theme_color": "#1450A8",
         "icons": [
             {"src": "/assets/icon-192.png", "sizes": "192x192", "type": "image/png"},
             {"src": "/assets/icon-512.png", "sizes": "512x512", "type": "image/png"},

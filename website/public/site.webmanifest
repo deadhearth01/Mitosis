@@ -3,7 +3,7 @@
   "short_name": "Mitosis",
   "start_url": "/",
   "display": "browser",
-  "background_color": "#ffffff",
+  "background_color": "#FAF8F4",
   "theme_color": "#1450A8",
   "icons": [
     {

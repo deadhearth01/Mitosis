@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>Two Figma Accounts on One Mac, Side by Side</title>
   <meta name="description" content="Run a second copy of Figma on your Mac with its own login, settings, and Dock icon, so two Figma accounts stay open at once.">
   <meta name="keywords" content="two figma accounts mac, figma multiple accounts desktop app, figma switch account">
@@ -22,8 +22,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "How to use two Figma accounts on one Mac", "description": "Run a second copy of Figma on your Mac with its own login, settings, and Dock icon, so two Figma accounts stay open at once.", "url": "https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/", "datePublished": "2026-10-09", "dateModified": "2026-10-19", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/new-clone-pick.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script src="/script.js" defer></script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "How to use two Figma accounts on one Mac", "description": "Run a second copy of Figma on your Mac with its own login, settings, and Dock icon, so two Figma accounts stay open at once.", "url": "https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/", "datePublished": "2026-10-09", "dateModified": "2026-11-28", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/new-clone-pick.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "How to use two Figma accounts on one Mac", "item": "https://mitosis.theavni.studio/guides/two-figma-accounts-on-mac/"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can I be signed in to two Figma accounts at the same time?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. A Mitosis clone of Figma is a separate app with its own login, so both stay signed in."}}, {"@type": "Question", "name": "Does the clone change my original Figma?", "acceptedAnswer": {"@type": "Answer", "text": "No. The original keeps its account, settings, and data. The clone lives in ~/Applications/Mitosis with its data in ~/Library/Mitosis."}}]}</script>
 </head>
@@ -40,6 +42,9 @@
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 

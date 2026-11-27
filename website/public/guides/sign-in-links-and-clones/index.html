@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <title>Sign-In Links and App Clones on Mac: Why the Wrong Copy Gets Signed In</title>
   <meta name="description" content="Apps that sign in through the browser send a link back that macOS gives to the original app. Here&#x27;s why that signs in the wrong copy, and how Mitosis routes it.">
   <meta name="keywords" content="sign in opens wrong app mac, url scheme multiple instances mac, oauth login second app instance">
@@ -22,8 +22,10 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="manifest" href="/site.webmanifest">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="/styles.css">
-  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Why a clone gets signed in to the wrong copy, and the fix", "description": "Apps that sign in through the browser send a link back that macOS gives to the original app. Here's why that signs in the wrong copy, and how Mitosis routes it.", "url": "https://mitosis.theavni.studio/guides/sign-in-links-and-clones/", "datePublished": "2026-10-09", "dateModified": "2026-10-19", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/sign-in-links.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/sign-in-links-and-clones/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
+  <script src="/script.js" defer></script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "TechArticle", "headline": "Why a clone gets signed in to the wrong copy, and the fix", "description": "Apps that sign in through the browser send a link back that macOS gives to the original app. Here's why that signs in the wrong copy, and how Mitosis routes it.", "url": "https://mitosis.theavni.studio/guides/sign-in-links-and-clones/", "datePublished": "2026-10-09", "dateModified": "2026-11-28", "inLanguage": "en", "author": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio"}, "publisher": {"@type": "Organization", "name": "The Avni Studio", "url": "https://theavni.studio", "logo": {"@type": "ImageObject", "url": "https://mitosis.theavni.studio/assets/icon-512.png"}}, "image": "https://mitosis.theavni.studio/assets/guides/sign-in-links.webp", "mainEntityOfPage": "https://mitosis.theavni.studio/guides/sign-in-links-and-clones/", "about": {"@type": "SoftwareApplication", "name": "Mitosis", "operatingSystem": "macOS", "applicationCategory": "UtilitiesApplication"}}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "BreadcrumbList", "itemListElement": [{"@type": "ListItem", "position": 1, "name": "Mitosis", "item": "https://mitosis.theavni.studio/"}, {"@type": "ListItem", "position": 2, "name": "Guides", "item": "https://mitosis.theavni.studio/guides/"}, {"@type": "ListItem", "position": 3, "name": "Why a clone gets signed in to the wrong copy, and the fix", "item": "https://mitosis.theavni.studio/guides/sign-in-links-and-clones/"}]}</script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Does Mitosis see my sign-in details?", "acceptedAnswer": {"@type": "Answer", "text": "The link passes through the helper on your Mac straight to the app. Nothing is stored or sent anywhere."}}, {"@type": "Question", "name": "Which apps need this?", "acceptedAnswer": {"@type": "Answer", "text": "Apps that finish signing in through your browser, such as Slack, Claude, Figma, and many Electron apps. If the clone signs in inside its own window, you don't need it."}}]}</script>
 </head>
@@ -40,6 +42,9 @@
         <a href="/#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 

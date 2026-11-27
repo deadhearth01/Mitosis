@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="Run separate copies of your Mac apps side by side, like Slack (Work) next to Slack, each with its own login, data, and Dock icon. Free app cloner for macOS.">
-  <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
-  <meta name="theme-color" content="#142337" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FAF8F4" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0E1116" media="(prefers-color-scheme: dark)">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Mitosis">
   <meta property="og:title" content="Mitosis — Free Mac App Cloner: Run Apps Twice, Separate Logins">
@@ -21,6 +21,7 @@
   <link rel="manifest" href="site.webmanifest">
   <meta property="og:image:width" content="1280">
   <meta property="og:image:height" content="640">
+  <script>(function () { var d = document.documentElement; d.classList.add('js'); try { var t = localStorage.getItem('mitosis-theme'); if (t === 'light' || t === 'dark') { d.dataset.theme = t; } } catch (e) {} })();</script>
   <link rel="stylesheet" href="styles.css">
   <script src="script.js" defer></script>
   <title>Mitosis — Free Mac App Cloner: Run Apps Twice, Separate Logins</title>
@@ -43,30 +44,37 @@
         <a href="#install">Install</a>
         <a href="https://github.com/deadhearth01/Mitosis">GitHub</a>
       </nav>
+      <button class="theme-toggle" type="button" data-theme-toggle>
+        <span class="sr-only" data-theme-label>Switch to dark theme</span>
+      </button>
     </div>
   </header>
 
   <main id="main">
-    <section class="hero wrap" id="top" aria-labelledby="hero-title">
-      <div class="hero-copy">
-        <p class="eyebrow">One app. Separate worlds.</p>
-        <h1 id="hero-title">Run separate copies of your Mac apps, side by side.</h1>
-        <p class="hero-subline">Keep work, personal, and every other login in its own app.</p>
-        <a class="button primary" href="#install">Install Mitosis <span aria-hidden="true">↓</span></a>
-        <p class="hero-note">Free and source-available <span aria-hidden="true">·</span> Native macOS</p>
-        <a class="featured-badge" href="https://www.trymacapps.com" target="_blank" rel="noopener">
-          <img src="https://www.trymacapps.com/badge.png" alt="Featured on TryMacApps" width="200" height="67" loading="lazy">
-        </a>
-      </div>
-      <div class="hero-art">
-        <img src="assets/hero.webp" width="720" height="720" alt="Mito, the blue Mitosis mascot, winking" fetchpriority="high">
+    <section class="hero" id="top" aria-labelledby="hero-title">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow">One app. Separate worlds.</p>
+          <h1 id="hero-title">Run separate copies of your Mac apps, side by side.</h1>
+          <p class="hero-subline">Keep work, personal, and every other login in its own app.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="#install">Install Mitosis <span aria-hidden="true">↓</span></a>
+            <p class="hero-note">Free and source-available <span aria-hidden="true">·</span> Native macOS</p>
+          </div>
+          <a class="featured-badge" href="https://www.trymacapps.com" target="_blank" rel="noopener">
+            <img src="https://www.trymacapps.com/badge.png" alt="Featured on TryMacApps" width="200" height="67" loading="lazy">
+          </a>
+        </div>
+        <div class="hero-art">
+          <img src="assets/hero.webp" width="720" height="720" alt="Mito, the blue Mitosis mascot, winking" fetchpriority="high">
+        </div>
       </div>
     </section>
 
     <section class="section install-section" id="install" aria-labelledby="install-title">
       <div class="wrap">
         <div class="section-heading">
-          <p class="eyebrow">Get started</p>
+          <p class="eyebrow"><span class="eyebrow-num">01</span>Get started</p>
           <h2 id="install-title">Install Mitosis</h2>
           <p>Paste this in Terminal. It checks the download before installing and needs no admin password.</p>
         </div>
@@ -88,7 +96,7 @@
     <section class="section screenshot-section" aria-label="The Mitosis app">
       <div class="wrap">
         <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/screen-dark.webp">
+          <source data-screen="dark" media="(prefers-color-scheme: dark)" srcset="assets/screen-dark.webp">
           <img class="screenshot" src="assets/screen-light.webp" decoding="async" width="1600" height="1165" loading="lazy" alt="The Mitosis window: clones listed by app in the sidebar, and a clone's page with its status, actions, and usage stats">
         </picture>
       </div>
@@ -97,7 +105,7 @@
     <section class="section features-section" aria-labelledby="features-title">
       <div class="wrap">
         <div class="section-heading">
-          <p class="eyebrow">Made for more than one account</p>
+          <p class="eyebrow"><span class="eyebrow-num">02</span>Made for more than one account</p>
           <h2 id="features-title">Each clone has its own space.</h2>
         </div>
         <div class="features-grid">
@@ -123,7 +131,7 @@
     <section class="section how-section" id="how-it-works" aria-labelledby="how-title">
       <div class="wrap">
         <div class="section-heading">
-          <p class="eyebrow">How it works</p>
+          <p class="eyebrow"><span class="eyebrow-num">03</span>How it works</p>
           <h2 id="how-title">Three steps. Two apps.</h2>
         </div>
         <ol class="steps-grid">
@@ -146,7 +154,7 @@
     <section class="section guides-section" aria-labelledby="guides-title">
       <div class="wrap">
         <div class="section-heading">
-          <p class="eyebrow">Guides</p>
+          <p class="eyebrow"><span class="eyebrow-num">04</span>Guides</p>
           <h2 id="guides-title">Two accounts, one Mac.</h2>
           <p>Step-by-step guides for the apps people clone most.</p>
         </div>
@@ -165,7 +173,7 @@
     <section class="section faq-section" id="faq" aria-labelledby="faq-title">
       <div class="wrap faq-layout">
         <div class="section-heading">
-          <p class="eyebrow">Good to know</p>
+          <p class="eyebrow"><span class="eyebrow-num">05</span>Good to know</p>
           <h2 id="faq-title">Frequently asked questions</h2>
         </div>
         <div class="faq-list">

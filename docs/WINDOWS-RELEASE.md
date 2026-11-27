@@ -1,9 +1,10 @@
 # Windows release readiness (Stage 17)
 
 Status: **release candidate pipeline exists and is reproducible; the app is not
-release-ready** — the clone engine is unimplemented (Stage 6+ framework only,
-catalog empty) and no clean-machine run has been performed. Every claim below is
-tied to build evidence from this stage; untested items are marked.
+release-ready** — no production provisioning strategy exists (the Stage 28 execution
+spine is probe-verified and the catalog is empty) and no clean-machine run has been
+performed. Every claim below is tied to build evidence from this stage; untested
+items are marked.
 
 ## Deployment model (evidence)
 
@@ -389,6 +390,8 @@ Before anything could be called 1.0 for Windows:
       explicit authorization. The unsigned zip + manual runtime prerequisites is
       the current working model.
 - [ ] **The clone engine itself** — the product's core (clone, launch, refresh,
-      delete, recovery) is framework-only with an empty strategy catalog and
-      closed execution gates; UI actions show honest "not available in preview"
-      dialogs. This is the largest real blocker and out of Stage 17's scope.
+      delete, recovery) has an execution spine (copy, manifest, launch
+      configuration, bounded launch, probe-verified) but no production strategy:
+      the catalog is empty and execution gates stay closed for real apps. UI
+      actions show honest "not available in preview" dialogs. This is the largest
+      real blocker and out of Stage 17's scope.

@@ -14,9 +14,11 @@ with per-app compatibility verdicts; profiles can be created, renamed, re-badged
 and removed as metadata records. Sample data survives only behind the explicit
 `Show preview instead` fallback and is never mixed with real results.
 
-The clone engine is framework only: the production strategy catalog is empty and
-every provisioning gate is closed. Nothing here clones, launches, or modifies an
-application. Local diagnostics (a bounded, redacted log, a copyable environment
+The clone engine has a probe-verified execution spine but no production strategy:
+the catalog is empty and every provisioning gate stays closed for real
+applications. Nothing here clones, launches, or modifies an installed
+application; the only executed target is a disposable probe. Local diagnostics (a
+bounded, redacted log, a copyable environment
 report, and crash hooks), single-instance activation (one window per user
 session), a read-only CLI (`version`, `list`, `profiles`, `doctor`) that ships in
 `cli/` inside the release zip, and a manual, read-only update-availability check
@@ -80,9 +82,10 @@ windows/
 ```
 
 The domain, application, infrastructure, compatibility, and Windows platform
-layers carry real implementations. `Mitosis.CloneEngine` currently contains the
-planning/gating framework only; it has no executor and the production strategy
-catalog is deliberately empty.
+layers carry real implementations. `Mitosis.CloneEngine` contains the planning and
+gating framework plus an execution spine (`CopyProvisionExecutor` and
+`InstanceLauncher`, `WINDOWS-PROVISIONING.md` §9); the production strategy catalog
+is deliberately empty, so no real application can be provisioned.
 
 ## Build and test
 
@@ -239,8 +242,8 @@ verdict and its saved profiles; the empty state appears when discovery returns
 nothing. Search filters live; Enter opens the selected app, Ctrl+N starts New
 Clone, Ctrl+F focuses search, right-click shows the app/clone menu, and F1 / Ctrl+,
 open Help / Settings. Engine-only actions (Open, Refresh, Delete, Clean Caches, …)
-still show honest “unavailable” dialogs because no executor exists; they never
-pretend to succeed.
+still show honest “unavailable” dialogs because no production strategy is
+registered; they never pretend to succeed.
 
 Manual visual verification (no automated UI tests in this environment): compare the
 running window against `Assets/Screenshots/clone-light.png` / `clone-dark.png` and

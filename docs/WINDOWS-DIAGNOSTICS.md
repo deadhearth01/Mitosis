@@ -20,7 +20,7 @@ CLI (`mitosis doctor`) has a report to print.
 Not recorded: application names, profile names, application data, credentials,
 tokens, environment variables, file contents, request/response bodies, or network
 activity. Feature-level logging will be added only when there is a feature that
-needs it; the engine is absent today.
+needs it; no provisioning strategy exists today.
 
 ## 2. Location, format, and rotation
 
@@ -109,6 +109,6 @@ application data, credentials, or file contents.
 - Store-health and discovery counts in the **GUI copy report**. The read-only CLI
   `doctor` prints them (Stage 24, `docs/WINDOWS-CLI.md`); the Settings clipboard
   report stays environment-only.
-- Per-feature log calls for the clone engine (no engine exists).
+- Per-feature log calls for the clone engine (no production strategy exists).
 - Log export/zip, retention-by-age, and any remote reporting.
 - Forwarding launch arguments to the running instance (no activation kinds exist).

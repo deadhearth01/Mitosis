@@ -285,8 +285,8 @@ parity. Until then: no fake tray commands; quit-on-close stays.
   the banner logic was already tested). See `docs/UI-PARITY-MATRIX.md`
   (Stage 16 notes).
 - Stage 17: release packaging and deployment audit — **audited and instrumented;
-  the app is not release-ready** (the clone engine remains unimplemented, no
-  clean-machine run has been performed). The audited deployment model is
+  the app is not release-ready** (no production provisioning strategy exists and
+  no clean-machine run has been performed). The audited deployment model is
   unpackaged + framework-dependent + x64 (csproj evidence in
   `docs/WINDOWS-RELEASE.md`), published to a reproducible, SHA-anchored zipped
   release candidate (`windows/artifacts/Mitosis-windows-x64-<sha>.zip`,

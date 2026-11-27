@@ -114,3 +114,21 @@ tests), F-L1 (swatch names; compile-verified, Narrator pass still required),
 F-L2 (polling retries + null approval/dimensions/go-back gating tests). No safety
 boundary weakened; no provisioning enabled; no macOS files touched; no new
 runtime dependencies.
+
+## 5. Addendum (2026-11-27, Stage 28)
+
+An execution spine now exists (`CopyProvisionExecutor`, `InstanceLauncher`) with no
+registered strategy, so it is unreachable for any installed application.
+
+- I-3: the executor maps I/O, access, profile, security, and not-supported failures to
+  a refused `ProvisionResult` that names the failure, removes the instance directory it
+  created, and rethrows cancellation. The gate itself still propagates anything the
+  executor does not handle, which remains an acceptable boundary because registration
+  requires a reviewed strategy.
+- I-4: execution-time revalidation is implemented. A reparse point anywhere in the
+  source tree, or above the destination, is refused rather than traversed; the
+  destination must be absent; the destination must stay under the instance root; the
+  launch executable, working directory, and data directory must all resolve inside the
+  instance. Reserved device names are rejected before any copy (F-M1's regression).
+- Reachability for a real application still requires a strategy with complete isolation
+  evidence, so this addendum records mechanism, not a change in product capability.

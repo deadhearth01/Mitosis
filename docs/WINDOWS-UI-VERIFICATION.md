@@ -54,6 +54,14 @@ native adaptation or a parity defect.
 - S9: themes and scaling: Light, Dark, each High-Contrast theme; 100/150/200%
   text scaling watching for clipping (tile values, pills, captions, buttons);
   125/150/200% display scale.
+  - **Observed 2026-11-27 (100% scale):** the Light theme was captured for the
+    main window at 1060×720, the Help window on Permissions, and Settings ▸
+    General (`light-main-1060x720.png`, `light-help-permissions.png`,
+    `light-settings-general.png`). Text, accents, selection fill, and the focus
+    ring stayed legible against the light surfaces; no hardcoded-colour defect
+    appeared. Dark was already covered by the Stage 27 set. High-contrast themes
+    and 100/150/200% text or display scaling remain unverified because they need
+    OS accessibility and display changes.
 - S10: Help window (W02/W38): opens at 820×580 via F1 and the sidebar Help
   button; starts on "Getting started"; each of the 9 topics changes title,
   paragraphs, mascot pose, and button area; only Permissions and Troubleshooting
@@ -283,9 +291,9 @@ no app was copied, launched, or modified to produce any of this evidence.
 - Narrator speech (no screen-reader audio capture on this machine): S24 stays
   pending even though names, roles, and states were inspected with UI
   Automation.
-- High-contrast themes and 150/200% text scaling; the pass used the default
-  dark theme at 100% scale only. A light-theme screenshot exists
-  (`main-1060x720-light.png`) but was not recaptured this pass.
+- High-contrast themes and 150/200% text scaling; the capture passes used the
+  default dark theme and one light-theme pass at 100% scale
+  (`light-*.png`).
 - Clean Windows 10/11 VMs, a standard (non-admin) account, and a second
   Windows user/session. S4 clone detail was not opened (preview data only).
 - Touch, IME, right-to-left layout, and drag-below-floor for the main window.
@@ -365,3 +373,35 @@ tree).
   Automation.
 
 Screenshots: `help-permissions-dark.png`, `help-troubleshooting-dark.png`.
+
+### 5.5 Light-theme pass (2026-11-27)
+
+The WinUI shell follows the system app theme, so this pass set
+`HKCU\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize\AppsUseLightTheme`
+to `1` for the duration, launched the packaged build
+(`Mitosis-windows-0.2.2-x64-ddc1711.zip`), and restored the previous value
+(`0`) afterwards; the value was re-read to confirm the restore. Only the
+app-theme value was touched — the taskbar/system value was left alone — and the
+app was closed before the restore.
+
+Windows and Settings were opened with UI Automation `Invoke` on the sidebar
+buttons (`Help`, `Settings`) rather than `SendKeys`, because the desktop was in
+active use and a synthetic keystroke had to be avoided.
+
+Observed:
+
+- Main window at 1060×720: light background, dark text, blue accent on the
+  selected nav item and the primary button; rows, group headers, and the
+  empty-state mascot all read correctly.
+- Help on Permissions: selected topic row uses a light fill with a visible focus
+  ring; body text, the "Open Privacy & Security" button, and the mascot pose have
+  adequate contrast.
+- Settings ▸ General at 540×779: section titles, captions, the two "Show in File
+  Explorer" buttons, "Copy diagnostics", and the update row are legible; the
+  selected tab underline uses the light-theme accent (`#1A7FE0`).
+
+Screenshots: `light-main-1060x720.png`, `light-help-permissions.png`,
+`light-settings-general.png`.
+
+Not exercised: high-contrast themes and 150/200% text scaling (both need
+OS accessibility settings), and non-100% display scaling.

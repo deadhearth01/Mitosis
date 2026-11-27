@@ -488,7 +488,9 @@ only started when its dependencies and authorization state allow it.
   `2149c138b0a05f27a16376fbffa1ea8f7cbff9b459025595dda365daa605196d`), rebuilt from the
   tree with both follow-up fixes and verified the same way. It was started once: the
   process stayed alive and created its “Mitosis” main window, which is all a locked
-  desktop allows; no interactive pass was possible. (An intermediate `aadbb52` archive
+  desktop allows; no interactive pass was possible at that moment. Later passes ran
+  interactively on the same package once the desktop was unlocked (§5.4/§5.5 of
+  `WINDOWS-UI-VERIFICATION.md`). (An intermediate `aadbb52` archive
   was built and verified between the two fixes.)
   A follow-up fixed a launch defect found by review: the bounded output reader stopped
   reading at the 64 KiB cap, so an instance that wrote more stalled on a full pipe and
@@ -496,7 +498,11 @@ only started when its dependencies and authorization state allow it.
   caps what it keeps; the regression test fails without the fix (20 s timeout), and the
   suite is 509/509. A second reviewed failure path was closed the same way: a launch
   whose data-directory name is held by a file now returns a named refusal instead of
-  throwing out of the call.
+  throwing out of the call. The current artifact is
+  `Mitosis-windows-0.2.2-x64-df998f7.zip` (94 files, 45,777,177 bytes, SHA-256
+  `89b0bb376487b33649c89d4336310302037c2c9673fc8d46d5b87aed7b5f7317`), verified by
+  `ReleaseVerifier` and started once, with a clean `app.stop | main window closed` on
+  close. It also carries the discovery merge fix recorded below.
   **Still blocked:** a production strategy for a real application (requires its own
   isolation evidence and your authorization), UI wiring, rollback, refresh, and
   deletion/relink. The catalog stays empty, so the wizard and detail views still

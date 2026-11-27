@@ -153,7 +153,8 @@ public static class OperationPlanner
             Warnings: warnings,
             Failures: Array.Empty<string>(),
             CanExecute: true,
-            CreatedAt: context.Timestamp);
+            CreatedAt: context.Timestamp,
+            SourceRoot: app.InstallLocation);
     }
 
     private static OperationPlan Refused(
@@ -177,7 +178,8 @@ public static class OperationPlanner
             Warnings: warnings,
             Failures: failures,
             CanExecute: false,
-            CreatedAt: context.Timestamp);
+            CreatedAt: context.Timestamp,
+            SourceRoot: app.InstallLocation);
 
     private static string Normalize(string relative) =>
         relative.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar).TrimEnd(Path.DirectorySeparatorChar);

@@ -73,7 +73,8 @@ public sealed record OperationPlan(
     IReadOnlyList<string> Warnings,
     IReadOnlyList<string> Failures,
     bool CanExecute,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt,
+    string? SourceRoot = null);
 
 /// <summary>Inputs to planning. The caller supplies capabilities and evidence; the
 /// planner gathers nothing and launches nothing.</summary>

@@ -1,8 +1,12 @@
-# Windows provisioning strategy framework (Stage 6)
+# Windows provisioning strategy framework (Stage 6; execution spine added 2026-11-27)
 
-Planning-only architecture for turning a discovered application into an independent
-instance. Stage 6 plans but never executes: the production catalog is empty, the
-planner refuses everything, and no executor exists.
+The framework plans an instance and, since the Stage 28 execution spine, can carry out
+the mechanical part: copy an install directory into a private instance directory, write
+the instance manifest and launch configuration, create the private data directory, and
+launch that copy. It still has **no production strategy**:
+`ProductionCatalog.Strategies` is empty, so the planner refuses execution for every real
+application and the UI can only save planned profiles. A self-contained probe — the
+system command processor, not an installed app — exercises the spine end to end.
 
 ## 1. Strategy architecture
 
@@ -16,8 +20,9 @@ planner refuses everything, and no executor exists.
 - `ProductionCatalog.Strategies` is **empty by design**: no Windows application
   category has validated isolation evidence yet (see §7).
 - Progress and outcomes use `ProvisionProgress` / `ProvisionResult` records;
-  a future `IProvisionExecutor` takes the immutable plan plus an
-  `IProgress<ProvisionProgress>` sink.
+  `IProvisionExecutor` takes the immutable plan plus a
+  `IProgress<ProvisionProgress>` sink (`CopyProvisionExecutor` is the first
+  implementation, §9).
 
 ## 2. Evidence requirements (`IsolationEvidence`)
 
@@ -63,8 +68,9 @@ an executor is installed, plan and strategy ids/versions still match, the strate
 is enabled and supports execution, prerequisites are still satisfied, and evidence
 is still complete. Anything else returns `Refused` without touching the system.
 Profile records are never mutated by planning or gating — `Ready` can only be set
-by a future provisioner after genuine verified work. No executor ships in Stage 6,
-so every request is refused by the missing-executor rule at the latest.
+by a future provisioner after genuine verified work. No executor shipped in Stage 6;
+the Stage 28 spine adds one (§9), but the gate still refuses every real application
+because the production catalog is empty.
 
 ## 7. Supported and unsupported categories
 
@@ -73,6 +79,11 @@ so every request is refused by the missing-executor rule at the latest.
   behavior, update behavior all unknown); system components are `Unsupported` at
   assessment time. No category clears the evidence bar, so no strategy was
   validated — the empty catalog is the honest outcome, not a gap in the framework.
+- The 2026-11-27 execution spine changes the mechanism, not the evidence: the
+  probe proves that copy, manifest, launch configuration, private data directory,
+  and launch work for a controlled target. It says nothing about any installed
+  application's data, registry, mutex, update, or licensing behavior, so the
+  catalog stays empty.
 - Stage 7 research (`docs/WINDOWS-STRATEGY-RESEARCH.md`) advanced the question:
   vendor-documented profile flags are eligible for engineering review, portable
   copies need review with a threat model, and Store/MSIX plus generic copies are
@@ -85,11 +96,66 @@ so every request is refused by the missing-executor rule at the latest.
 
 Per-application data-isolation research (Electron `--user-data-dir`-style switches on
 Windows, Chromium profile dirs, Squirrel/installer layouts, single-instance mutexes,
-protocol-handler separation, update-in-place behavior); a lawful copy mechanism
-replacing APFS clonefile; signature/integrity story replacing ad-hoc codesign;
-reparse-point and ACL handling at execution; schema for strategy evidence bundles;
-UI for strategy selection once multiple strategies exist. All belong to Stage 7+.
+protocol-handler separation, update-in-place behavior); reparse-point and ACL handling
+at execution (the copy executor refuses reparse points rather than traversing them);
+schema for strategy evidence bundles; UI for strategy selection once multiple
+strategies exist. The file-copy mechanism that replaces APFS clonefile now exists (§9);
+everything per application remains Stage 7+ research.
 Evidence recording for these dimensions is defined in
 `docs/WINDOWS-EVIDENCE-BUNDLES.md` (Stage 8); verification itself stays unauthorized
 until a dedicated live-testing stage conducted under
 `docs/WINDOWS-ISOLATION-VERIFICATION-PLAN.md` (Stage 9A, plan only).
+
+## 9. Execution spine (Stage 28, 2026-11-27)
+
+Two engine components now exist; neither is reachable for a real application because
+no strategy is registered.
+
+`CopyProvisionExecutor` (`Mitosis.CloneEngine/Provisioning/CopyProvisionExecutor.cs`)
+revalidates the plan at execution time, then copies the install directory, writes the
+manifest and launch configuration, and creates the private data directory. Its rules:
+
+- Refuses an unadmitted plan, a non-normalized or non-absolute instance root, a drive
+  or share root, a source that is missing or contains/overlaps the instance root, a
+  destination that exists, a destination reached through a reparse point, and a launch
+  executable that is not part of the source tree.
+- Walks the source without following reparse points (refuses any it finds), caps the
+  tree at 64 levels, 100,000 files, and 8 GiB, and rejects names that fail
+  `DestinationSafety` (so a hostile install directory cannot escape the instance).
+- Copies with `overwrite: false`, clears read-only attributes on the copies, preserves
+  empty directories, and on any failure deletes the instance directory it created —
+  never the source, never anything outside the destination.
+- Does not launch, touch the registry, change ACLs, or mutate the profile record.
+
+`InstanceLauncher` re-reads `mitosis-launch.json` and requires the executable, working
+directory, and data directory to resolve inside the instance, so a tampered
+configuration cannot start an arbitrary program. It substitutes `{instance}` and
+`{dataDirectory}` in arguments, captures at most 64 KiB of output, and kills the
+process tree after the timeout (30 s by default).
+
+Skeletons written into every instance:
+
+```json
+// mitosis-instance.json
+{ "SchemaVersion": 1, "PlanId": "…", "StrategyId": "…", "StrategyVersion": "…",
+  "ProfileId": "…", "AppId": "…", "SourceRoot": "C:\\…",
+  "InstancePath": "C:\\…\\instances\\<profile-guid>", "CreatedAt": "…" }
+
+// mitosis-launch.json
+{ "SchemaVersion": 1, "Executable": "app.exe", "Arguments": [],
+  "DataDirectory": "data", "WorkingDirectory": "." }
+```
+
+**Probe evidence.** Ten tests cover the executor (copy/manifest/config/writable copies,
+existing destination, missing source, reparse point, unadmitted plan), the launcher
+(external executable refused, missing configuration refused, placeholder substitution),
+and an end-to-end run: the same source directory is provisioned for two profiles, both
+copies launch from their own instance directory, and each writes its marker only into
+its own tree. The probe executable is the system command processor, so no installed
+application was copied, launched, or modified. Suite 507/507, 0 warnings.
+
+**Not proven by the probe.** Any real application's data, registry, mutex, protocol,
+update, or licensing behavior; rollback after a successful provisioning; refresh;
+deletion/relink; strategy selection in the UI (the catalog is still empty, so the
+wizard still saves planned profiles only). Those remain Stage 28's authorization-gated
+remainder and Stages 29–31.

@@ -27,17 +27,23 @@ public interface IProvisioningStrategy
 /// <summary>Structured progress for a future execution. No executor exists in Stage 6.</summary>
 public sealed record ProvisionProgress(int OperationIndex, int OperationCount, string Message);
 
-/// <summary>Outcome of an execution request. Stage 6 only ever produces <see cref="Refused"/>.</summary>
+/// <summary>Outcome of an execution request. <see cref="Refused"/> is the only outcome
+/// when the gate rejects a plan; an executor that performs real work returns
+/// <see cref="Completed"/> with the absolute outputs it created.</summary>
 public sealed record ProvisionResult(
     bool Admitted,
     Guid PlanId,
-    IReadOnlyList<string> Errors)
+    IReadOnlyList<string> Errors,
+    IReadOnlyList<string>? Outputs = null)
 {
     public static ProvisionResult Refused(Guid planId, params string[] errors) =>
         new(false, planId, errors);
 
     public static ProvisionResult Refused(Guid planId, IReadOnlyList<string> errors) =>
         new(false, planId, errors);
+
+    public static ProvisionResult Completed(Guid planId, IReadOnlyList<string> outputs) =>
+        new(true, planId, Array.Empty<string>(), outputs);
 }
 
 /// <summary>Execution handle for a future stage. Takes the immutable plan plus a progress

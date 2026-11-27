@@ -97,8 +97,8 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 497/497; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity |
-| Windows CI | Complete and verified locally; remote run not observed this session | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify |
+| Unit/integration tests | Complete for implemented logic | 507/507; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity, and the provisioning execution spine |
+| Windows CI | Complete; remote run observed | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify; run `45907355528` succeeded on `6e3417d` |
 | Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `install.ps1`; `Mitosis.pri` fix |
 | Artifact verifier | Complete and verified (45 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI + installer rules in Stage 26 |
 | Version metadata | Complete; release stamp decision pending | `Directory.Build.props` (`0.2.2`; product tag is `v0.2.3`) |
@@ -112,9 +112,9 @@ is eligible now, deferred, or authorization-gated.
 
 | # | Area | Gap | Evidence | Impact | Disposition |
 |---|---|---|---|---|---|
-| G1 | Core product | No real clone engine/executor | `ProductionCatalog.Strategies = Array.Empty` | Cannot clone anything | Authorization-gated |
-| G2 | Isolation | No live isolation evidence for any Windows app | `WINDOWS-ISOLATION-VERIFICATION-PLAN.md` | Cannot claim separation | Authorization-gated |
-| G3 | Lifecycle | No launch verification, refresh, rollback, recovery | Engine absent | Clones could not be trusted | Authorization-gated |
+| G1 | Core product | Executor exists; no production strategy | `CopyProvisionExecutor` + `InstanceLauncher`, probe-verified (`WINDOWS-PROVISIONING.md` §9); `ProductionCatalog.Strategies` still empty | The mechanism can build and launch an instance, but no real app is eligible, so the product still cannot clone | Production strategies authorization-gated |
+| G2 | Isolation | No live isolation evidence for any Windows app | `WINDOWS-ISOLATION-VERIFICATION-PLAN.md`; the probe proves only its own private tree | Cannot claim separation for a real app | Authorization-gated |
+| G3 | Lifecycle | Launch verified for the probe only; no refresh, rollback, or recovery | `InstanceLauncher` + probe test; engine has no rollback/refresh | Clones could not be trusted | Probe launch done; remainder authorization-gated |
 | G4 | Data safety | No delete/clean/relink semantics for real clones | Engine absent | Cannot safely remove data | Authorization-gated |
 | G5 | Profiles | Saved profiles had no rename, re-badge, or removal path | `Planned`-profile Edit/Remove added in Stage 21; provisioned profiles remain read-only | Future provisioned records must be managed by the engine, not metadata code | Complete for `Planned` (Stage 21) |
 | G6 | Wizard entry | App-detail “New Clone…” showed a placeholder | `CreateCloneFromAppCommand` now raises `NewCloneRequested`; preview keeps the placeholder | A primary path works | Complete (Stage 21) |
@@ -446,7 +446,7 @@ only started when its dependencies and authorization state allow it.
   `eeec0264cd12c7c95d4aa91cf4780a1b863a87e88f313677b0f2092e123711e2`) passes the
   verifier.
 
-### Stage 28 — Clone engine authorization and strategy implementation (blocked)
+### Stage 28 — Clone engine authorization and strategy implementation (execution spine implemented; production strategies blocked)
 
 - **Objective:** Implement the first production provisioning strategy and executor
   behind the existing gate.
@@ -466,6 +466,24 @@ only started when its dependencies and authorization state allow it.
 - **Definition of done:** One strategy registered with complete evidence; a clone
   launches and is verifiably separate; rollback works.
 - **Authorization:** **Required before any code that can execute provisioning.**
+- **Progress (2026-11-27):** the execution spine is implemented and probe-verified.
+  `CopyProvisionExecutor` revalidates the plan at execution time (root, source,
+  destination, reparse points, launch executable), copies with reparse-point refusal
+  and file/size/depth bounds, writes `mitosis-instance.json` and
+  `mitosis-launch.json`, creates the private `data` directory, clears read-only
+  attributes on copies, and removes only what it created on failure.
+  `InstanceLauncher` requires the executable, working directory, and data directory
+  to resolve inside the instance, substitutes `{instance}`/`{dataDirectory}`, bounds
+  captured output, and enforces a timeout. `OperationPlan` now carries `SourceRoot`
+  so execution can revalidate the copy source. Ten tests cover refusals, a real copy,
+  launcher substitution, and a two-profile run in which both copies launch from their
+  own directory and write only into their own tree; the probe target is the system
+  command processor, so no installed application was copied or launched. Suite
+  507/507, 0 warnings.
+  **Still blocked:** a production strategy for a real application (requires its own
+  isolation evidence and your authorization), UI wiring, rollback, refresh, and
+  deletion/relink. The catalog stays empty, so the wizard and detail views still
+  offer planned profiles only.
 
 ### Stage 29 — Isolation verification execution (blocked)
 
@@ -605,8 +623,8 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` on the Stage 27 tree (0 warnings); GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
-| 497 tests pass | Verified | `dotnet test` at the Stage 27 tree, eight test projects; Actions run `45906908476` re-ran restore/build/test and published the RC | None for this tree |
+| Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
+| 507 tests pass | Verified | `dotnet test` on the execution-spine tree, eight test projects | Clean-machine test run |
 | Manual UI protocol | Verified for observed scenarios (desktop) | 41 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
@@ -616,9 +634,10 @@ operations are allowed without additional authorization.
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
 | Release zip is structurally sound | Verified | Stage 19/20 verifier + 45 fixture tests; Stage 26 additionally bundled the CLI, requires the PRI, and requires `install.ps1` | Clean-machine launch |
+| Provisioning execution spine | Verified (runtime, probe target only) | 10 tests: copy + manifest + launch config + private data directory; refusals for an existing destination, missing source, reparse point, unadmitted plan, and external executable; two-profile probe launched both copies with separate writable trees; suite 507/507 | A real application; rollback, refresh, delete/relink; UI wiring |
 | Published artifact launches | Verified (development machine only) | Stage 26: the publish tree and a freshly unzipped archive start, show the main/welcome windows, and exit cleanly; this exposed and fixed the missing `Mitosis.pri` (microsoft/WindowsAppSDK#6720) | Clean Windows 10/11 VM, missing-prerequisite path, another desktop session |
 | UI matches macOS pixels | **Not verified** | Stage 27 screenshots of Windows states; no macOS side-by-side diff | macOS pixel diff; contrast; Narrator |
-| Any clone works | **Not verified / not implemented** | Catalog empty | Authorization + engine + evidence |
+| Any clone works | **Not verified** (probe only) | The execution spine builds and launches an instance for a controlled probe; the production catalog is empty | Authorization + a real strategy + isolation evidence |
 | Installer works | Verified (development machine, logic + runtime) | `install.ps1`: dry run, install/reinstall/`-Force`, unsafe-path and unowned-folder refusal, recorded-file-only uninstall, data preservation and `-RemoveUserData`, missing-marker refusal, real shortcut + HKCU entry inspected and removed; 11 behavioral tests | Clean Windows 10/11 VM, standard user, PowerShell 7, SmartScreen/AV |
 | Binary is trusted | **Not verified** | Unsigned | Signing decision |
 

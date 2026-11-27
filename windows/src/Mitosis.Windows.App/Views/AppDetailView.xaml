@@ -247,6 +247,11 @@
                                                 Orientation="Horizontal"
                                                 Spacing="4">
                                                 <Button
+                                                    AutomationProperties.Name="Preview plan"
+                                                    Click="OnPreviewPlanClick"
+                                                    Content="Plan"
+                                                    Tag="{x:Bind Id}" />
+                                                <Button
                                                     AutomationProperties.Name="Edit profile"
                                                     Click="OnEditProfileClick"
                                                     Content="Edit"

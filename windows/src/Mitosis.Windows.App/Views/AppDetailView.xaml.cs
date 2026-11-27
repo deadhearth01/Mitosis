@@ -103,6 +103,19 @@ public sealed partial class AppDetailView : UserControl
         HeaderBadge.Visibility = Visibility.Collapsed;
     }
 
+    private async void OnPreviewPlanClick(object sender, RoutedEventArgs e)
+    {
+        if ((sender as FrameworkElement)?.Tag is not Guid id
+            || ViewModel.FindProfile(id) is not { } profile
+            || ViewModel.SelectedApp is not { } item)
+        {
+            return;
+        }
+
+        var preview = PlanPreviewViewModel.Create(item.App, profile, item.Assessment);
+        await PlanDialog.ShowAsync(XamlRoot, preview);
+    }
+
     private async void OnEditProfileClick(object sender, RoutedEventArgs e)
     {
         if ((sender as FrameworkElement)?.Tag is Guid id && ViewModel.FindProfile(id) is { } profile)

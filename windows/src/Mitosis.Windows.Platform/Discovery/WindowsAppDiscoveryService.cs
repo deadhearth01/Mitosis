@@ -42,7 +42,7 @@ public sealed class WindowsAppDiscoveryService : IAppDiscoveryService
     internal static IReadOnlyList<DiscoveredApp> Merge(IReadOnlyList<RawAppRecord> records)
     {
         return records
-            .GroupBy(r => AppIdentity.NormalizeKey(r.DisplayName, r.Publisher), StringComparer.Ordinal)
+            .GroupBy(r => AppIdentity.MergeKey(r.DisplayName, r.Publisher), StringComparer.Ordinal)
             .Select(g =>
             {
                 // First occurrence wins display fields: sources are enumerated in composition
@@ -57,7 +57,7 @@ public sealed class WindowsAppDiscoveryService : IAppDiscoveryService
                 return new DiscoveredApp(
                     Id: AppIdentity.Create(first.Source, first.DisplayName, first.Publisher),
                     DisplayName: first.DisplayName.Trim(),
-                    Publisher: ordered.Select(r => r.Publisher).FirstOrDefault(p => !string.IsNullOrEmpty(p)),
+                    Publisher: PreferredPublisher(ordered),
                     Version: ordered.Select(r => r.Version).FirstOrDefault(v => !string.IsNullOrEmpty(v)),
                     InstallLocation: ordered.Select(r => r.InstallLocation).FirstOrDefault(p => !string.IsNullOrEmpty(p)),
                     ExecutablePath: null,
@@ -71,5 +71,15 @@ public sealed class WindowsAppDiscoveryService : IAppDiscoveryService
             .OrderBy(a => a.DisplayName, StringComparer.OrdinalIgnoreCase)
             .ThenBy(a => a.Id, StringComparer.Ordinal)
             .ToList();
+    }
+
+    /// <summary>A friendly publisher reads better than an X.500 name, so a merged entry
+    /// prefers one when any source supplied it.</summary>
+    private static string? PreferredPublisher(List<RawAppRecord> ordered)
+    {
+        var friendly = ordered
+            .Select(r => r.Publisher)
+            .FirstOrDefault(p => !string.IsNullOrEmpty(p) && !AppIdentity.IsDistinguishedName(p));
+        return friendly ?? ordered.Select(r => r.Publisher).FirstOrDefault(p => !string.IsNullOrEmpty(p));
     }
 }

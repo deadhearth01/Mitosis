@@ -44,6 +44,38 @@ public sealed class DiscoveryModelsTests
     }
 
     [TestMethod]
+    public void MergeKey_TreatsDistinguishedNameAsItsCommonName()
+    {
+        var packaged = AppIdentity.MergeKey(
+            "Microsoft Edge",
+            "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US");
+        var registered = AppIdentity.MergeKey("Microsoft Edge", "Microsoft Corporation");
+
+        Assert.AreEqual(registered, packaged);
+    }
+
+    [TestMethod]
+    public void MergeKey_HandlesEscapedCommasAndNestedComponents()
+    {
+        Assert.AreEqual(
+            "acme, inc",
+            AppIdentity.NormalizePublisher(@"CN=Acme\, Inc, O=Acme, C=US"));
+        Assert.AreEqual(
+            "acme research",
+            AppIdentity.NormalizePublisher("O=Acme, CN=Acme Research, C=US"));
+    }
+
+    [TestMethod]
+    public void MergeKey_KeepsFriendlyPublishersDistinct()
+    {
+        Assert.AreNotEqual(
+            AppIdentity.MergeKey("Photos", "Microsoft Corporation"),
+            AppIdentity.MergeKey("Photos", "Google LLC"));
+        Assert.AreEqual("google llc", AppIdentity.NormalizePublisher("  Google LLC "));
+        Assert.IsFalse(AppIdentity.IsDistinguishedName("Google LLC"));
+    }
+
+    [TestMethod]
     public void DiscoveredApp_KeepsMissingMetadataMissing()
     {
         var app = new DiscoveredApp(

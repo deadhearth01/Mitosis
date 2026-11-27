@@ -293,6 +293,49 @@ public sealed class WindowsAppDiscoveryServiceTests
     }
 
     [TestMethod]
+    public async Task PackagedAndRegisteredCopies_OfOneApp_MergeIntoOneEntry()
+    {
+        var service = new WindowsAppDiscoveryService(new[]
+        {
+            FakeSource.Returning(Records.Make(
+                "Microsoft Edge",
+                "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US",
+                DiscoverySource.AppxPackage,
+                InstallScope.CurrentUser)),
+            FakeSource.Returning(Records.Make(
+                "Microsoft Edge",
+                "Microsoft Corporation",
+                DiscoverySource.LocalMachineUninstall32,
+                InstallScope.Machine)),
+        });
+
+        var apps = await service.DiscoverAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(1, apps.Count, "The same application must not be listed twice.");
+        CollectionAssert.AreEquivalent(
+            new[] { DiscoverySource.AppxPackage, DiscoverySource.LocalMachineUninstall32 },
+            apps[0].Sources.ToList());
+        Assert.AreEqual("Microsoft Corporation", apps[0].Publisher,
+            "A friendly publisher is preferred over the X.500 name.");
+        Assert.AreEqual(InstallScope.Machine, apps[0].Scope);
+    }
+
+    [TestMethod]
+    public async Task SameNameDifferentPublishers_StayDistinct()
+    {
+        var service = new WindowsAppDiscoveryService(new[]
+        {
+            FakeSource.Returning(
+                Records.Make("Photos", "Microsoft Corporation"),
+                Records.Make("Photos", "Google LLC")),
+        });
+
+        var apps = await service.DiscoverAsync(TestContext.CancellationToken);
+
+        Assert.AreEqual(2, apps.Count, "Different vendors may publish apps with the same name.");
+    }
+
+    [TestMethod]
     public async Task Ordering_IsDeterministic()
     {
         var service = new WindowsAppDiscoveryService(new[]

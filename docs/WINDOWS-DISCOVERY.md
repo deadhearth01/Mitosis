@@ -39,10 +39,16 @@ Identity (`AppIdentity`): `{source}:{sha256(source␀name␀publisher)[0..8, hex
 trimmed, lowercased name + publisher. Not path-based: reinstalls keep identity while
 renames do not collide. Case and surrounding whitespace are insignificant.
 
-Deduplication (`WindowsAppDiscoveryService.Merge`): registrations with equal normalized
-keys merge into one entry; sources union; Machine scope wins; first source in
-composition order (user before machine) wins display fields; final order is
-name (`OrdinalIgnoreCase`) then id — fully deterministic.
+Deduplication (`WindowsAppDiscoveryService.Merge`): registrations with equal merge keys
+merge into one entry; sources union; Machine scope wins; first source in composition
+order (user before machine) wins display fields; final order is name
+(`OrdinalIgnoreCase`) then id — fully deterministic. The merge key is
+`AppIdentity.MergeKey`: the name plus the publisher's *common name*, so a packaged app
+whose publisher is an X.500 name (`CN=Microsoft Corporation, O=…`) merges with the same
+app's install-registry entry (`Microsoft Corporation`) instead of appearing twice. A
+merged entry shows the friendly publisher when one source supplied it. Identity still
+hashes the publisher as reported, so profile references do not change; if the entry that
+disappears from the list was the one a profile pointed at, the orphan view handles it.
 
 ## 3. Compatibility statuses (`Mitosis.Domain/Compatibility.cs`)
 
@@ -107,3 +113,7 @@ path to sample data, never automatic, never mixed.
 5. The update banner, empty clone list, and New Clone placeholder remain as in Stage 2.
 6. Registry check after a run: no writes (read-only opens only); no new processes
    spawned by discovery (verify with Task Manager if desired).
+7. Duplicate-registration check: `cli/mitosis.exe list --json` reports one
+   `Microsoft Edge` entry whose `sources` contain both `localMachineUninstall32`
+   and `appxPackage`, and no name appears twice with the same vendor (checked
+   2026-11-27; 125 applications, was 126 before the common-name merge key).

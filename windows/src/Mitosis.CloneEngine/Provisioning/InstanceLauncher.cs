@@ -200,7 +200,9 @@ public static class InstanceLauncher
     {
         var buffer = new char[4096];
         var captured = new StringBuilder();
-        while (captured.Length < MaxCapturedCharacters)
+        // Read to end of stream even after the capture cap is reached: stopping early
+        // leaves the child blocked on a full pipe and it would only ever exit by timeout.
+        while (true)
         {
             var read = await reader.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
             if (read == 0)
@@ -208,7 +210,10 @@ public static class InstanceLauncher
                 break;
             }
 
-            captured.Append(buffer, 0, Math.Min(read, MaxCapturedCharacters - captured.Length));
+            if (captured.Length < MaxCapturedCharacters)
+            {
+                captured.Append(buffer, 0, Math.Min(read, MaxCapturedCharacters - captured.Length));
+            }
         }
 
         return captured.ToString();

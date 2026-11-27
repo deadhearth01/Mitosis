@@ -323,6 +323,33 @@ public sealed class InstanceLauncherTests
     }
 
     [TestMethod]
+    public async Task Launch_DrainsOutputBeyondTheCaptureCap()
+    {
+        using var temp = TempTree.Create();
+        var source = temp.Dir("app");
+        File.Copy(ExecutionFixtures.ComSpec, Path.Combine(source, "cmd.exe"));
+        // 200 KiB of text: past the 64 KiB capture cap and past a pipe buffer, so a
+        // reader that stops at the cap leaves the child blocked on a full pipe.
+        temp.WriteFile("app\\big.txt", new string('x', 200 * 1024));
+        var instanceRoot = temp.Dir("root");
+
+        var app = ExecutionFixtures.AppFor(source);
+        var (plan, _) = ExecutionFixtures.Plan(app, instanceRoot);
+        var executor = new CopyProvisionExecutor(new LaunchSpecification(
+            "cmd.exe",
+            new[] { "/c", "type big.txt" }));
+        var result = await executor.ExecuteAsync(plan, null);
+        Assert.IsTrue(result.Admitted, string.Join("; ", result.Errors));
+
+        var outcome = await InstanceLauncher.LaunchAsync(
+            ExecutionFixtures.Destination(plan), timeout: TimeSpan.FromSeconds(20));
+
+        Assert.IsFalse(outcome.TimedOut, "A chatty child must not stall on a full pipe.");
+        Assert.AreEqual(0, outcome.ExitCode, outcome.StandardError);
+        Assert.AreEqual(InstanceLauncher.MaxCapturedCharacters, outcome.StandardOutput.Length);
+    }
+
+    [TestMethod]
     public async Task Launch_RefusesExecutableOutsideTheInstance()
     {
         using var temp = TempTree.Create();

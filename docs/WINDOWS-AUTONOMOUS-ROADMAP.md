@@ -40,13 +40,13 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 497 tests |
+| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 514 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
 | Preferences JSON store | Complete and verified | `JsonAppPreferencesStore.cs`; 17 tests |
 | Evidence bundle model/store/evaluation | Complete and verified (framework only) | `Evidence.cs`, `EvidenceEvaluation.cs`, `JsonEvidenceStore.cs`; 40 tests |
-| Read-only app discovery (registry + packaged apps) | Complete and verified | `Windows.Platform/Discovery`; 14 ViewModel tests + platform tests; 180-app smoke test recorded in Stage 3 |
+| Read-only app discovery (registry + packaged apps) | Complete and verified | `Windows.Platform/Discovery`; 14 ViewModel tests + platform tests; 180-app smoke test recorded in Stage 3; duplicate registrations of one app merge on the publisher's common name (Edge appeared twice until 2026-11-27 — one row now, `df998f7`) |
 | Compatibility assessor | Complete and verified (rule-based, conservative) | `Mitosis.Compatibility`; 8 tests |
 | Provisioning planner/gate framework | Complete and verified (planning only) | `Planner.cs`, `Gate.cs`; 27 planning tests |
 | Strategy research catalog | Complete and verified (research records only) | `ResearchCatalog.cs`; 8 tests |
@@ -69,7 +69,7 @@ source, test, or artifact that establishes it.
 | Tray / menu-bar equivalent | Deferred by decision | `docs/WINDOWS-PORT.md` § Stage 14 |
 | Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
 | Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, control names checked with UI Automation (Stage 27); Narrator speech, contrast, and text scaling not run |
-| Visual parity | Verified for captured states in both themes; macOS pixel diff pending | 46 screenshots in `docs/evidence/windows-ui/`; Stage 27 recorded defects and fixes; no side-by-side macOS comparison yet |
+| Visual parity | Verified for captured states in both themes; macOS pixel diff pending | 47 screenshots in `docs/evidence/windows-ui/`; Stage 27 recorded defects and fixes; no side-by-side macOS comparison yet |
 
 ### 1.3 Clone engine and Windows integration
 
@@ -650,7 +650,7 @@ operations are allowed without additional authorization.
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
 | 509 tests pass | Verified | `dotnet test` on the execution-spine tree, eight test projects | Clean-machine test run |
-| Manual UI protocol | Verified for observed scenarios (desktop) | 46 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5, including both Help action buttons (Settings privacy page, issue-template page), the Help three-stop tab cycle, and light-theme captures of the main window, Help, and Settings; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
+| Manual UI protocol | Verified for observed scenarios (desktop) | 47 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5, including both Help action buttons (Settings privacy page, issue-template page), the Help three-stop tab cycle, and light-theme captures of the main window, Help, and Settings; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
@@ -701,6 +701,7 @@ After every stage:
 | 28 (execution spine) | Provisioning executor + instance launcher, probe-verified | `c2cbea6` | 507 | no production strategy (catalog still empty); two-profile probe launched both copies with separate writable trees; live Help-button check blocked by a locked session |
 | 28 (follow-up) | Bounded-output drain fix | `15ac563` | 508 | chatty child no longer stalls on a full pipe; regression test times out without the fix |
 | 28 (follow-up 2) | Occupied data-directory refusal | `ddc1711` | 509 | launcher returns a named refusal instead of throwing |
-| 28 (evidence) | Help action buttons and light-theme captures | `b837199`, `2f72818` | 509 | both Help buttons live-verified (Settings privacy page, issue chooser); Help tab cycle recorded; three light-theme screenshots; app theme toggled per-user and restored |
+| 28 (evidence) | Help action buttons and light-theme captures | `b837199`, `2f72818`, `a19fcb4` | 509 | both Help buttons live-verified (Settings privacy page, issue chooser); Help tab cycle recorded; three light-theme screenshots; app theme toggled per-user and restored |
+| — | Duplicate app registrations merged by publisher common name | `df998f7` | 514 | Edge was listed twice (X.500 vs friendly publisher); 126 → 125 applications, one row, detail shows both sources; 5 new tests |
 
 Stages 21+ are appended as they complete.

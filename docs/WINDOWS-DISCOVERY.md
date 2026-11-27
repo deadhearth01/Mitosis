@@ -116,4 +116,8 @@ path to sample data, never automatic, never mixed.
 7. Duplicate-registration check: `cli/mitosis.exe list --json` reports one
    `Microsoft Edge` entry whose `sources` contain both `localMachineUninstall32`
    and `appxPackage`, and no name appears twice with the same vendor (checked
-   2026-11-27; 125 applications, was 126 before the common-name merge key).
+   2026-11-27; 125 applications, was 126 before the common-name merge key). In the
+   app the sidebar shows one row and the detail page reads `Publisher Microsoft
+   Corporation`, `Installed for This machine`, `Found via Machine registration
+   (32-bit), Packaged app registration`
+   (`docs/evidence/windows-ui/appdetail-edge-merged-dark.png`).

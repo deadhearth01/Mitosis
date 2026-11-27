@@ -450,8 +450,8 @@ only started when its dependencies and authorization state allow it.
 
 - **Objective:** Implement the first production provisioning strategy and executor
   behind the existing gate.
-- **Current problem:** The catalog is empty and no executor exists; the product
-  cannot clone.
+- **Current problem:** The catalog is empty, so the product cannot clone; the
+  executor and launcher exist but are unreachable for a real application.
 - **Evidence:** `Gate.cs`, `Planner.cs`, `WINDOWS-PROVISIONING.md`.
 - **Implementation:** Only after written authorization: choose a researched
   candidate (e.g. documented per-profile flag), implement a strategy + executor,
@@ -473,19 +473,22 @@ only started when its dependencies and authorization state allow it.
   `mitosis-launch.json`, creates the private `data` directory, clears read-only
   attributes on copies, and removes only what it created on failure.
   `InstanceLauncher` requires the executable, working directory, and data directory
-  to resolve inside the instance, substitutes `{instance}`/`{dataDirectory}`, bounds
-  captured output, and enforces a timeout. `OperationPlan` now carries `SourceRoot`
-  so execution can revalidate the copy source. Ten tests cover refusals, a real copy,
-  launcher substitution, and a two-profile run in which both copies launch from their
-  own directory and write only into their own tree; the probe target is the system
-  command processor, so no installed application was copied or launched. Suite
-  507/507, 0 warnings. GitHub Actions run `45938961584` on `c2cbea6` completed
-  successfully (restore, build, 507 tests, and the x64 release-candidate publish
-  with verification). `Mitosis-windows-0.2.2-x64-c2cbea6.zip` (94 files, 45,775,840
+  to resolve inside the instance, substitutes `{instance}`/`{dataDirectory}`, drains
+  output while keeping at most 64 KiB, and enforces a timeout. `OperationPlan` now
+  carries `SourceRoot` so execution can revalidate the copy source. Eleven tests
+  cover refusals, a real copy, launcher substitution and output drain, and a
+  two-profile run in which both copies launch from their own directory and write
+  only into their own tree; the probe target is the system command processor, so no
+  installed application was copied or launched. At `c2cbea6` (ten tests) the suite
+  ran 507/507 with 0 warnings; GitHub Actions run `45938961584` on that commit
+  completed successfully (restore, build, 507 tests, and the x64
+  release-candidate publish with verification). `Mitosis-windows-0.2.2-x64-c2cbea6.zip` (94 files, 45,775,840
   bytes) passed the verifier and was then superseded by
   `Mitosis-windows-0.2.2-x64-aadbb52.zip` (94 files, 45,775,825 bytes, SHA-256
   `d27dbb43deb0a26cdb2bc17e98647c75292233e8cf11fb0b7ff82d4133fe83e4`), rebuilt from
-  the tree that includes the drain fix and verified the same way.
+  the tree that includes the drain fix and verified the same way. The rebuilt
+  archive was started once: the process stayed alive and created its “Mitosis” main
+  window, which is all a locked desktop allows; no interactive pass was possible.
   A follow-up fixed a launch defect found by review: the bounded output reader stopped
   reading at the 64 KiB cap, so an instance that wrote more stalled on a full pipe and
   could only be stopped by the timeout. It now drains the stream to the end and still

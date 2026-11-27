@@ -109,7 +109,14 @@ public static class InstanceLauncher
             return Failed("The data directory is not inside the instance directory.");
         }
 
-        Directory.CreateDirectory(dataDirectory);
+        try
+        {
+            Directory.CreateDirectory(dataDirectory);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return Failed($"The data directory could not be created: {ex.Message}");
+        }
 
         var info = new ProcessStartInfo
         {

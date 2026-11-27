@@ -350,6 +350,38 @@ public sealed class InstanceLauncherTests
     }
 
     [TestMethod]
+    public async Task Launch_RefusesWhenTheDataDirectoryNameIsAFile()
+    {
+        using var temp = TempTree.Create();
+        var source = temp.Dir("app");
+        File.Copy(ExecutionFixtures.ComSpec, Path.Combine(source, "cmd.exe"));
+        var instanceRoot = temp.Dir("root");
+
+        var app = ExecutionFixtures.AppFor(source);
+        var (plan, _) = ExecutionFixtures.Plan(app, instanceRoot);
+        var executor = new CopyProvisionExecutor(new LaunchSpecification(
+            "cmd.exe",
+            Array.Empty<string>()));
+        var result = await executor.ExecuteAsync(plan, null);
+        Assert.IsTrue(result.Admitted, string.Join("; ", result.Errors));
+
+        // Replace the private data directory with a file of the same name: the launcher
+        // must refuse with a message instead of throwing out of the call.
+        var destination = ExecutionFixtures.Destination(plan);
+        var dataDirectory = Path.Combine(destination, "data");
+        Directory.Delete(dataDirectory, recursive: true);
+        File.WriteAllText(dataDirectory, "not a directory");
+
+        var outcome = await InstanceLauncher.LaunchAsync(destination);
+
+        Assert.IsFalse(outcome.Started);
+        Assert.IsNotNull(outcome.Error);
+        Assert.IsTrue(
+            outcome.Error.Contains("data directory", StringComparison.OrdinalIgnoreCase),
+            outcome.Error);
+    }
+
+    [TestMethod]
     public async Task Launch_RefusesExecutableOutsideTheInstance()
     {
         using var temp = TempTree.Create();

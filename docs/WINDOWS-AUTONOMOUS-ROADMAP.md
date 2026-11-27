@@ -114,7 +114,7 @@ is eligible now, deferred, or authorization-gated.
 | # | Area | Gap | Evidence | Impact | Disposition |
 |---|---|---|---|---|---|
 | G1 | Core product | Executor exists; no production strategy | `CopyProvisionExecutor` + `InstanceLauncher`, probe-verified (`WINDOWS-PROVISIONING.md` §9); `ProductionCatalog.Strategies` still empty | The mechanism can build and launch an instance, but no real app is eligible, so the product still cannot clone | Production strategies authorization-gated |
-| G2 | Isolation | No live isolation evidence for any Windows app | `WINDOWS-ISOLATION-VERIFICATION-PLAN.md`; the probe proves only its own private tree | Cannot claim separation for a real app | Authorization-gated |
+| G2 | Isolation | No live isolation evidence for any Windows app | `WINDOWS-ISOLATION-VERIFICATION-PLAN.md`; the probe proves only its own private tree; a concrete request now exists (`WINDOWS-STAGE-29-AUTHORIZATION-REQUEST.md`, Brave/Edge) | Cannot claim separation for a real app | Authorization-gated; request prepared 2026-11-28 |
 | G3 | Lifecycle | Launch verified for the probe only; no refresh, rollback, or recovery | `InstanceLauncher` + probe test; engine has no rollback/refresh | Clones could not be trusted | Probe launch done; remainder authorization-gated |
 | G4 | Data safety | No delete/clean/relink semantics for real clones | Engine absent | Cannot safely remove data | Authorization-gated |
 | G5 | Profiles | Saved profiles had no rename, re-badge, or removal path | `Planned`-profile Edit/Remove added in Stage 21; provisioned profiles remain read-only | Future provisioned records must be managed by the engine, not metadata code | Complete for `Planned` (Stage 21) |
@@ -585,6 +585,13 @@ only started when its dependencies and authorization state allow it.
 - **Definition of done:** Evidence bundle with all dimensions verified and
   approved; otherwise the candidate remains ineligible.
 - **Authorization:** **Required.**
+- **Request prepared (2026-11-28):** `docs/WINDOWS-STAGE-29-AUTHORIZATION-REQUEST.md`
+  names the candidate and the application (Brave `158.1.100.59`, Edge
+  `158.0.4370.45` as fallback), the code that must exist first, the eight
+  observed steps, the evidence dimensions, the abort controls, and the blank
+  authorization record. It grants nothing: no third-party application has been
+  launched for verification, and the catalog remains empty. The first
+  execution decision (implementation, execution, registration) is yours.
 
 ### Stage 30 — Clone lifecycle: launch, refresh, rollback, delete/recovery (blocked)
 

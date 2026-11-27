@@ -479,11 +479,22 @@ only started when its dependencies and authorization state allow it.
   launcher substitution, and a two-profile run in which both copies launch from their
   own directory and write only into their own tree; the probe target is the system
   command processor, so no installed application was copied or launched. Suite
-  507/507, 0 warnings.
+  507/507, 0 warnings. GitHub Actions run `45938961584` on `c2cbea6` completed
+  successfully (restore, build, 507 tests, and the x64 release-candidate publish
+  with verification). The republished archive
+  `Mitosis-windows-0.2.2-x64-c2cbea6.zip` (94 files, 45,775,840 bytes, SHA-256
+  `e53ae851fbde03cf340b7938152200353b9087f8744b44e99c0eb50148658887`) passes the
+  verifier.
+  A follow-up fixed a launch defect found by review: the bounded output reader stopped
+  reading at the 64 KiB cap, so an instance that wrote more stalled on a full pipe and
+  could only be stopped by the timeout. It now drains the stream to the end and still
+  caps what it keeps; the regression test fails without the fix (20 s timeout), and the
+  suite is 508/508.
   **Still blocked:** a production strategy for a real application (requires its own
   isolation evidence and your authorization), UI wiring, rollback, refresh, and
   deletion/relink. The catalog stays empty, so the wizard and detail views still
-  offer planned profiles only.
+  offer planned profiles only. The live Help-action check planned for this pass was
+  blocked by a locked desktop session (§5.4 of `WINDOWS-UI-VERIFICATION.md`).
 
 ### Stage 29 — Isolation verification execution (blocked)
 
@@ -624,7 +635,7 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
-| 507 tests pass | Verified | `dotnet test` on the execution-spine tree, eight test projects | Clean-machine test run |
+| 508 tests pass | Verified | `dotnet test` on the execution-spine tree, eight test projects | Clean-machine test run |
 | Manual UI protocol | Verified for observed scenarios (desktop) | 41 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
@@ -634,7 +645,7 @@ operations are allowed without additional authorization.
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
 | Release zip is structurally sound | Verified | Stage 19/20 verifier + 45 fixture tests; Stage 26 additionally bundled the CLI, requires the PRI, and requires `install.ps1` | Clean-machine launch |
-| Provisioning execution spine | Verified (runtime, probe target only) | 10 tests: copy + manifest + launch config + private data directory; refusals for an existing destination, missing source, reparse point, unadmitted plan, and external executable; two-profile probe launched both copies with separate writable trees; suite 507/507 | A real application; rollback, refresh, delete/relink; UI wiring |
+| Provisioning execution spine | Verified (runtime, probe target only) | 11 tests: copy + manifest + launch config + private data directory; refusals for an existing destination, missing source, reparse point, unadmitted plan, and external executable; launcher placeholder substitution and a 200 KiB output drain; two-profile probe launched both copies with separate writable trees; suite 508/508 | A real application; rollback, refresh, delete/relink; UI wiring |
 | Published artifact launches | Verified (development machine only) | Stage 26: the publish tree and a freshly unzipped archive start, show the main/welcome windows, and exit cleanly; this exposed and fixed the missing `Mitosis.pri` (microsoft/WindowsAppSDK#6720) | Clean Windows 10/11 VM, missing-prerequisite path, another desktop session |
 | UI matches macOS pixels | **Not verified** | Stage 27 screenshots of Windows states; no macOS side-by-side diff | macOS pixel diff; contrast; Narrator |
 | Any clone works | **Not verified** (probe only) | The execution spine builds and launches an instance for a controlled probe; the production catalog is empty | Authorization + a real strategy + isolation evidence |
@@ -673,5 +684,7 @@ After every stage:
 | 26 | CLI in release zip, PRI fix, per-user installer | `18dd7d6`, `3ac2d86` | 490 | `cli/` layout; launch-tested artifact; `install.ps1`; clean-VM run pending |
 | 27 | Manual UI/accessibility pass and fixes | `6e0b802` | 497 | 33 screenshots; 11 defects fixed; Narrator/contrast/clean VM pending |
 | 27 (follow-up) | Dialogs, support actions, wizard paths | `59a0f9d` | 497 | save-error focus + announcement (defect 12); 8 screenshots; edit/remove, diagnostics/reveal/tips, wizard validation verified |
+| 28 (execution spine) | Provisioning executor + instance launcher, probe-verified | `c2cbea6` | 507 | no production strategy (catalog still empty); two-profile probe launched both copies with separate writable trees; live Help-button check blocked by a locked session |
+| 28 (follow-up) | Bounded-output drain fix | `15ac563` | 508 | chatty child no longer stalls on a full pipe; regression test times out without the fix |
 
 Stages 21+ are appended as they complete.

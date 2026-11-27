@@ -339,3 +339,13 @@ Not exercised: the acknowledgement checkbox, which appears only for apps
 assessed *Needs review* — on this machine every app is *Not yet assessed* or
 *Not supported* — and Narrator speech for the new notification. The automation
 tree exposes the message text and the focus move, but no audio was captured.
+
+### 5.4 Post-packaging attempt (2026-11-27, blocked)
+
+The packaged build (`Mitosis-windows-0.2.2-x64-c2cbea6.zip`) was started to check
+the two Help action buttons (Permissions ▸ Open Privacy & Security,
+Troubleshooting ▸ Report a Problem). The desktop session was locked at that point
+(the lock screen owned the input desktop), so `SendKeys` and foreground focus were
+denied and no button could be pressed. The buttons remain unverified in a live
+session; only `HelpViewModel.UriFor` and the page-button state are covered by unit
+tests. A short unlocked pass is still needed.

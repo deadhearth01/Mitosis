@@ -130,8 +130,9 @@ manifest and launch configuration, and creates the private data directory. Its r
 `InstanceLauncher` re-reads `mitosis-launch.json` and requires the executable, working
 directory, and data directory to resolve inside the instance, so a tampered
 configuration cannot start an arbitrary program. It substitutes `{instance}` and
-`{dataDirectory}` in arguments, captures at most 64 KiB of output, and kills the
-process tree after the timeout (30 s by default).
+`{dataDirectory}` in arguments, keeps at most 64 KiB of output while draining the rest
+(so an instance that logs heavily cannot block on a full pipe), and kills the process
+tree after the timeout (30 s by default).
 
 Skeletons written into every instance:
 
@@ -146,13 +147,14 @@ Skeletons written into every instance:
   "DataDirectory": "data", "WorkingDirectory": "." }
 ```
 
-**Probe evidence.** Ten tests cover the executor (copy/manifest/config/writable copies,
-existing destination, missing source, reparse point, unadmitted plan), the launcher
-(external executable refused, missing configuration refused, placeholder substitution),
-and an end-to-end run: the same source directory is provisioned for two profiles, both
-copies launch from their own instance directory, and each writes its marker only into
-its own tree. The probe executable is the system command processor, so no installed
-application was copied, launched, or modified. Suite 507/507, 0 warnings.
+**Probe evidence.** Eleven tests cover the executor (copy/manifest/config/writable
+copies, existing destination, missing source, reparse point, unadmitted plan), the
+launcher (external executable refused, missing configuration refused, placeholder
+substitution, 200 KiB of output drained without stalling), and an end-to-end run: the
+same source directory is provisioned for two profiles, both copies launch from their own
+instance directory, and each writes its marker only into its own tree. The probe
+executable is the system command processor, so no installed application was copied,
+launched, or modified. Suite 508/508, 0 warnings.
 
 **Not proven by the probe.** Any real application's data, registry, mutex, protocol,
 update, or licensing behavior; rollback after a successful provisioning; refresh;

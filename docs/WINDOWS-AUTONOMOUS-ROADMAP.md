@@ -481,10 +481,11 @@ only started when its dependencies and authorization state allow it.
   command processor, so no installed application was copied or launched. Suite
   507/507, 0 warnings. GitHub Actions run `45938961584` on `c2cbea6` completed
   successfully (restore, build, 507 tests, and the x64 release-candidate publish
-  with verification). The republished archive
-  `Mitosis-windows-0.2.2-x64-c2cbea6.zip` (94 files, 45,775,840 bytes, SHA-256
-  `e53ae851fbde03cf340b7938152200353b9087f8744b44e99c0eb50148658887`) passes the
-  verifier.
+  with verification). `Mitosis-windows-0.2.2-x64-c2cbea6.zip` (94 files, 45,775,840
+  bytes) passed the verifier and was then superseded by
+  `Mitosis-windows-0.2.2-x64-aadbb52.zip` (94 files, 45,775,825 bytes, SHA-256
+  `d27dbb43deb0a26cdb2bc17e98647c75292233e8cf11fb0b7ff82d4133fe83e4`), rebuilt from
+  the tree that includes the drain fix and verified the same way.
   A follow-up fixed a launch defect found by review: the bounded output reader stopped
   reading at the 64 KiB cap, so an instance that wrote more stalled on a full pipe and
   could only be stopped by the timeout. It now drains the stream to the end and still

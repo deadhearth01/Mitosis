@@ -69,7 +69,7 @@ source, test, or artifact that establishes it.
 | Tray / menu-bar equivalent | Deferred by decision | `docs/WINDOWS-PORT.md` § Stage 14 |
 | Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
 | Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, control names checked with UI Automation (Stage 27); Narrator speech, contrast, and text scaling not run |
-| Visual parity | Verified for captured states; macOS pixel diff pending | 33 screenshots in `docs/evidence/windows-ui/`; Stage 27 recorded defects and fixes; no side-by-side macOS comparison yet |
+| Visual parity | Verified for captured states; macOS pixel diff pending | 43 screenshots in `docs/evidence/windows-ui/`; Stage 27 recorded defects and fixes; no side-by-side macOS comparison yet |
 
 ### 1.3 Clone engine and Windows integration
 
@@ -125,7 +125,7 @@ is eligible now, deferred, or authorization-gated.
 | G11 | Install | Per-user script installer added (Stage 26); no MSI/signing | `WINDOWS-INSTALL.md` | Manual prerequisites replaced by detected ones; Start-menu/uninstall entry provided; clean-VM run and system-wide install pending | Complete for the unsigned per-user model |
 | G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
 | G13 | Compatibility | Only Windows 11 25H2 ever exercised | Release checklist | Unknown behavior on 10/24H2/23H2 | Blocked by environment |
-| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | Stage 27 added 33 screenshots plus UIA/keyboard observations (`WINDOWS-UI-VERIFICATION.md` §2/§5) and fixed 11 UI defects; the 2026-11-27 follow-up added eight screenshots for the profile dialogs, Settings diagnostics/tips, and wizard validation (defect 12) | Visual/a11y parity unproven | Narrator, contrast, 150/200% scaling, clean-VM runs remain |
+| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | Stage 27 added 33 screenshots plus UIA/keyboard observations (`WINDOWS-UI-VERIFICATION.md` §2/§5) and fixed 11 UI defects; the 2026-11-27 follow-up added eight screenshots for the profile dialogs, Settings diagnostics/tips, and wizard validation (defect 12); the unlocked Help pass added two more and verified both action buttons and the Help tab cycle | Visual/a11y parity unproven | Narrator, contrast, 150/200% scaling, clean-VM runs remain |
 | G15 | Stats | Detail tiles are static preview values | `PreviewData` | Misleading only if shown as live; currently preview-gated | Depends on engine |
 | G16 | Link routing | Toggle is UI-only | `ShowLinksCard` / `LinkRoutingOn` | Users may expect routing | Depends on engine/protocol handler |
 | G17 | Background | No refresh agent or scheduled task | No code | Clones would age silently | Depends on engine |
@@ -500,8 +500,9 @@ only started when its dependencies and authorization state allow it.
   **Still blocked:** a production strategy for a real application (requires its own
   isolation evidence and your authorization), UI wiring, rollback, refresh, and
   deletion/relink. The catalog stays empty, so the wizard and detail views still
-  offer planned profiles only. The live Help-action check planned for this pass was
-  blocked by a locked desktop session (§5.4 of `WINDOWS-UI-VERIFICATION.md`).
+  offer planned profiles only. The Help action buttons, which the locked desktop had
+  blocked, were verified in a later unlocked pass (§5.4 of
+  `WINDOWS-UI-VERIFICATION.md`).
 
 ### Stage 29 — Isolation verification execution (blocked)
 
@@ -612,12 +613,14 @@ static update banner, the missing install story, and most of the manual UI
 evidence gap. Stage 28 added the provisioning execution spine (copy, manifest,
 launch configuration, private data directory, bounded launch) and proved it with
 a two-profile probe, but no production strategy is registered, so the product
-still cannot clone a real application. Narrator/contrast/scaling/clean-VM
-verification and the two Help action buttons remain unverified. The port is
-installable per-user and ships in a launch-tested but unsigned archive. Next
-eligible work is the remaining desktop evidence in an unlocked session, then the
-tray/background decisions; clean-VM, signing, system-wide install, public
-distribution, and any real strategy stay authorization-gated.
+still cannot clone a real application. Narrator speech, high-contrast themes, text
+scaling, and clean-VM runs remain unverified. The two Help action buttons were
+verified in a later unlocked pass, including the Settings and issue-template targets
+and the Help tab cycle (§5.4 of `WINDOWS-UI-VERIFICATION.md`). The port is
+installable per-user and ships in a launch-tested but unsigned archive. Next eligible
+work is the light-theme recapture and the tray/background decision; clean-VM,
+signing, system-wide install, public distribution, and any real strategy stay
+authorization-gated.
 
 ## 5. Authorization boundaries
 
@@ -644,7 +647,7 @@ operations are allowed without additional authorization.
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
 | 509 tests pass | Verified | `dotnet test` on the execution-spine tree, eight test projects | Clean-machine test run |
-| Manual UI protocol | Verified for observed scenarios (desktop) | 41 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
+| Manual UI protocol | Verified for observed scenarios (desktop) | 43 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5, including both Help action buttons (Settings privacy page, issue-template page) and the Help three-stop tab cycle; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |

@@ -64,8 +64,9 @@ native adaptation or a parity defect.
   - **Observed 2026-11-27:** F1 and the sidebar Help button each opened one
     Help window focused on the topic list; Down moved the selection from
     "Getting started" to "Which apps work" and the page followed
-    (`help-dark.png`). The Permissions/Troubleshooting action buttons were not
-    clicked in this pass.
+    (`help-dark.png`). The two action buttons were clicked in the later unlocked
+    pass recorded in §5.4: Settings opened at Privacy & security and the issue
+    chooser opened in the default browser.
 - S11: Settings window (W03/W36/W37): opens at 540 wide via Ctrl+, and the
   sidebar Settings button; General tab shows Storage (data folder path shown as
   text; "Show in File Explorer" opens the folder, creating it if needed);
@@ -97,6 +98,9 @@ native adaptation or a parity defect.
   window; Ctrl+, opens Settings; both sidebar buttons carry accessible names
   and tooltips; Tab order inside Help (topics → page → button) and Settings
   (tabs → rows) is sensible with visible focus.
+  - **Observed 2026-11-27:** the Help cycle is three stops — topic list item →
+    page pane → action button → back to the topic list item — read from
+    `FocusedElement` after each Tab (§5.4).
 - S14: main-window minimum size (W01): launch at 1060×720; try to drag the
   edge below 820×520 — the window stops at the floor; snap layouts and
   Aero Snap respect it; 820×520 shows usable sidebar + detail proportions
@@ -284,8 +288,7 @@ no app was copied, launched, or modified to produce any of this evidence.
   (`main-1060x720-light.png`) but was not recaptured this pass.
 - Clean Windows 10/11 VMs, a standard (non-admin) account, and a second
   Windows user/session. S4 clone detail was not opened (preview data only).
-- Touch, IME, right-to-left layout, drag-below-floor for the main window, and
-  Help action buttons.
+- Touch, IME, right-to-left layout, and drag-below-floor for the main window.
 - A published Windows artifact remains macOS-only upstream, so "View Release"
   click-through was not exercised.
 
@@ -340,12 +343,25 @@ assessed *Needs review* — on this machine every app is *Not yet assessed* or
 *Not supported* — and Narrator speech for the new notification. The automation
 tree exposes the message text and the focus move, but no audio was captured.
 
-### 5.4 Post-packaging attempt (2026-11-27, blocked)
+### 5.4 Post-packaging pass: Help action buttons (2026-11-27)
 
-The packaged build (`Mitosis-windows-0.2.2-x64-c2cbea6.zip`) was started to check
-the two Help action buttons (Permissions ▸ Open Privacy & Security,
-Troubleshooting ▸ Report a Problem). The desktop session was locked at that point
-(the lock screen owned the input desktop), so `SendKeys` and foreground focus were
-denied and no button could be pressed. The buttons remain unverified in a live
-session; only `HelpViewModel.UriFor` and the page-button state are covered by unit
-tests. A short unlocked pass is still needed.
+The first attempt ran while the desktop was locked, so `SendKeys` and foreground
+focus were denied; the check was repeated after the session was unlocked, against the
+packaged build (`Mitosis-windows-0.2.2-x64-ddc1711.zip`, started from the publish
+tree).
+
+- Permissions ▸ **Open Privacy & Security** opened Windows Settings at **Privacy &
+  security** (window titled "Settings", with Location, Camera, Microphone, Speech,
+  and Diagnostics entries). The Settings window was closed afterwards.
+- Troubleshooting ▸ **Report a Problem…** started the default browser (Brave was not
+  running) at `github.com/deadhearth01/Mitosis/issues/new/choose`; the window title
+  "Choose an Issue Template" and the address-bar value both confirmed the target. The
+  browser instance was closed afterwards.
+- Tab order inside Help is a three-stop cycle: topic list item ▸ page pane ▸ action
+  button ▸ back to the topic list item. The mascot zoom/scroll buttons are not in the
+  cycle (UI Automation `FocusedElement` after each Tab).
+- The action button's accessible name ends with U+2026 ("Report a Problem…"). An
+  exact match on a period does not find it, which matters when scripting UI
+  Automation.
+
+Screenshots: `help-permissions-dark.png`, `help-troubleshooting-dark.png`.

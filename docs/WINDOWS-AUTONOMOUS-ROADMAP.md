@@ -97,7 +97,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 509/509; covers domain, stores, discovery, view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity, and the provisioning execution spine |
+| Unit/integration tests | Complete for implemented logic | 514/514; covers domain, stores, discovery (including the packaged/registered merge key), view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity, and the provisioning execution spine |
 | Windows CI | Complete; remote run observed | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify; run `45907355528` succeeded on `6e3417d` |
 | Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `install.ps1`; `Mitosis.pri` fix |
 | Artifact verifier | Complete and verified (45 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI + installer rules in Stage 26 |
@@ -655,7 +655,7 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
-| 509 tests pass | Verified | `dotnet test` on the execution-spine tree, eight test projects | Clean-machine test run |
+| 514 tests pass | Verified | `dotnet test` on the discovery-merge tree, eight test projects | Clean-machine test run |
 | Manual UI protocol | Verified for observed scenarios (desktop) | 47 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5, including both Help action buttons (Settings privacy page, issue-template page), the Help three-stop tab cycle, and light-theme captures of the main window, Help, and Settings; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |

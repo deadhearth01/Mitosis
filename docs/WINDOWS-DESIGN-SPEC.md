@@ -151,6 +151,14 @@ the fallback. Sidebar and content use distinct themed surfaces, and the high-con
 resolves both to the scheme window colour with no translucency (verified against High Contrast
 Black).
 
+Implemented 2026-11-28: the sidebar lists applications rather than registration entries
+(runtimes, redistributables, media extensions, drivers, and installers are hidden by default,
+with a Settings ▸ Advanced toggle and a footer count), and a planned profile offers a read-only
+"Plan" dry run that shows the provisioning planner's output - including its refusal - under a
+"Preview only" banner. Both are Windows-side affordances with no macOS counterpart in the
+reference screenshots; neither adds new chrome, and both reuse the existing cards, dialogs, and
+status language.
+
 ## 12. Visual references still required **[R]**
 
 Existing screenshots cover: main window light/dark, pick, details, done. Before any

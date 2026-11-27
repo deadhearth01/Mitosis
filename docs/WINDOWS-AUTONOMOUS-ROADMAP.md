@@ -8,11 +8,11 @@ automated tests, and the stated verification level agree.
 - **Baseline at creation:** `6f8e3de` (merge of `origin/main` `v0.2.3` into
   `WindowsVersion`; the merge changed no Windows source)
 - **Automated suite at creation:** 329/329 green (Release, .NET SDK 10.0.404)
-- **Current suite:** 497/497 green (Release, .NET SDK 10.0.404; 0 warnings)
+- **Current suite:** 585/585 green (Release, .NET SDK 10.0.404; 0 warnings)
 - **Release-candidate pipeline:** present and verified structurally (Stages 17–20)
 - **Clone engine:** framework only; production strategy catalog empty; execution
   gates closed
-- **Last updated:** 2026-11-27
+- **Last updated:** 2026-11-28
 
 > **Product truth.** The UI shell is largely built. The product is not: nothing on
 > Windows can create, launch, refresh, repair, or delete a real clone. No amount of
@@ -40,7 +40,7 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 514 tests |
+| Solution/project boundaries (.NET 10, 9 src projects, 8 test projects, verifier tool) | Complete and verified | `windows/Mitosis.sln`; Release build (0 warnings); 585 tests |
 | Clone-name rules | Complete and verified | `Mitosis.Domain/CloneName.cs`; `CloneNameTests` (10) |
 | Clone profile model and lifecycle transitions | Complete and verified | `Mitosis.Domain/CloneProfile.cs`; `CloneProfileTests` (9) |
 | Profile JSON store (atomic, corruption-safe, duplicate rejection) | Complete and verified | `JsonProfileRepository.cs`; `JsonProfileRepositoryTests` (19) |
@@ -56,8 +56,8 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence / missing part |
 |---|---|---|
-| Main window, sidebar, search, grouping, selection | Verified for observed states; Narrator pending | Real discovery; Stage 15 interaction tests; Stage 27 desktop evidence plus the 2026-11-27 modern-chrome captures: unified title bar, sidebar and content surfaces, search match/no-match/Esc, selection preserved, 820x520-1600x900 |
-| App detail (metadata, compatibility, evidence, profiles) | Verified for observed states; Narrator pending | `AppDetailView.xaml`; header, Details, Compatibility, and Profiles cards with the application's own icon; empty/with-profile/removal states observed and screenshotted; layout clipping fixed (Stage 27); blank reason/evidence bullets fixed 2026-11-27 |
+| Main window, sidebar, search, grouping, selection | Verified for observed states; Narrator pending | Real discovery; Stage 15 interaction tests; Stage 27 desktop evidence plus the 2026-11-27 modern-chrome captures: unified title bar, sidebar and content surfaces, search match/no-match/Esc, selection preserved, 820x520-1600x900; the sidebar hides non-application entries by default (`ShowSystemComponents`, 34 hidden of 59 rows on the test machine) with a footer hint and a filtered-only state |
+| App detail (metadata, compatibility, evidence, profiles) | Verified for observed states; Narrator pending | `AppDetailView.xaml`; header, Details, Compatibility, and Profiles cards with the application's own icon; empty/with-profile/removal states observed and screenshotted; layout clipping fixed (Stage 27); blank reason/evidence bullets fixed 2026-11-27; each profile row offers the read-only "Plan" dry run |
 | Clone detail page | Partially implemented | Only reachable through explicit preview data; all engine actions are honest placeholders |
 | New Clone wizard | Partially implemented | Metadata-only save works; app-detail entry opens it preselected (Stage 21); macOS picker segments/mode picker/launch check deferred |
 | Badge editing | Partially implemented | Wizard inline editor plus `Planned`-profile re-badging (Stage 21); provisioned profiles still read-only |
@@ -70,6 +70,7 @@ source, test, or artifact that establishes it.
 | Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
 | Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, and control names checked with UI Automation (Stage 27); 150% and 200% text scaling reflow without clipping (2026-11-27); high contrast adopts the scheme window colour (#202020 under High Contrast Black), scheme text and scheme selection with no translucency (2026-11-27); Narrator speech not run |
 | Visual parity | Verified for captured states in both themes; macOS pixel diff pending | 57 screenshots in `docs/evidence/windows-ui/`; modern chrome, cards, and real application icons captured 2026-11-27; no side-by-side macOS comparison yet |
+| Repeatable UI checks | Implemented and run (three scenarios) | `tools/ui-smoke.ps1` drives named UI Automation elements only, writes a JSON summary, and exits non-zero on a failed check; scenarios `main-window`, `system-filter`, `plan-preview`, `all` | Screenshots require an unlocked desktop; Narrator still manual |
 
 ### 1.3 Clone engine and Windows integration
 
@@ -97,13 +98,13 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence |
 |---|---|---|
-| Unit/integration tests | Complete for implemented logic | 514/514; covers domain, stores, discovery (including the packaged/registered merge key), view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity, and the provisioning execution spine |
+| Unit/integration tests | Complete for implemented logic | 585/585; covers domain, stores, discovery (including the packaged/registered merge key and the system-component classifier), view models, shortcuts, verifier, CLI, installer scripts, update checks, view-model thread affinity, the provisioning execution spine, and the plan dry run |
 | Windows CI | Complete; remote run observed | `.github/workflows/windows-ci.yml`; restore/build/test/RC verify; run `45907355528` succeeded on `6e3417d` |
 | Release packaging | Complete and launch-verified on the development machine | `publish-release.ps1`; SHA sidecar; 46 MB x64 zip; CLI in `cli/`; `install.ps1`; `Mitosis.pri` fix |
 | Artifact verifier | Complete and verified (45 fixture tests) | `tools/ReleaseVerifier`; hostile-input hardening; CLI + PRI + installer rules in Stage 26 |
 | Version metadata | Complete; release stamp decision pending | `Directory.Build.props` (`0.2.2`; product tag is `v0.2.3`) |
 | Application icon | Complete for ≥32 px; small-size glyph open | `app.ico`; `make-icon.ps1` |
-| Documentation | Current through Stage 26; manual UI evidence still missing | Stage docs, `windows/README.md`, release/CLI/update/install docs |
+| Documentation | Current through Stage 28 and the 2026-11-28 UI follow-up; manual UI evidence still missing | Stage docs, `windows/README.md`, release/CLI/update/install docs |
 
 ## 2. Remaining engineering gaps
 
@@ -125,7 +126,7 @@ is eligible now, deferred, or authorization-gated.
 | G11 | Install | Per-user script installer added (Stage 26); no MSI/signing | `WINDOWS-INSTALL.md` | Manual prerequisites replaced by detected ones; Start-menu/uninstall entry provided; clean-VM run and system-wide install pending | Complete for the unsigned per-user model |
 | G12 | Trust | Unsigned binaries | Release checklist | SmartScreen blocks/warns | Requires authorization |
 | G13 | Compatibility | Only Windows 11 25H2 ever exercised | Release checklist | Unknown behavior on 10/24H2/23H2 | Blocked by environment |
-| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | Stage 27 added 33 screenshots plus UIA/keyboard observations (`WINDOWS-UI-VERIFICATION.md` §2/§5) and fixed 11 UI defects; the 2026-11-27 follow-up added eight screenshots for the profile dialogs, Settings diagnostics/tips, and wizard validation (defect 12); the unlocked Help pass added two more and verified both action buttons and the Help tab cycle, and a light-theme pass added three more (§5.5) | Visual/a11y parity unproven | Narrator, contrast, 150/200% scaling, clean-VM runs remain |
+| G14 | Verification | No screenshots, Narrator, contrast, or keypress observations | Stage 27 added 33 screenshots plus UIA/keyboard observations (`WINDOWS-UI-VERIFICATION.md` §2/§5) and fixed 11 UI defects; the 2026-11-27 follow-up added eight screenshots for the profile dialogs, Settings diagnostics/tips, and wizard validation (defect 12); the unlocked Help pass added two more and verified both action buttons and the Help tab cycle, and a light-theme pass added three more (§5.5); the 2026-11-27/28 pass added the repeatable `ui-smoke.ps1` harness (three scenarios, JSON summary) and three filter captures (§5.7) | Visual/a11y parity unproven | Narrator, High Contrast White, 150/200% scaling re-check, clean-VM runs remain |
 | G15 | Stats | Detail tiles are static preview values | `PreviewData` | Misleading only if shown as live; currently preview-gated | Depends on engine |
 | G16 | Link routing | Toggle is UI-only | `ShowLinksCard` / `LinkRoutingOn` | Users may expect routing | Depends on engine/protocol handler |
 | G17 | Background | No refresh agent or scheduled task | No code | Clones would age silently | Depends on engine |
@@ -133,6 +134,8 @@ is eligible now, deferred, or authorization-gated.
 | G19 | Version | Windows stamp `0.2.2` vs product `v0.2.3` | `Directory.Build.props` | Artifact naming/version claims drift | Release decision |
 | G20 | Performance | Discovery cost/scale unmeasured beyond one smoke test | Stage 3 record | Startup may be slow on large machines | Eligible later |
 | G21 | Licensing | PolyForm Noncommercial + trademark constraints | `LICENSE`, `WINDOWS-PORT.md` §8 | Distribution must respect them | Policy, not code |
+| G22 | Discovery | The system-component filter is name-based, so a real application with a component-like name would be hidden and an unlisted component stays visible | `SystemComponentClassifier` rules + 24 negative cases; the Settings toggle restores everything | Only the default sidebar is affected; discovery, profiles, and selection keep every entry | Eligible; extend the rule set only with observed names |
+| G23 | Plan preview | The dry run can only show refusals until a strategy is registered | Empty `ProductionCatalog`; the dialog prints `No provisioning strategy is available` | No user-visible plan steps yet, but the presentation path is tested with an injected strategy | Unblocks with Stage 28 authorization |
 
 ## 3. Stage plan
 
@@ -470,6 +473,38 @@ only started when its dependencies and authorization state allow it.
   and the verification log records both the pass and the correction. Suite
   522/522, 0 warnings (commit `396e445`).
 
+  **Follow-up (2026-11-28, list filter, harness, plan dry run):** three
+  changes, each committed separately.
+  (1) The sidebar lists applications, not registration entries. A conservative
+  name rule set (`SystemComponentClassifier`: runtimes, redistributables, media
+  extensions, versioned driver packages, service installers, Local Experience
+  Packs, Microsoft 365 side-by-side names) is applied during the discovery
+  merge, on top of the registry's own `SystemComponent` flag. It is a display
+  filter only: every entry stays discovered, selectable, and one toggle away in
+  Settings ▸ Advanced, and the sidebar shows how many entries are hidden. On
+  the development machine 34 of 59 rows are hidden and the toggle restores
+  them, verified live and by the `system-filter` smoke scenario. The rule set is
+  a heuristic: see G22.
+  (2) `tools/ui-smoke.ps1` replaces the throwaway `%TEMP%` scripts with named
+  scenarios (`main-window`, `system-filter`, `plan-preview`, `all`), UI
+  Automation only (Invoke/SelectionItem/Toggle, no synthetic clicks), a JSON
+  summary, and a non-zero exit on any failed check. Screenshot checks report a
+  clear failure when the workstation is locked, because DWM stops composing
+  and `PrintWindow` returns a blank frame; behavioural checks still run. The
+  three filter captures came from an unlocked pass.
+  (3) A planned profile now offers "Plan": `PlanPreviewViewModel` runs the real
+  `OperationPlanner` and draws its output, including refusals, under a banner
+  that lives in the view model ("Preview only — nothing has been executed.").
+  It never calls the gate, executor, or launcher, and does not create the
+  instance directory or mutate the profile. Because the production catalog is
+  empty, the dialog states `No provisioning strategy is available` and
+  `No steps can be planned`; six tests cover the refusal, a planning-only
+  strategy, a complete four-step plan with two expected outputs, unproven
+  evidence, a mismatched profile, and the no-directory guarantee. Suite
+  585/585, 0 warnings. The plan dialog's own screenshot is still missing (the
+  desktop was locked after the behavioural check), recorded as a gap rather
+  than claimed.
+
 ### Stage 28 — Clone engine authorization and strategy implementation (execution spine implemented; production strategies blocked)
 
 - **Objective:** Implement the first production provisioning strategy and executor
@@ -679,8 +714,11 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
-| 522 tests pass | Verified | `dotnet test` on the modern-UI tree (2026-11-27), eight test projects | Clean-machine test run |
+| 585 tests pass | Verified | `dotnet test` on the filter/harness/plan-dry-run tree (2026-11-28), eight test projects | Clean-machine test run |
 | Manual UI protocol | Verified for observed scenarios (desktop) | 57 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` sections 2/5: both Help action buttons, the Help three-stop tab cycle, light-theme captures, modern chrome with real app icons in dark and light, and 150/200% text scaling; 12 defects fixed with regression tests | S24 Narrator, a verified high-contrast fix, clean VM, second user |
+| System-component filter | Verified (live + tests) | 34 of 59 rows hidden on the development machine; toggle on shows `AV1/Avc` extensions, `.NET Runtime`, `Visual C++ redistributables`, `App Installer`, Local Experience Pack; toggle off restores the list and `ShowSystemComponents=false`; `system-filter` smoke scenario passes; 13 preference/ViewModel tests + 25 classifier cases | Unlocked screenshot of the Settings toggle; a machine whose entries differ |
+| UI smoke harness | Verified (three scenarios) | `windows/tools/ui-smoke.ps1` run live: `main-window` 5/5 behavioural checks, `system-filter` 6/6 including the restored preference, `plan-preview` 7/7 | Screenshots require an unlocked desktop; Narrator remains manual |
+| Provisioning plan dry run | Verified (live refusal path + 6 tests) | `PlanPreviewViewModel` over the real planner; live dialog shows the banner, `No provisioning strategy is available`, `No steps can be planned`, and closes cleanly; tests cover an injected executable strategy (four steps, two outputs) and prove no directory is created | A registered strategy to exercise the step list in the app |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
@@ -736,5 +774,6 @@ After every stage:
 | 28 (evidence) | Help action buttons and light-theme captures | `b837199`, `2f72818`, `a19fcb4` | 509 | both Help buttons live-verified (Settings privacy page, issue chooser); Help tab cycle recorded; three light-theme screenshots; app theme toggled per-user and restored |
 | — | Duplicate app registrations merged by publisher common name | `df998f7` | 514 | Edge was listed twice (X.500 vs friendly publisher); 126 → 125 applications, one row, detail shows both sources; 5 new tests |
 | 27 (follow-up 3) | macOS chrome, app icons, card detail layout | `396e445` | 522 | Mica + unified title bar; real app icons with letter fallback; dark/light, 150/200% text-scale, and High Contrast Black captures |
+| 27 (follow-up 4) | System-component filter, UI smoke harness, plan dry run | `1097881`, `9e42df7`, `a2e6385` | 585 | 34 of 59 rows hidden by default with a Settings toggle and hint; `ui-smoke.ps1` scenarios; read-only plan dialog showing the planner refusal |
 
 Stages 21+ are appended as they complete.

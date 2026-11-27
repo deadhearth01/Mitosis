@@ -484,3 +484,77 @@ system-wide accessibility toggles were run in this session.
 
 **Not exercised in this pass:** Narrator speech, a second Windows user, a clean
 VM, non-100% display scaling, and the high-contrast fix itself.
+### 5.7 System-component filter, smoke harness, and plan dry run (2026-11-28)
+
+Build: `Release|x64` from `Mitosis.sln`, suite 585/585, 0 warnings. The desktop
+pass ran at 1180x960 on the development machine (Windows 11 25H2, 100% scale,
+dark theme). Actions were driven through named UI Automation elements only
+(`Invoke`, `SelectionItem`, `Toggle`); no synthetic clicks or keystrokes were
+sent while the machine was in use.
+
+**Application list filter**
+
+- The sidebar hides entries that are not applications a person opens. Windows
+  already flags some of them (`SystemComponent=1`, dropped during discovery),
+  and a documented name rule set (`SystemComponentClassifier`) catches
+  installer-authored entries that carry no flag: runtimes, redistributables,
+  media extensions, versioned driver packages, service installers, Local
+  Experience Packs, and Microsoft 365 side-by-side names.
+- Observed: 59 rows and the footer hint "34 system components hidden".
+  Settings > Advanced > Show system components switched on listed
+  `App Installer`, `AV1 Video Extension`, `AVC Encoder Video Extension`,
+  `English (United Kingdom) Local Experience Pack`,
+  `Microsoft .NET Runtime - 8.0.33 (x64)`, `Microsoft .NET Runtime - 9.0.22
+  (x64)`, and four `Microsoft Visual C++ Redistributable` rows. Switching it off
+  restored the application-only list, and `%LOCALAPPDATA%\Mitosis\preferences.json`
+  read back `"ShowSystemComponents": false`.
+- Captures: `smoke-main.png`, `smoke-system-components-shown.png`,
+  `smoke-system-components-hidden.png`.
+- Scope: the filter is a display rule. Every entry stays discovered and keeps
+  its identity; selection, the detail page, and profile lookup are unchanged,
+  and the toggle restores the full list without a restart.
+- Untested: a machine whose installed entries differ from this one, and the
+  "only system components found" empty state (unreachable here). Both are
+  covered by ViewModel tests.
+
+**Repeatable smoke harness**
+
+- `windows/tools/ui-smoke.ps1` replaces the throwaway `%TEMP%` scripts. It
+  accepts `-Scenario main-window|system-filter|plan-preview|all`, resizes the
+  window, acts only through named elements, parks the pointer and focus before
+  each capture, writes a JSON summary to `%TEMP%\mitosis-ui-smoke\`, and exits
+  non-zero if any check fails.
+- Live results: `main-window` 5/5 (window size, rows present, no component names
+  in the default list, footer hint, capture); `system-filter` 6/6 including the
+  restored preference; `plan-preview` 7/7.
+- Limitation observed and handled: with the workstation locked, DWM stops
+  composing, so `PrintWindow` returns a blank frame and `CopyFromScreen` fails
+  with "The handle is invalid". The harness now reports the locked desktop as a
+  failed capture check with that explanation while the behavioural checks still
+  run. The three committed filter captures come from the unlocked pass.
+
+**Provisioning plan dry run**
+
+- A profile row now offers "Plan". `PlanPreviewViewModel` runs the real
+  `OperationPlanner` over the selected application, the profile, the
+  assessment, and `ProductionCatalog.Strategies`, then formats the result.
+  Planning is a pure function and the preview never calls the gate, executor,
+  or launcher.
+- Live: the dialog opens with the banner "Preview only - nothing has been
+  executed.", states "This plan is refused. No part of it can run in this
+  build.", lists `No provisioning strategy is available` as the blocking
+  issue, and shows "No steps can be planned...". It closes cleanly and the
+  profile record is unchanged; no `instances` directory is created under
+  `%LOCALAPPDATA%\Mitosis`.
+- Unit tests cover what the live app cannot reach yet: a planning-only strategy
+  (never lists steps), an executable strategy with complete evidence (four
+  steps, two expected outputs, correct target path), unproven evidence, a
+  profile that belongs to another application, and the guarantee that no
+  directory is created.
+- Not captured: a screenshot of the dialog. The behavioural check ran while
+  the desktop was locked, and screenshots need an unlocked session; this is
+  recorded as a gap rather than claimed.
+
+**Still not exercised:** Narrator speech, High Contrast White and the remaining
+schemes, a second Windows user, a clean VM, non-100% display scaling, and any
+real clone.

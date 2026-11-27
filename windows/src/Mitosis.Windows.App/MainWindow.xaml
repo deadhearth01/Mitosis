@@ -6,9 +6,43 @@
     xmlns:views="using:Mitosis.Windows.App.Views"
     Title="Mitosis">
 
-    <Grid RowDefinitions="Auto,*">
-        <InfoBar
+    <!-- Row 0 is the custom title bar (macOS-style unified toolbar): the sidebar tint
+         runs up behind the caption area on the left, the content surface on the right.
+         It is set as the window's drag region in code, not a caption-control duplicate. -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition x:Name="TitleBarRow" Height="32" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid
+            x:Name="AppTitleBar"
             Grid.Row="0"
+            ColumnDefinitions="240,*">
+            <Border Grid.Column="0" Background="{ThemeResource MitosisSidebarBrush}" />
+            <Border Grid.Column="1" Background="{ThemeResource MitosisContentBackgroundBrush}" />
+            <StackPanel
+                Grid.Column="1"
+                Padding="20,0,0,0"
+                VerticalAlignment="Center"
+                Orientation="Horizontal"
+                Spacing="8">
+                <TextBlock
+                    AutomationProperties.AccessibilityView="Raw"
+                    FontSize="13"
+                    FontWeight="SemiBold"
+                    Text="Mitosis" />
+                <TextBlock
+                    AutomationProperties.AccessibilityView="Raw"
+                    FontSize="12"
+                    Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                    Text="{x:Bind ViewModel.CloneCountSubtitle, Mode=OneWay}" />
+            </StackPanel>
+        </Grid>
+
+        <InfoBar
+            Grid.Row="1"
             Title="{x:Bind ViewModel.BannerTitle, Mode=OneWay}"
             CloseButtonClick="OnUpdateBannerClosed"
             IsOpen="{x:Bind ViewModel.ShowUpdateBanner, Mode=OneWay}"
@@ -19,13 +53,12 @@
             </InfoBar.ActionButton>
         </InfoBar>
 
-        <Grid Grid.Row="1" ColumnDefinitions="240,*">
-            <Border
-                Grid.Column="0"
-                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
-                BorderThickness="0,0,1,0">
+        <Grid Grid.Row="2" ColumnDefinitions="240,*">
+            <Border Grid.Column="0" Background="{ThemeResource MitosisSidebarBrush}">
                 <views:SidebarView x:Name="Sidebar" ViewModel="{x:Bind ViewModel, Mode=OneWay}" />
             </Border>
+
+            <Border Grid.Column="1" Background="{ThemeResource MitosisContentBackgroundBrush}" />
 
             <views:CloneDetailView
                 x:Name="DetailView"
@@ -51,20 +84,21 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 MaxWidth="420"
-                Spacing="16">
+                Spacing="12">
                 <Image
-                    Width="168"
-                    Height="168"
+                    Width="160"
+                    Height="160"
                     Source="ms-appx:///Assets/pose-empty.png">
                     <AutomationProperties.AccessibilityView>Raw</AutomationProperties.AccessibilityView>
                 </Image>
-                <StackPanel Spacing="8">
+                <StackPanel Spacing="6">
                     <TextBlock
                         HorizontalAlignment="Center"
                         Style="{StaticResource MitosisTitle2Style}"
                         Text="No clones yet" />
                     <TextBlock
                         HorizontalAlignment="Center"
+                        FontSize="14"
                         Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                         Text="Choose an app to make your first one." />
                 </StackPanel>
@@ -75,9 +109,9 @@
                     Style="{StaticResource AccentButtonStyle}" />
                 <TextBlock
                     HorizontalAlignment="Center"
-                    FontSize="13"
+                    FontSize="12"
                     Foreground="{ThemeResource TextFillColorTertiaryBrush}"
-                    Text="or drag an app here" />
+                    Text="or pick one from the sidebar" />
             </StackPanel>
         </Grid>
     </Grid>

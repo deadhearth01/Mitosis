@@ -9,6 +9,8 @@
     <UserControl.Resources>
         <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
         <local:ProfileSubtitleConverter x:Key="ProfileSubtitle" />
+        <local:CompatibilityStatusToBrushConverter x:Key="AppStatusBrush" />
+        <local:CompatibilityStatusToWashConverter x:Key="AppStatusWash" />
     </UserControl.Resources>
 
     <ScrollViewer
@@ -17,80 +19,110 @@
         HorizontalScrollMode="Disabled">
         <Grid>
             <StackPanel
-                MaxWidth="780"
-                Padding="32,28"
-                Spacing="28">
-                <!-- Header -->
-                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="24">
-                    <controls:CloneBadgeIcon
+                MaxWidth="820"
+                Padding="36,30"
+                Spacing="26">
+                <!-- Header: macOS shows the app tile, the name, a status pill beside the
+                     supporting line, then the primary action. -->
+                <Grid ColumnDefinitions="Auto,*" ColumnSpacing="22">
+                    <Grid
                         Grid.Column="0"
-                        VerticalAlignment="Center"
-                        IconSize="104"
-                        Initial="{x:Bind ViewModel.SelectedApp.Initial, Mode=OneWay}"
-                        InitialFontSize="40"
-                        TileCornerRadius="22"
-                        TintHex="#8E8E93" />
-                    <StackPanel Grid.Column="1" Spacing="8">
+                        Width="92"
+                        Height="92"
+                        VerticalAlignment="Top">
+                        <controls:CloneBadgeIcon
+                            x:Name="HeaderBadge"
+                            IconSize="92"
+                            Initial="{x:Bind ViewModel.SelectedApp.Initial, Mode=OneWay}"
+                            InitialFontSize="36"
+                            TileCornerRadius="20"
+                            TintHex="#8E8E93" />
+                        <Image
+                            x:Name="HeaderIcon"
+                            Width="92"
+                            Height="92"
+                            Stretch="Uniform"
+                            Visibility="Collapsed" />
+                    </Grid>
+                    <StackPanel Grid.Column="1" Spacing="6">
                         <TextBlock Style="{StaticResource MitosisDetailNameStyle}" Text="{x:Bind ViewModel.SelectedApp.App.DisplayName, Mode=OneWay}" />
-                        <TextBlock
-                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                            Text="{x:Bind ViewModel.SelectedAppPublisherLine, Mode=OneWay}"
-                            TextWrapping="Wrap" />
-                        <TextBlock
-                            FontSize="13"
-                            FontWeight="SemiBold"
-                            Text="{x:Bind ViewModel.SelectedApp.StatusText, Mode=OneWay}" />
-                        <StackPanel Margin="0,4,0,0" Orientation="Horizontal" Spacing="8">
-                            <Button
-                                Command="{x:Bind ViewModel.CreateCloneFromAppCommand, Mode=OneWay}"
-                                Content="New Clone…"
-                                Style="{StaticResource AccentButtonStyle}">
-                                <AutomationProperties.Name>New clone from this app</AutomationProperties.Name>
-                            </Button>
+                        <StackPanel Orientation="Horizontal" Spacing="9">
+                            <Border
+                                Padding="9,3,11,3"
+                                VerticalAlignment="Center"
+                                Background="{x:Bind ViewModel.SelectedApp.Assessment.Status, Mode=OneWay, Converter={StaticResource AppStatusWash}}"
+                                CornerRadius="10">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <Ellipse
+                                        Width="7"
+                                        Height="7"
+                                        VerticalAlignment="Center"
+                                        Fill="{x:Bind ViewModel.SelectedApp.Assessment.Status, Mode=OneWay, Converter={StaticResource AppStatusBrush}}" />
+                                    <TextBlock
+                                        FontSize="12"
+                                        FontWeight="SemiBold"
+                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                        Text="{x:Bind ViewModel.SelectedApp.StatusText, Mode=OneWay}" />
+                                </StackPanel>
+                            </Border>
+                            <TextBlock
+                                VerticalAlignment="Center"
+                                FontSize="13"
+                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Text="{x:Bind ViewModel.SelectedAppPublisherLine, Mode=OneWay}"
+                                TextTrimming="CharacterEllipsis" />
                         </StackPanel>
+                        <Button
+                            Margin="0,8,0,0"
+                            HorizontalAlignment="Left"
+                            Command="{x:Bind ViewModel.CreateCloneFromAppCommand, Mode=OneWay}"
+                            Content="New Clone…"
+                            Style="{StaticResource AccentButtonStyle}">
+                            <AutomationProperties.Name>New clone from this app</AutomationProperties.Name>
+                        </Button>
                     </StackPanel>
                 </Grid>
 
                 <!-- Details -->
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="10">
                     <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Details" />
                     <Border Style="{StaticResource MitosisCardStyle}">
                         <StackPanel>
-                            <Grid Padding="16,11" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <Grid Padding="16,13" ColumnDefinitions="*,Auto" ColumnSpacing="24">
                                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Publisher" />
                                 <TextBlock
                                     Grid.Column="1"
-                                    MaxWidth="420"
+                                    MaxWidth="460"
                                     Text="{x:Bind ViewModel.SelectedAppPublisherOrUnknown, Mode=OneWay}"
                                     TextAlignment="Right"
                                     TextWrapping="Wrap" />
                             </Grid>
                             <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
-                            <Grid Padding="16,11" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <Grid Padding="16,13" ColumnDefinitions="*,Auto" ColumnSpacing="24">
                                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Version" />
                                 <TextBlock
                                     Grid.Column="1"
-                                    MaxWidth="420"
+                                    MaxWidth="460"
                                     Text="{x:Bind ViewModel.SelectedAppVersionOrUnknown, Mode=OneWay}"
                                     TextAlignment="Right"
                                     TextWrapping="Wrap" />
                             </Grid>
                             <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
-                            <Grid Padding="16,11" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <Grid Padding="16,13" ColumnDefinitions="*,Auto" ColumnSpacing="24">
                                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Installed for" />
                                 <TextBlock
                                     Grid.Column="1"
-                                    MaxWidth="420"
+                                    MaxWidth="460"
                                     Text="{x:Bind ViewModel.SelectedAppScopeText, Mode=OneWay}"
                                     TextAlignment="Right"
                                     TextWrapping="Wrap" />
                             </Grid>
                             <Rectangle Height="1" Fill="{ThemeResource CardStrokeColorDefaultBrush}" Margin="16,0" />
-                            <Grid Padding="16,11" ColumnDefinitions="*,Auto" ColumnSpacing="16">
+                            <Grid Padding="16,13" ColumnDefinitions="*,Auto" ColumnSpacing="24">
                                 <TextBlock Foreground="{ThemeResource TextFillColorSecondaryBrush}" Text="Found via" />
                                 <TextBlock
                                     Grid.Column="1"
-                                    MaxWidth="420"
+                                    MaxWidth="460"
                                     Text="{x:Bind ViewModel.SelectedAppSourcesText, Mode=OneWay}"
                                     TextAlignment="Right"
                                     TextWrapping="Wrap" />
@@ -100,19 +132,35 @@
                 </StackPanel>
 
                 <!-- Compatibility -->
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="10">
                     <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Compatibility" />
-                    <Border Style="{StaticResource MitosisCardStyle}" Padding="16,12">
-                        <StackPanel Spacing="8">
-                            <TextBlock FontSize="14" FontWeight="Medium" Text="{x:Bind ViewModel.SelectedApp.StatusText, Mode=OneWay}" />
+                    <Border Padding="16,14" Style="{StaticResource MitosisCardStyle}">
+                        <StackPanel Spacing="9">
+                            <StackPanel Orientation="Horizontal" Spacing="7">
+                                <Ellipse
+                                    Width="8"
+                                    Height="8"
+                                    VerticalAlignment="Center"
+                                    Fill="{x:Bind ViewModel.SelectedApp.Assessment.Status, Mode=OneWay, Converter={StaticResource AppStatusBrush}}" />
+                                <TextBlock FontSize="14" FontWeight="SemiBold" Text="{x:Bind ViewModel.SelectedApp.StatusText, Mode=OneWay}" />
+                            </StackPanel>
                             <ItemsControl ItemsSource="{x:Bind ViewModel.SelectedAppReasons, Mode=OneWay}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock
-                                            FontSize="13"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                            Text="{x:Bind Mode=OneTime}"
-                                            TextWrapping="Wrap" />
+                                    <DataTemplate x:DataType="x:String">
+                                        <Grid Padding="0,2" ColumnDefinitions="Auto,*" ColumnSpacing="9">
+                                            <Ellipse
+                                                Width="4"
+                                                Height="4"
+                                                Margin="1,7,0,0"
+                                                VerticalAlignment="Top"
+                                                Fill="{ThemeResource TextFillColorTertiaryBrush}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="13"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="{x:Bind}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -121,34 +169,48 @@
                                 Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                 Text="Independent copies arrive in a later stage."
                                 TextWrapping="Wrap" />
-                            <TextBlock FontSize="13" FontWeight="Medium" Text="Still needed"
+                            <TextBlock
+                                Margin="0,4,0,0"
+                                FontSize="13"
+                                FontWeight="SemiBold"
+                                Text="Still needed"
                                 Visibility="{x:Bind ViewModel.ShowSelectedAppNeeds, Mode=OneWay, Converter={StaticResource BoolToVisibility}}" />
                             <TextBlock
                                 FontSize="12"
-                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                Foreground="{ThemeResource TextFillColorTertiaryBrush}"
                                 Text="{x:Bind ViewModel.SelectedAppEvidenceSummary, Mode=OneWay}"
                                 TextWrapping="Wrap" />
                             <ItemsControl
                                 ItemsSource="{x:Bind ViewModel.SelectedAppNeeds, Mode=OneWay}"
                                 Visibility="{x:Bind ViewModel.ShowSelectedAppNeeds, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                                 <ItemsControl.ItemTemplate>
-                                    <DataTemplate>
-                                        <TextBlock
-                                            FontSize="13"
-                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                            Text="{x:Bind Mode=OneTime}"
-                                            TextWrapping="Wrap" />
+                                    <DataTemplate x:DataType="x:String">
+                                        <Grid Padding="0,2" ColumnDefinitions="Auto,*" ColumnSpacing="9">
+                                            <Ellipse
+                                                Width="4"
+                                                Height="4"
+                                                Margin="1,7,0,0"
+                                                VerticalAlignment="Top"
+                                                Fill="{ThemeResource TextFillColorTertiaryBrush}" />
+                                            <TextBlock
+                                                Grid.Column="1"
+                                                FontSize="13"
+                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                                Text="{x:Bind}"
+                                                TextWrapping="Wrap" />
+                                        </Grid>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                         </StackPanel>
                     </Border>
                 </StackPanel>
+
                 <!-- Profiles -->
-                <StackPanel Spacing="12">
+                <StackPanel Spacing="10">
                     <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Profiles" />
-                    <Border Style="{StaticResource MitosisCardStyle}" Padding="16,12">
-                        <StackPanel Spacing="8">
+                    <Border Padding="16,12" Style="{StaticResource MitosisCardStyle}">
+                        <StackPanel Spacing="6">
                             <ProgressRing
                                 Width="20"
                                 Height="20"
@@ -171,7 +233,7 @@
                             <ItemsControl ItemsSource="{x:Bind ViewModel.ProfilesForSelectedApp, Mode=OneWay}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="domain:CloneProfile">
-                                        <Grid Padding="0,6" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                        <Grid Padding="0,7" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                                             <StackPanel Spacing="2">
                                                 <TextBlock FontSize="14" FontWeight="Medium" Text="{x:Bind Name, Mode=OneTime}" />
                                                 <TextBlock
@@ -200,7 +262,7 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <StackPanel
-                                Spacing="4"
+                                Spacing="3"
                                 Visibility="{x:Bind ViewModel.ShowProfilesEmpty, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
                                 <TextBlock FontSize="13" Text="No profiles yet." />
                                 <TextBlock

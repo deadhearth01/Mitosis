@@ -1,11 +1,15 @@
 using Microsoft.UI;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using System.ComponentModel;
+using System.Runtime.InteropServices;
 using Windows.Graphics;
 using Windows.System;
+using Windows.UI;
 using Windows.UI.Core;
 using Mitosis.Application.Diagnostics;
 using Mitosis.Windows.ViewModels;
@@ -28,6 +32,7 @@ public sealed partial class MainWindow : Window
         InitializeComponent();
         Title = "Mitosis";
         ApplyMainWindowLimits();
+        ApplyModernChrome();
         AppWindow.Resize(new SizeInt32(WindowSizes.MainDefaultWidth, WindowSizes.MainDefaultHeight));
         ViewModel.DialogRequested += OnDialogRequested;
         ViewModel.NewCloneRequested += OnNewCloneRequested;
@@ -63,6 +68,71 @@ public sealed partial class MainWindow : Window
         {
             presenter.PreferredMinimumWidth = WindowSizes.MainMinimumWidth;
             presenter.PreferredMinimumHeight = WindowSizes.MainMinimumHeight;
+        }
+    }
+
+    /// <summary>macOS-style chrome: the content supplies its own unified title bar and the
+    /// window sits on a Mica material, so the sidebar keeps a hint of the desktop the way
+    /// the AppKit vibrant sidebar does. Best effort only - a composition target that
+    /// refuses the backdrop keeps the stock title bar instead of failing the launch.</summary>
+    private void ApplyModernChrome()
+    {
+        try
+        {
+            SystemBackdrop = new MicaBackdrop { Kind = MicaKind.BaseAlt };
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException or NotSupportedException)
+        {
+            // No Mica on this build: the themed solid surfaces below still render.
+        }
+
+        try
+        {
+            ExtendsContentIntoTitleBar = true;
+            SetTitleBar(AppTitleBar);
+            var titleBar = AppWindow.TitleBar;
+            titleBar.PreferredHeightOption = TitleBarHeightOption.Standard;
+            TitleBarRow.Height = new GridLength(titleBar.Height > 0 ? titleBar.Height : 32);
+            UpdateTitleBarColors();
+            if (Content is FrameworkElement root)
+            {
+                root.ActualThemeChanged += (_, _) => UpdateTitleBarColors();
+            }
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException or NotSupportedException)
+        {
+            ExtendsContentIntoTitleBar = false;
+        }
+    }
+
+    /// <summary>Caption glyphs are drawn by the system over our own title bar, so their
+    /// colours must follow the element theme; otherwise a dark window keeps a light
+    /// title bar and the glyphs lose contrast.</summary>
+    private void UpdateTitleBarColors()
+    {
+        try
+        {
+            var dark = (Content as FrameworkElement)?.ActualTheme == ElementTheme.Dark;
+            var foreground = dark ? Colors.White : Color.FromArgb(0xFF, 0x1C, 0x1C, 0x1E);
+            var titleBar = AppWindow.TitleBar;
+            titleBar.ButtonBackgroundColor = Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+            titleBar.ButtonForegroundColor = foreground;
+            titleBar.ButtonInactiveForegroundColor = dark
+                ? Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF)
+                : Color.FromArgb(0x99, 0, 0, 0);
+            titleBar.ButtonHoverBackgroundColor = dark
+                ? Color.FromArgb(0x18, 0xFF, 0xFF, 0xFF)
+                : Color.FromArgb(0x12, 0, 0, 0);
+            titleBar.ButtonHoverForegroundColor = foreground;
+            titleBar.ButtonPressedBackgroundColor = dark
+                ? Color.FromArgb(0x28, 0xFF, 0xFF, 0xFF)
+                : Color.FromArgb(0x20, 0, 0, 0);
+            titleBar.ButtonPressedForegroundColor = foreground;
+        }
+        catch (Exception ex) when (ex is COMException or InvalidOperationException)
+        {
+            // The caption keeps its system colours; nothing else depends on this.
         }
     }
 

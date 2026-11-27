@@ -9,6 +9,17 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
                 <ResourceDictionary Source="Styles/Theme.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <!-- macOS rounds control corners to ~6 px; the WinUI default of 4
+                         reads sharper than the reference app. -->
+                    <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <CornerRadius x:Key="ControlCornerRadius">6</CornerRadius>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <local:BoolToVisibilityConverter x:Key="BoolToVisibility" />
             <local:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibility" />
             <local:HexToBrushConverter x:Key="HexToBrush" />

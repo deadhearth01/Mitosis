@@ -72,15 +72,15 @@ public sealed class StatusToBrushConverter : IValueConverter
 
             return clone.Status switch
             {
-                CloneStatusKind.OriginalMissing => new SolidColorBrush(Colors.Red),
-                CloneStatusKind.UpdateAvailable => new SolidColorBrush(Colors.Orange),
+                CloneStatusKind.OriginalMissing => new SolidColorBrush(StatusPalette.Red),
+                CloneStatusKind.UpdateAvailable => new SolidColorBrush(StatusPalette.Orange),
                 _ => clone.IsRunning
-                    ? new SolidColorBrush(Colors.Green)
-                    : new SolidColorBrush(Colors.Gray),
+                    ? new SolidColorBrush(StatusPalette.Green)
+                    : new SolidColorBrush(StatusPalette.Grey),
             };
         }
 
-        return new SolidColorBrush(Colors.Gray);
+        return new SolidColorBrush(StatusPalette.Grey);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, string language) =>
@@ -133,6 +133,49 @@ public sealed class RunningToActionTextConverter : IValueConverter
 {
     public object Convert(object value, Type targetType, object parameter, string language) =>
         value is CloneItem { IsRunning: true } ? "Show" : "Open";
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>macOS status tints (BRAND.md §Color): red, orange, green, secondary grey.
+/// Status is never colour alone — callers pair the tint with a dot, symbol, or label.</summary>
+public static class StatusPalette
+{
+    public static readonly Color Red = Color.FromArgb(0xFF, 0xFF, 0x45, 0x3A);
+    public static readonly Color Orange = Color.FromArgb(0xFF, 0xFF, 0x9F, 0x0A);
+    public static readonly Color Green = Color.FromArgb(0xFF, 0x30, 0xD1, 0x58);
+    public static readonly Color Grey = Color.FromArgb(0xFF, 0x8E, 0x8E, 0x93);
+
+    public static Color Tint(CompatibilityStatus? status) => status switch
+    {
+        CompatibilityStatus.Supported => Green,
+        CompatibilityStatus.NeedsReview => Orange,
+        CompatibilityStatus.Unsupported => Red,
+        _ => Grey,
+    };
+
+    /// <summary>18% wash used behind status pills (design spec §4 fills).</summary>
+    public static Color Wash(CompatibilityStatus? status)
+    {
+        var c = Tint(status);
+        return Color.FromArgb(0x2E, c.R, c.G, c.B);
+    }
+}
+
+public sealed class CompatibilityStatusToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        new SolidColorBrush(StatusPalette.Tint(value as CompatibilityStatus?));
+
+    public object ConvertBack(object value, Type targetType, object parameter, string language) =>
+        throw new NotSupportedException();
+}
+
+public sealed class CompatibilityStatusToWashConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, string language) =>
+        new SolidColorBrush(StatusPalette.Wash(value as CompatibilityStatus?));
 
     public object ConvertBack(object value, Type targetType, object parameter, string language) =>
         throw new NotSupportedException();

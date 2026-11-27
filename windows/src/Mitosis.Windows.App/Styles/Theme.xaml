@@ -8,14 +8,26 @@
         <ResourceDictionary x:Key="Light">
             <Color x:Key="MitosisAccentColor">#1A7FE0</Color>
             <Color x:Key="MitosisPrimaryBlueColor">#41AEF8</Color>
+            <!-- Opaque-enough window surfaces over Mica: the sidebar keeps a hint of the
+                 desktop (macOS vibrancy) while the content pane stays legible. -->
+            <SolidColorBrush x:Key="MitosisSidebarBrush" Color="#E8E8EE" Opacity="0.92" />
+            <SolidColorBrush x:Key="MitosisContentBackgroundBrush" Color="#FBFBFD" />
+            <SolidColorBrush x:Key="MitosisRowHoverBrush" Color="#0F000000" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <Color x:Key="MitosisAccentColor">#3B9EF0</Color>
             <Color x:Key="MitosisPrimaryBlueColor">#41AEF8</Color>
+            <SolidColorBrush x:Key="MitosisSidebarBrush" Color="#202024" Opacity="0.8" />
+            <SolidColorBrush x:Key="MitosisContentBackgroundBrush" Color="#1B1B1E" />
+            <SolidColorBrush x:Key="MitosisRowHoverBrush" Color="#14FFFFFF" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="HighContrast">
             <Color x:Key="MitosisAccentColor">#3B9EF0</Color>
             <Color x:Key="MitosisPrimaryBlueColor">#41AEF8</Color>
+            <!-- High contrast keeps the system's own surfaces: no translucency, no tint. -->
+            <SolidColorBrush x:Key="MitosisSidebarBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="MitosisContentBackgroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
+            <SolidColorBrush x:Key="MitosisRowHoverBrush" Color="{ThemeResource SystemColorHighlightColor}" Opacity="0.25" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 

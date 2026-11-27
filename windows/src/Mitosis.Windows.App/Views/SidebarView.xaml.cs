@@ -3,15 +3,19 @@ using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.System;
+using Mitosis.Windows.Platform.Icons;
 using Mitosis.Windows.ViewModels;
 
 namespace Mitosis.Windows.App.Views;
 
 public sealed partial class SidebarView : UserControl
 {
+    private readonly AppIconLoader iconLoader;
+
     public SidebarView()
     {
         InitializeComponent();
+        iconLoader = new AppIconLoader(DispatcherQueue);
     }
 
     public MainViewModel ViewModel
@@ -120,6 +124,50 @@ public sealed partial class SidebarView : UserControl
         }
 
         return false;
+    }
+
+    /// <summary>Fills each realised app row with the icon named by its registry
+    /// <c>DisplayIcon</c> value, keeping the letter tile until (and unless) a readable
+    /// thumbnail arrives. Recycling resets both halves so a reused container never
+    /// shows the previous row's icon.</summary>
+    private void OnAppsContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
+    {
+        if (args.ItemContainer?.ContentTemplateRoot is not FrameworkElement root
+            || root.FindName("AppIcon") is not Image image
+            || root.FindName("AppBadge") is not FrameworkElement badge)
+        {
+            return;
+        }
+
+        image.Source = null;
+        image.Visibility = Visibility.Collapsed;
+        badge.Visibility = Visibility.Visible;
+
+        if (args.InRecycleQueue || args.Item is not DiscoveredAppItem item)
+        {
+            return;
+        }
+
+        var path = AppIconReference.Parse(item.App.IconReference);
+        if (path is null)
+        {
+            return;
+        }
+
+        _ = ShowIconAsync(image, badge, item, path);
+    }
+
+    private async Task ShowIconAsync(Image image, FrameworkElement badge, DiscoveredAppItem item, string path)
+    {
+        var source = await iconLoader.LoadAsync(path).ConfigureAwait(true);
+        if (source is null || !ReferenceEquals(image.DataContext, item))
+        {
+            return;
+        }
+
+        image.Source = source;
+        image.Visibility = Visibility.Visible;
+        badge.Visibility = Visibility.Collapsed;
     }
 
     private void OnAppsKeyDown(object sender, KeyRoutedEventArgs e)

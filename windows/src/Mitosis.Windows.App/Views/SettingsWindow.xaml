@@ -147,6 +147,25 @@
                     </StackPanel>
 
                     <StackPanel x:Name="AdvancedPanel" Spacing="8" Visibility="Collapsed">
+                        <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Applications list" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0" Spacing="2">
+                                <TextBlock Text="Show system components" />
+                                <TextBlock
+                                    FontSize="12"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Text="Includes runtimes, installers, media extensions, and entries that Windows flags as system components."
+                                    TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ToggleSwitch
+                                x:Name="SystemComponentsToggle"
+                                Grid.Column="1"
+                                VerticalAlignment="Center"
+                                AutomationProperties.Name="Show system components"
+                                IsOn="{x:Bind ViewModel.ShowSystemComponents, Mode=TwoWay}"
+                                OffContent="Hidden"
+                                OnContent="Shown" />
+                        </Grid>
                         <TextBlock Style="{StaticResource MitosisSectionTitleStyle}" Text="Tips and the welcome screen" />
                         <Grid ColumnDefinitions="*,Auto">
                             <TextBlock

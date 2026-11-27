@@ -65,6 +65,21 @@ public sealed class JsonAppPreferencesStoreTests : IDisposable
         StringAssert.Contains(json, "\"SchemaVersion\": 1");
         StringAssert.Contains(json, "\"Onboarded\": false");
         StringAssert.Contains(json, "\"ShowTips\": true");
+        StringAssert.Contains(json, "\"ShowSystemComponents\": false");
+    }
+
+    [TestMethod]
+    public async Task SystemComponentFilter_RoundTrips()
+    {
+        var dir = Dir("prefs");
+        var store = Store(dir);
+        await store.SaveAsync(
+            AppPreferences.Default with { ShowSystemComponents = true },
+            TestContext.CancellationToken);
+
+        var loaded = await Store(dir).LoadAsync(TestContext.CancellationToken);
+
+        Assert.IsTrue(loaded.ShowSystemComponents);
     }
 
     [TestMethod]

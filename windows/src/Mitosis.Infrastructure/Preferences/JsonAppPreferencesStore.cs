@@ -108,6 +108,9 @@ public sealed class JsonAppPreferencesStore : IAppPreferencesStore
         {
             Onboarded = document.Onboarded ?? false,
             ShowTips = document.ShowTips ?? true,
+            // Missing in stores written before this flag existed, so it stays schema 1;
+            // the default (hide system components) is what an upgrade should get.
+            ShowSystemComponents = document.ShowSystemComponents ?? false,
         };
     }
 
@@ -118,6 +121,7 @@ public sealed class JsonAppPreferencesStore : IAppPreferencesStore
             SchemaVersion = AppPreferences.CurrentSchemaVersion,
             Onboarded = preferences.Onboarded,
             ShowTips = preferences.ShowTips,
+            ShowSystemComponents = preferences.ShowSystemComponents,
         };
 
         string json;
@@ -170,5 +174,7 @@ public sealed class JsonAppPreferencesStore : IAppPreferencesStore
         public bool? Onboarded { get; set; }
 
         public bool? ShowTips { get; set; }
+
+        public bool? ShowSystemComponents { get; set; }
     }
 }

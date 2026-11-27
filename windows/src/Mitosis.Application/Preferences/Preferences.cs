@@ -16,6 +16,13 @@ public sealed record AppPreferences
     /// <summary>Wake tip / welcome state behind Settings ▸ Advanced ▸ Show Tips Again.</summary>
     public bool ShowTips { get; init; }
 
+    /// <summary>Includes registry entries that Windows flags as system components
+    /// (<c>SystemComponent=1</c> and AppX system packages). Off by default: those entries
+    /// are runtimes, updaters, and shell services that a person does not open, and they
+    /// bury the applications the sidebar is for. The flag is additive, never destructive —
+    /// every discovered app stays in the model and is one toggle away.</summary>
+    public bool ShowSystemComponents { get; init; }
+
     /// <summary>Defaults for a missing preference store: not onboarded yet, tips on
     /// (macOS registers <c>showTipsKey: true</c>, MitosisRootApp.swift:11).</summary>
     public static AppPreferences Default { get; } = new() { ShowTips = true };

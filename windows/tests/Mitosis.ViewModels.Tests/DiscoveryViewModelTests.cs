@@ -48,7 +48,8 @@ internal static class DiscoveredApps
     public static DiscoveredApp Make(
         string name,
         string? publisher = "Publisher",
-        DiscoverySource source = DiscoverySource.CurrentUserUninstall) => new(
+        DiscoverySource source = DiscoverySource.CurrentUserUninstall,
+        bool isSystemComponent = false) => new(
             Id: AppIdentity.Create(source, name, publisher),
             DisplayName: name,
             Publisher: publisher,
@@ -58,7 +59,7 @@ internal static class DiscoveredApps
             PrimarySource: source,
             Sources: new[] { source },
             Scope: InstallScope.CurrentUser,
-            IsSystemComponent: false,
+            IsSystemComponent: isSystemComponent,
             IconReference: null,
             Warnings: Array.Empty<string>());
 }
@@ -319,6 +320,67 @@ public sealed class DiscoveryViewModelTests
             new[] { "Proof of isolation", "License confirmation" },
             model.SelectedAppNeeds.ToList());
         Assert.IsTrue(model.ShowSelectedAppNeeds);
+    }
+
+    [TestMethod]
+    public async Task SystemComponents_AreHiddenByDefaultAndOneToggleAway()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[]
+        {
+            DiscoveredApps.Make("Brave"),
+            DiscoveredApps.Make("AVC Encoder Video Extension", isSystemComponent: true),
+        });
+        var model = Create(discovery);
+        await model.LoadAsync(TestContext.CancellationToken);
+
+        var visible = model.VisibleAppGroups.SelectMany(g => g.Items).ToList();
+        Assert.AreEqual(1, visible.Count, "Runtimes and shell services do not fill the sidebar.");
+        Assert.AreEqual("Brave", visible[0].App.DisplayName);
+        Assert.AreEqual(1, model.HiddenSystemComponentCount);
+        Assert.IsTrue(model.ShowSystemComponentsHint);
+        Assert.IsTrue(model.ShowSystemComponentsCommand.CanExecute(null));
+
+        await model.SetShowSystemComponentsAsync(true);
+
+        visible = model.VisibleAppGroups.SelectMany(g => g.Items).ToList();
+        Assert.AreEqual(2, visible.Count, "The entry is filtered from view, never deleted.");
+        Assert.AreEqual(0, model.HiddenSystemComponentCount);
+        Assert.IsFalse(model.ShowSystemComponentsHint);
+        Assert.IsFalse(model.ShowSystemComponentsCommand.CanExecute(null));
+    }
+
+    [TestMethod]
+    public async Task SystemComponents_WhenEverythingIsFiltered_ExplainsWhy()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("AsyncTextService", isSystemComponent: true) });
+        var model = Create(discovery);
+
+        await model.LoadAsync(TestContext.CancellationToken);
+
+        Assert.IsFalse(model.ShowAppsEmpty, "Discovery did find an entry; claiming none is wrong.");
+        Assert.IsTrue(model.ShowAppsFilteredOnly);
+        Assert.IsFalse(model.HasApps);
+        Assert.IsFalse(model.HasNoResults, "No query is active.");
+    }
+
+    [TestMethod]
+    public async Task SystemComponents_SelectionSurvivesTheFilter()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[] { DiscoveredApps.Make("AsyncTextService", isSystemComponent: true) });
+        var model = Create(discovery);
+        await model.LoadAsync(TestContext.CancellationToken);
+        await model.SetShowSystemComponentsAsync(true);
+        var item = model.VisibleAppGroups.SelectMany(g => g.Items).Single();
+        model.SelectedApp = item;
+
+        await model.SetShowSystemComponentsAsync(false);
+
+        Assert.AreSame(item, model.SelectedApp,
+            "Hiding a row must not silently discard the user's selection.");
+        Assert.IsTrue(model.ShowAppDetail);
     }
 
     [TestMethod]

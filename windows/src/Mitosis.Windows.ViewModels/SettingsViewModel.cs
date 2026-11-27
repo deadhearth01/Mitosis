@@ -17,6 +17,8 @@ using Mitosis.Application.Preferences;
 ///     copyable environment report. Local-only; no application data or credentials.
 ///   General ▸ Updates: a manual, read-only GitHub Releases check (Stage 25). No
 ///     automatic check, download, or install.
+///   Advanced ▸ Applications list: shows or hides registry entries that Windows flags
+///     as system components. Persisted and applied to the main window immediately.
 /// Data folder is supplied at composition and never guessed here.</summary>
 public sealed class SettingsViewModel : ObservableObject, IDisposable
 {
@@ -24,6 +26,8 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
     private readonly DoctorFacts diagnosticsFacts;
     private readonly CancellationTokenSource lifetime = new();
     private bool tipsReset;
+    private bool showSystemComponents;
+    private bool settingShowSystemComponents;
     private bool disposed;
     private string? saveError;
 
@@ -152,6 +156,23 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     public RelayCommand ShowTipsAgainCommand { get; }
 
+    /// <summary>Settings ▸ Advanced ▸ Applications list. Bound two-way by the toggle;
+    /// each change persists and raises <see cref="PreferencesChanged"/> so the main
+    /// window re-filters while Settings is still open.</summary>
+    public bool ShowSystemComponents
+    {
+        get => showSystemComponents;
+        set
+        {
+            if (!SetProperty(ref showSystemComponents, value) || settingShowSystemComponents)
+            {
+                return;
+            }
+
+            _ = SaveShowSystemComponentsAsync(value);
+        }
+    }
+
     public RelayCommand CheckForUpdatesCommand { get; }
 
     public RelayCommand RevealDataFolderCommand { get; }
@@ -169,6 +190,10 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
 
     /// <summary>Carries the report text so the window can copy it to the clipboard.</summary>
     public event EventHandler<string>? CopyDiagnosticsRequested;
+
+    /// <summary>Raised after a preference that affects the main window was saved
+    /// (currently the system-component filter).</summary>
+    public event EventHandler? PreferencesChanged;
 
     /// <summary>Detaches from the shared update state. The window closes once; without
     /// this, every reopened Settings window would stay subscribed to the feed state.</summary>
@@ -211,11 +236,52 @@ public sealed class SettingsViewModel : ObservableObject, IDisposable
         SaveError = null;
         try
         {
-            _ = await preferences.LoadAsync(cancellationToken);
+            var stored = await preferences.LoadAsync(cancellationToken);
+            try
+            {
+                settingShowSystemComponents = true;
+                ShowSystemComponents = stored.ShowSystemComponents;
+            }
+            finally
+            {
+                settingShowSystemComponents = false;
+            }
         }
         catch (PreferencesStoreException ex)
         {
             SaveError = ex.Message;
+        }
+    }
+
+    /// <summary>Persists a toggle change and lets the main window apply it at once. A
+    /// failed save restores the toggle so the checkbox never claims a value the store
+    /// rejected.</summary>
+    private async Task SaveShowSystemComponentsAsync(bool value)
+    {
+        SaveError = null;
+        try
+        {
+            var current = await preferences.LoadAsync(lifetime.Token);
+            await preferences.SaveAsync(
+                current with { ShowSystemComponents = value }, lifetime.Token);
+            PreferencesChanged?.Invoke(this, EventArgs.Empty);
+        }
+        catch (OperationCanceledException)
+        {
+            // The window closed mid-save; the previous value stays persisted.
+        }
+        catch (PreferencesStoreException ex)
+        {
+            SaveError = ex.Message;
+            try
+            {
+                settingShowSystemComponents = true;
+                ShowSystemComponents = !value;
+            }
+            finally
+            {
+                settingShowSystemComponents = false;
+            }
         }
     }
 

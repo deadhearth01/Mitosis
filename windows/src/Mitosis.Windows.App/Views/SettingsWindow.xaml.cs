@@ -21,7 +21,7 @@ namespace Mitosis.Windows.App.Views;
 public sealed partial class SettingsWindow : Window
 {
     private const int GeneralClientHeight = 740;
-    private const int AdvancedClientHeight = 300;
+    private const int AdvancedClientHeight = 380;
 
     public SettingsWindow(SettingsViewModel viewModel)
     {

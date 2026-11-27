@@ -334,6 +334,28 @@
             HorizontalAlignment="Center"
             VerticalAlignment="Center"
             Spacing="8"
+            Visibility="{x:Bind ViewModel.ShowAppsFilteredOnly, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontWeight="SemiBold"
+                Text="Only system components found." />
+            <TextBlock
+                HorizontalAlignment="Center"
+                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                Text="Mitosis hides runtimes, installers, and registry entries that Windows flags as system components by default."
+                TextWrapping="Wrap" />
+            <Button
+                HorizontalAlignment="Center"
+                Command="{x:Bind ViewModel.ShowSystemComponentsCommand, Mode=OneWay}"
+                Content="Show system components" />
+        </StackPanel>
+
+        <StackPanel
+            Grid.Row="2"
+            Margin="16"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Spacing="8"
             Visibility="{x:Bind ViewModel.ShowAppsError, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
             <SymbolIcon
                 HorizontalAlignment="Center"
@@ -373,6 +395,21 @@
         </StackPanel>
 
         <StackPanel Grid.Row="3" Margin="16,12">
+            <Button
+                Margin="0,0,0,4"
+                Padding="0,2"
+                HorizontalAlignment="Left"
+                Background="Transparent"
+                BorderThickness="0"
+                Command="{x:Bind ViewModel.ShowSystemComponentsCommand, Mode=OneWay}"
+                ToolTipService.ToolTip="Registry entries that Windows flags as system components"
+                Visibility="{x:Bind ViewModel.ShowSystemComponentsHint, Mode=OneWay, Converter={StaticResource BoolToVisibility}}">
+                <AutomationProperties.Name>Show hidden system components</AutomationProperties.Name>
+                <TextBlock
+                    FontSize="12"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Text="{x:Bind ViewModel.HiddenSystemComponentsText, Mode=OneWay}" />
+            </Button>
             <Button
                 Margin="0,4"
                 Padding="0,4"

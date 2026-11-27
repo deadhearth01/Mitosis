@@ -259,6 +259,58 @@ public sealed class SettingsViewModelTests
         Assert.IsFalse(model.HasUpdateLink);
     }
 
+    [TestMethod]
+    public async Task ShowSystemComponents_LoadsTheStoredValue()
+    {
+        var store = new FakePreferencesStore(new AppPreferences { ShowSystemComponents = true });
+        var model = Model(store);
+
+        await model.LoadAsync();
+
+        Assert.IsTrue(model.ShowSystemComponents);
+        Assert.AreEqual(0, store.Saves, "Loading must not rewrite the store.");
+    }
+
+    [TestMethod]
+    public async Task ShowSystemComponents_PersistsAndRaisesTheChange()
+    {
+        var store = new FakePreferencesStore(new AppPreferences { Onboarded = true, ShowTips = true });
+        var model = Model(store);
+        await model.LoadAsync();
+        var changes = 0;
+        model.PreferencesChanged += (_, _) => changes++;
+
+        model.ShowSystemComponents = true;
+        for (var i = 0; i < 100 && store.Saves == 0; i++)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.IsTrue(model.ShowSystemComponents);
+        Assert.AreEqual(1, store.Saves);
+        Assert.IsTrue(store.Saved.Single().ShowSystemComponents);
+        Assert.AreEqual(1, changes, "The main window is told to re-filter immediately.");
+    }
+
+    [TestMethod]
+    public async Task ShowSystemComponents_FailedSave_RestoresTheToggle()
+    {
+        var store = new FakePreferencesStore(
+            new AppPreferences { Onboarded = true },
+            _ => new PreferencesStoreException("disk full"));
+        var model = Model(store);
+
+        model.ShowSystemComponents = true;
+        for (var i = 0; i < 100 && model.SaveError == null; i++)
+        {
+            await Task.Delay(10);
+        }
+
+        Assert.IsFalse(model.ShowSystemComponents,
+            "The toggle must not claim a value the store rejected.");
+        Assert.IsNotNull(model.SaveError);
+    }
+
     private sealed class StubUpdateChecker(
         Func<CancellationToken, Task<UpdateCheckResult>> check) : IUpdateChecker
     {

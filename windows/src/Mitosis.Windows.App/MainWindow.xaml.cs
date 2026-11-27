@@ -315,22 +315,38 @@ public sealed partial class MainWindow : Window
     {
         if (settingsWindow == null)
         {
-            settingsWindow = new SettingsWindow(
-                new SettingsViewModel(
-                    ViewModel.PreferencesStore
-                        ?? throw new InvalidOperationException("Settings need the preference store."),
-                    dataFolderPath
-                        ?? throw new InvalidOperationException("Settings were composed without a data folder."),
-                    diagnostics,
-                    ViewModel.Updates));
+            var settingsViewModel = new SettingsViewModel(
+                ViewModel.PreferencesStore
+                    ?? throw new InvalidOperationException("Settings need the preference store."),
+                dataFolderPath
+                    ?? throw new InvalidOperationException("Settings were composed without a data folder."),
+                diagnostics,
+                ViewModel.Updates);
+            settingsViewModel.PreferencesChanged += OnSettingsPreferencesChanged;
+            settingsWindow = new SettingsWindow(settingsViewModel);
             settingsWindow.Closed += (_, _) =>
             {
+                settingsViewModel.PreferencesChanged -= OnSettingsPreferencesChanged;
                 settingsWindow = null;
                 RestoreMainFocus();
             };
         }
 
         return settingsWindow;
+    }
+
+    /// <summary>Applies a Settings change (currently the system-component filter) to the
+    /// main list immediately, without waiting for the next launch.</summary>
+    private async void OnSettingsPreferencesChanged(object? sender, EventArgs e)
+    {
+        try
+        {
+            await ViewModel.ReloadPreferencesAsync();
+        }
+        catch (OperationCanceledException)
+        {
+            // Shutdown raced the reload; the list keeps its current filter.
+        }
     }
 
     private void OnShowSettingsRequested(object? sender, EventArgs e) => OpenSettings().Activate();

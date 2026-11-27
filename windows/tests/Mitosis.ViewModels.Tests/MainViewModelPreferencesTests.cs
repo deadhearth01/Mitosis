@@ -89,6 +89,59 @@ public sealed class MainViewModelPreferencesTests
         Assert.AreEqual(2, raised, "Settings can be opened as often as requested.");
     }
 
+    [TestMethod]
+    public async Task LoadAsync_AppliesTheStoredSystemComponentFilter()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[]
+        {
+            DiscoveredApps.Make("Brave"),
+            DiscoveredApps.Make("AsyncTextService", isSystemComponent: true),
+        });
+        var store = new FakePreferencesStore(
+            new AppPreferences { Onboarded = true, ShowTips = true, ShowSystemComponents = true });
+        var model = Create(discovery, store);
+
+        await model.LoadAsync();
+
+        Assert.AreEqual(2, model.VisibleAppGroups.SelectMany(g => g.Items).Count());
+        Assert.AreEqual(0, model.HiddenSystemComponentCount);
+    }
+
+    [TestMethod]
+    public async Task ReloadPreferencesAsync_AppliesASettingsChange()
+    {
+        var discovery = new FakeDiscoveryService();
+        discovery.Returns(new[]
+        {
+            DiscoveredApps.Make("Brave"),
+            DiscoveredApps.Make("AsyncTextService", isSystemComponent: true),
+        });
+        var store = new FakePreferencesStore(new AppPreferences { Onboarded = true, ShowTips = true });
+        var model = Create(discovery, store);
+        await model.LoadAsync();
+        Assert.AreEqual(1, model.VisibleAppGroups.SelectMany(g => g.Items).Count());
+
+        store.Next = store.Next with { ShowSystemComponents = true };
+        await model.ReloadPreferencesAsync();
+
+        Assert.AreEqual(2, model.VisibleAppGroups.SelectMany(g => g.Items).Count(),
+            "A Settings toggle applies without restarting the app.");
+    }
+
+    [TestMethod]
+    public async Task SetShowSystemComponentsAsync_PersistsTheChoice()
+    {
+        var store = new FakePreferencesStore(new AppPreferences { Onboarded = true, ShowTips = true });
+        var model = Create(preferences: store);
+
+        await model.SetShowSystemComponentsAsync(true);
+
+        Assert.AreEqual(1, store.Saves);
+        Assert.IsTrue(store.Saved.Single().ShowSystemComponents);
+        Assert.IsTrue(model.ShowSystemComponents);
+    }
+
     private sealed class ThrowingPreferencesStore : IAppPreferencesStore
     {
         public Task<AppPreferences> LoadAsync(CancellationToken cancellationToken = default) =>

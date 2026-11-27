@@ -64,7 +64,8 @@ public sealed class WindowsAppDiscoveryService : IAppDiscoveryService
                     PrimarySource: first.Source,
                     Sources: ordered.Select(r => r.Source).Distinct().ToList(),
                     Scope: scope,
-                    IsSystemComponent: ordered.Any(r => r.IsSystemComponent),
+                    IsSystemComponent: ordered.Any(r => r.IsSystemComponent)
+                        || SystemComponentClassifier.IsComponentName(first.DisplayName),
                     IconReference: ordered.Select(r => r.IconReference).FirstOrDefault(p => !string.IsNullOrEmpty(p)),
                     Warnings: ordered.SelectMany(r => r.Warnings).Distinct().ToList());
             })

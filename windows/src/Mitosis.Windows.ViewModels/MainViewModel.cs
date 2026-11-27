@@ -44,6 +44,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly UpdatesViewModel? updates;
     private bool previewUpdateBanner;
     private string previewBannerVersion = string.Empty;
+    private bool showSystemComponents;
 
     public MainViewModel(IEnumerable<AppGroupItem> groups, IEnumerable<CloneItem> clones, bool isPreview,
         bool showUpdateBanner = false, string bannerVersion = "", UpdatesViewModel? updates = null)
@@ -148,6 +149,9 @@ public sealed class MainViewModel : ObservableObject
             () => SelectedApp != null);
         ShowHelpCommand = new RelayCommand(() => ShowHelpRequested?.Invoke(this, EventArgs.Empty));
         ShowSettingsCommand = new RelayCommand(() => ShowSettingsRequested?.Invoke(this, EventArgs.Empty));
+        ShowSystemComponentsCommand = new RelayCommand(
+            async _ => await SetShowSystemComponentsAsync(true),
+            _ => HasHiddenSystemComponents);
 
         RefreshVisibleGroups();
     }
@@ -280,6 +284,22 @@ public sealed class MainViewModel : ObservableObject
 
     public bool HasApps => visibleAppGroups.Count > 0;
 
+    /// <summary>Discovered entries the default filter hides because Windows flags them as
+    /// system components. Counted from discovery, not from the query-filtered view, so the
+    /// hint does not move while the user types.</summary>
+    public int HiddenSystemComponentCount =>
+        showSystemComponents ? 0 : appItems.Count(i => i.App.IsSystemComponent);
+
+    public bool HasHiddenSystemComponents => HiddenSystemComponentCount > 0;
+
+    /// <summary>Footer hint only while real applications fill the list; when every entry
+    /// is hidden the dedicated filtered-only state explains it instead.</summary>
+    public bool ShowSystemComponentsHint => HasHiddenSystemComponents && HasApps;
+
+    public string HiddenSystemComponentsText => HiddenSystemComponentCount == 1
+        ? "1 system component hidden"
+        : $"{HiddenSystemComponentCount} system components hidden";
+
     public bool HasClones => visibleGroups.Count > 0;
 
     public bool IsLoadingApps
@@ -310,7 +330,13 @@ public sealed class MainViewModel : ObservableObject
 
     public bool ShowAppsError => !IsLoadingApps && DiscoveryError != null;
 
-    public bool ShowAppsEmpty => !IsLoadingApps && DiscoveryError == null && !HasApps && !IsPreview && !HasActiveQuery;
+    public bool ShowAppsEmpty => !IsLoadingApps && DiscoveryError == null && !HasApps && !IsPreview
+        && !HasActiveQuery && HiddenSystemComponentCount == 0;
+
+    /// <summary>Every discovered entry was a system component and the filter hid all of
+    /// them. Says so instead of claiming that nothing was found.</summary>
+    public bool ShowAppsFilteredOnly => !IsLoadingApps && DiscoveryError == null && !HasApps && !IsPreview
+        && !HasActiveQuery && HiddenSystemComponentCount > 0;
 
     public IReadOnlyList<AppGroupView> VisibleAppGroups => visibleAppGroups;
 
@@ -690,6 +716,27 @@ public sealed class MainViewModel : ObservableObject
 
     public RelayCommand ShowSettingsCommand { get; }
 
+    public RelayCommand ShowSystemComponentsCommand { get; }
+
+    /// <summary>Mirrors the preference flag: system components are hidden by default so
+    /// the sidebar lists applications a person can open. Changing it re-filters at once
+    /// and persists; the Settings window drives the same flag.</summary>
+    public bool ShowSystemComponents
+    {
+        get => showSystemComponents;
+        private set
+        {
+            if (showSystemComponents == value)
+            {
+                return;
+            }
+
+            showSystemComponents = value;
+            RaisePropertyChanged(nameof(ShowSystemComponents));
+            RefreshVisibleGroups();
+        }
+    }
+
     /// <summary>Preference store shared with the Help/Settings windows and the
     /// welcome flow; null in preview/tests without persistence.</summary>
     public IAppPreferencesStore? PreferencesStore => preferences;
@@ -749,6 +796,7 @@ public sealed class MainViewModel : ObservableObject
             {
                 var stored = await preferences.LoadAsync(cancellationToken);
                 NeedsOnboarding = !stored.Onboarded;
+                showSystemComponents = stored.ShowSystemComponents;
             }
             catch (OperationCanceledException)
             {
@@ -945,10 +993,11 @@ public sealed class MainViewModel : ObservableObject
         }
 
         var appNext = new List<AppGroupView>();
-        foreach (var key in appItems.Select(GroupKey).Distinct().OrderBy(k => k == "#" ? string.Empty : k, StringComparer.Ordinal))
+        foreach (var key in appItems.Where(IncludeInSidebar).Select(GroupKey).Distinct()
+                     .OrderBy(k => k == "#" ? string.Empty : k, StringComparer.Ordinal))
         {
             var items = appItems
-                .Where(i => GroupKey(i) == key && MatchesApp(i, query))
+                .Where(i => IncludeInSidebar(i) && GroupKey(i) == key && MatchesApp(i, query))
                 .OrderBy(i => i.App.DisplayName, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(i => i.App.Id, StringComparer.Ordinal)
                 .ToList();
@@ -987,13 +1036,76 @@ public sealed class MainViewModel : ObservableObject
         RaisePropertyChanged(nameof(HasActiveQuery));
         RaisePropertyChanged(nameof(HasApps));
         RaisePropertyChanged(nameof(HasClones));
+        RaisePropertyChanged(nameof(HiddenSystemComponentCount));
+        RaisePropertyChanged(nameof(HasHiddenSystemComponents));
+        RaisePropertyChanged(nameof(HiddenSystemComponentsText));
+        RaisePropertyChanged(nameof(ShowSystemComponentsHint));
+        ShowSystemComponentsCommand.RaiseCanExecuteChanged();
         RaisePropertyChanged(nameof(OrphanProfiles));
         RaisePropertyChanged(nameof(HasOrphans));
         RaisePropertyChanged(nameof(HasNoResults));
         RaisePropertyChanged(nameof(NoResultsText));
         RaisePropertyChanged(nameof(ShowAppsEmpty));
+        RaisePropertyChanged(nameof(ShowAppsFilteredOnly));
         RaisePropertyChanged(nameof(ShowProfilesEmpty));
         RaisePropertyChanged(nameof(ProfilesForSelectedApp));
+    }
+
+    /// <summary>Sidebar visibility rule. The flag is a display filter only: the model,
+    /// selection, profiles, and evidence keep every discovered app.</summary>
+    private bool IncludeInSidebar(DiscoveredAppItem item) =>
+        showSystemComponents || !item.App.IsSystemComponent;
+
+    /// <summary>Persists the flag and re-filters. A store failure keeps the in-memory
+    /// switch (the user asked for it) and never blocks the list; the Settings window
+    /// surfaces its own save errors.</summary>
+    public async Task SetShowSystemComponentsAsync(
+        bool value, CancellationToken cancellationToken = default)
+    {
+        if (preferences != null)
+        {
+            try
+            {
+                var current = await preferences.LoadAsync(cancellationToken);
+                await preferences.SaveAsync(
+                    current with { ShowSystemComponents = value }, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch
+            {
+                // The switch still applies for this session; a later save can retry.
+            }
+        }
+
+        ShowSystemComponents = value;
+    }
+
+    /// <summary>Re-reads the preference store after Settings closes, so a flag changed
+    /// there applies to the list without restarting. An unreadable store keeps the
+    /// current view — a damaged file must not reset the user's choice mid-session.</summary>
+    public async Task ReloadPreferencesAsync(CancellationToken cancellationToken = default)
+    {
+        if (preferences == null)
+        {
+            return;
+        }
+
+        try
+        {
+            var stored = await preferences.LoadAsync(cancellationToken);
+            ShowSystemComponents = stored.ShowSystemComponents;
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch
+        {
+            // See summary.
+        }
     }
 
     private static string GroupKey(DiscoveredAppItem item)

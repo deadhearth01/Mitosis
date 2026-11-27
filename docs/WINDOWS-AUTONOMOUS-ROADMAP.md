@@ -603,14 +603,15 @@ These are separate milestones. Passing one does not imply the next.
 **Current position:** Stages 21-27 closed the metadata-profile dead end, the
 support-tooling gap, duplicate-process risk, the missing automation path, the
 static update banner, the missing install story, and most of the manual UI
-evidence gap. The UI shell now has desktop evidence for its main interaction
-paths, but the product is still not at feature complete because the clone
-engine is absent, and Narrator/contrast/scaling/clean-VM verification remains
-open. The port is installable per-user and shipped in a launch-tested archive,
-but not signed or clean-machine verified. Next eligible work is the
-Narrator/contrast/scaling pass and tray/background decisions, with clean-VM,
-signing, system-wide install, and public distribution still
-authorization-gated.
+evidence gap. Stage 28 added the provisioning execution spine (copy, manifest,
+launch configuration, private data directory, bounded launch) and proved it with
+a two-profile probe, but no production strategy is registered, so the product
+still cannot clone a real application. Narrator/contrast/scaling/clean-VM
+verification and the two Help action buttons remain unverified. The port is
+installable per-user and ships in a launch-tested but unsigned archive. Next
+eligible work is the remaining desktop evidence in an unlocked session, then the
+tray/background decisions; clean-VM, signing, system-wide install, public
+distribution, and any real strategy stay authorization-gated.
 
 ## 5. Authorization boundaries
 

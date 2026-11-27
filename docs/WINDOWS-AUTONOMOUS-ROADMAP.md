@@ -503,7 +503,10 @@ only started when its dependencies and authorization state allow it.
   evidence, a mismatched profile, and the no-directory guarantee. Suite
   585/585, 0 warnings. The plan dialog's own screenshot is still missing (the
   desktop was locked after the behavioural check), recorded as a gap rather
-  than claimed.
+  than claimed. GitHub Actions run `46051296321` on `c19a8e8` succeeded
+  (restore/build/test and the x64 release-candidate publish); an intermediate
+  docs-only push cancelled the publish job of run `46050803581` after its
+  build/test job had already succeeded, by the workflow's branch concurrency.
 
 ### Stage 28 — Clone engine authorization and strategy implementation (execution spine implemented; production strategies blocked)
 
@@ -720,7 +723,7 @@ operations are allowed without additional authorization.
 
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
-| Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
+| Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d`, and run `46051296321` succeeded on `c19a8e8` (restore, build, 585 tests, x64 release-candidate publish) | None for this tree |
 | 585 tests pass | Verified | `dotnet test` on the filter/harness/plan-dry-run tree (2026-11-28), eight test projects | Clean-machine test run |
 | Manual UI protocol | Verified for observed scenarios (desktop) | 57 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` sections 2/5: both Help action buttons, the Help three-stop tab cycle, light-theme captures, modern chrome with real app icons in dark and light, and 150/200% text scaling; 12 defects fixed with regression tests | S24 Narrator, a verified high-contrast fix, clean VM, second user |
 | System-component filter | Verified (live + tests) | 34 of 59 rows hidden on the development machine; toggle on shows `AV1/Avc` extensions, `.NET Runtime`, `Visual C++ redistributables`, `App Installer`, Local Experience Pack; toggle off restores the list and `ShowSystemComponents=false`; `system-filter` smoke scenario passes; 13 preference/ViewModel tests + 25 classifier cases | Unlocked screenshot of the Settings toggle; a machine whose entries differ |

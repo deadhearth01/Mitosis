@@ -458,21 +458,23 @@ row names to an ellipsis (full name available in the row tooltip) and the
 Compatibility copy wraps onto more lines. `TextScaleFactor` was restored to 100
 and re-read after the pass.
 
-**High contrast (partial, with a recorded defect)**
+**High contrast (pass, High Contrast Black)**
 
 `hc-main.png`, `hc-appdetail.png` were captured with Windows High Contrast
 enabled (`SystemParametersInfo(SPI_GETHIGHCONTRAST)` reported the on flag set
-and the "High Contrast Black" scheme name). What the capture shows:
+and the "High Contrast Black" scheme name). Pixel check: the page and sidebar
+surfaces read `#202020`, which is exactly the scheme's `Window=32 32 32`, so the
+`HighContrast` theme dictionary does take effect and no Mica translucency
+remains. Text renders in the scheme `WindowText` (white), the selected row uses
+the scheme highlight (aqua with black text), card borders stay visible, the
+status dots keep enough contrast against the dark fill, and the caption glyphs
+are white over the dark title bar. The gold frame around the window is the
+scheme's active-window border, not app chrome.
 
-- The ListView selection uses the system highlight colour, caption glyphs and
-  system-drawn text keep system colours, and every label remained legible.
-- **Defect recorded:** the app's own surface tokens did not switch to the
-  scheme's window colour - the window painted its light surfaces under the
-  high-contrast scheme. The `HighContrast` theme dictionary in
-  `Styles/Theme.xaml` therefore is not taking effect for those brushes. Only
-  the control styles that consume framework theme resources adapted. This is a
-  real visual defect, not a cosmetic preference, and it is listed in the
-  roadmap gap table; the fix needs a verified high-contrast run.
+Correction recorded: the first pass read this same capture as "the app kept its
+light surfaces" and logged a high-contrast defect. Sampling the pixels showed
+that reading was wrong - the window was dark all along and the tokens did
+switch. High Contrast White and the other schemes were not run.
 
 Operational note: high contrast is a system-wide setting. The pass enabled it,
 captured, and restored it; one earlier attempt failed mid-script and left the

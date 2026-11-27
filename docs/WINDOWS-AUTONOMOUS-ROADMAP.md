@@ -68,7 +68,7 @@ source, test, or artifact that establishes it.
 | Window lifecycle and keyboard routing | Verified for observed scenarios | Fixed wizard/Settings sizes, Help 700×500 floor, first focus in all secondary windows, F1/Ctrl+,/Ctrl+F/Ctrl+N routing, focus return (Stage 27); Narrator/contrast pending |
 | Tray / menu-bar equivalent | Deferred by decision | `docs/WINDOWS-PORT.md` § Stage 14 |
 | Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
-| Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, and control names checked with UI Automation (Stage 27); 150% and 200% text scaling reflow without clipping (2026-11-27); high contrast keeps the system selection colour and system text but the app surfaces stayed on the light theme values (recorded defect); Narrator speech not run |
+| Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, and control names checked with UI Automation (Stage 27); 150% and 200% text scaling reflow without clipping (2026-11-27); high contrast adopts the scheme window colour (#202020 under High Contrast Black), scheme text and scheme selection with no translucency (2026-11-27); Narrator speech not run |
 | Visual parity | Verified for captured states in both themes; macOS pixel diff pending | 57 screenshots in `docs/evidence/windows-ui/`; modern chrome, cards, and real application icons captured 2026-11-27; no side-by-side macOS comparison yet |
 
 ### 1.3 Clone engine and Windows integration
@@ -462,11 +462,13 @@ only started when its dependencies and authorization state allow it.
   Text scaling reflows without clipping (the 240 px sidebar ellipsizes row
   names and keeps the full name in the row tooltip); `TextScaleFactor` was
   restored and re-read. High contrast was enabled for `hc-main.png` and
-  `hc-appdetail.png`: system selection and system text kept their values and
-  every label stayed legible, but the app surfaces stayed on the light theme
-  values under the high-contrast scheme, so the `HighContrast` theme
-  dictionary is not taking effect. That is recorded as a visual defect, not
-  marked complete. Suite 522/522, 0 warnings (commit `396e445`).
+  `hc-appdetail.png` (High Contrast Black): surfaces sample `#202020`, the
+  scheme `Window` colour, so the `HighContrast` theme dictionary applies and no
+  Mica translucency remains; text is the scheme `WindowText`, the selected row
+  uses the scheme highlight, and the caption glyphs stay legible. A first read
+  of that capture logged the opposite result; sampling the pixels corrected it,
+  and the verification log records both the pass and the correction. Suite
+  522/522, 0 warnings (commit `396e445`).
 
 ### Stage 28 — Clone engine authorization and strategy implementation (execution spine implemented; production strategies blocked)
 
@@ -686,7 +688,7 @@ operations are allowed without additional authorization.
 | Local diagnostics log/report | Verified (logic + runtime) | 14 tests: redaction, rotation, report, failure, commands; live clipboard report and Explorer reveal of the real log folder | Crash dialog; Narrator; second network |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
 | Application icons | Verified (live) | Registry `DisplayIcon` is parsed and read read-only as a shell thumbnail; Android Studio, AntiGravity, Brave, and Bun rendered real icons; a letter badge remains when the value is missing or unreadable; 8 parser tests; bitmaps are created on the UI-thread dispatcher, which WinUI requires | Applications whose icon lives in an `.ico` or `.dll` source on another machine |
-| High-contrast surfaces | **Defect recorded** | High-contrast run: the system selection colour and system-drawn text kept system values and everything stayed legible, but the app surfaces (sidebar, content) stayed on the light theme values, so the `HighContrast` theme dictionary is not taking effect | A verified fix and re-run |
+| High-contrast surfaces | Verified (High Contrast Black) | Surfaces sample `#202020`, exactly the scheme `Window` colour, so the `HighContrast` dictionary applies and no translucency remains; text is the scheme `WindowText`, the selected row uses the scheme highlight, captions stay legible | High Contrast White and the other schemes; Narrator |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
 | Release zip is structurally sound | Verified | Stage 19/20 verifier + 45 fixture tests; Stage 26 additionally bundled the CLI, requires the PRI, and requires `install.ps1` | Clean-machine launch |
 | Provisioning execution spine | Verified (runtime, probe target only) | 12 tests: copy + manifest + launch config + private data directory; refusals for an existing destination, missing source, reparse point, unadmitted plan, an external executable, and an occupied data-directory name; launcher placeholder substitution and a 200 KiB output drain; two-profile probe launched both copies with separate writable trees; suite 509/509 | A real application; rollback, refresh, delete/relink; UI wiring |
@@ -733,6 +735,6 @@ After every stage:
 | 28 (follow-up 2) | Occupied data-directory refusal | `ddc1711` | 509 | launcher returns a named refusal instead of throwing |
 | 28 (evidence) | Help action buttons and light-theme captures | `b837199`, `2f72818`, `a19fcb4` | 509 | both Help buttons live-verified (Settings privacy page, issue chooser); Help tab cycle recorded; three light-theme screenshots; app theme toggled per-user and restored |
 | — | Duplicate app registrations merged by publisher common name | `df998f7` | 514 | Edge was listed twice (X.500 vs friendly publisher); 126 → 125 applications, one row, detail shows both sources; 5 new tests |
-| 27 (follow-up 3) | macOS chrome, app icons, card detail layout | `396e445` | 522 | Mica + unified title bar; real app icons with letter fallback; dark/light and 150/200% text-scale captures; high-contrast surface defect recorded |
+| 27 (follow-up 3) | macOS chrome, app icons, card detail layout | `396e445` | 522 | Mica + unified title bar; real app icons with letter fallback; dark/light, 150/200% text-scale, and High Contrast Black captures |
 
 Stages 21+ are appended as they complete.

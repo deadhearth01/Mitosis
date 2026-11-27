@@ -147,9 +147,9 @@ a Mica (BaseAlt) window backdrop, a custom title bar that extends into the conte
 sidebar tint behind the caption area, a 6 px control corner radius, macOS status tints
 (system red/orange/green plus secondary grey) always paired with a dot and a label, and real
 application icons read read-only from the registry `DisplayIcon` value with the letter tile as
-the fallback. Sidebar and content use distinct themed surfaces. The high-contrast dictionary is
-meant to resolve those surfaces to system window colours; that is not yet taking effect and is
-tracked as a defect in the roadmap.
+the fallback. Sidebar and content use distinct themed surfaces, and the high-contrast dictionary
+resolves both to the scheme window colour with no translucency (verified against High Contrast
+Black).
 
 ## 12. Visual references still required **[R]**
 

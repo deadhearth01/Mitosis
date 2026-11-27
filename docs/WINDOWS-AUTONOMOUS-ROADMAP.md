@@ -56,8 +56,8 @@ source, test, or artifact that establishes it.
 
 | Subsystem | Status | Evidence / missing part |
 |---|---|---|
-| Main window, sidebar, search, grouping, selection | Verified for observed states; Narrator/contrast pending | Real discovery; Stage 15 interaction tests; Stage 27 desktop evidence: search match/no-match/Esc, selection preserved, 820×520-1600×900 |
-| App detail (metadata, compatibility, evidence, profiles) | Verified for observed states; Narrator/contrast pending | `AppDetailView.xaml`; empty/with-profile/removal states observed and screenshotted; layout clipping fixed (Stage 27) |
+| Main window, sidebar, search, grouping, selection | Verified for observed states; Narrator pending | Real discovery; Stage 15 interaction tests; Stage 27 desktop evidence plus the 2026-11-27 modern-chrome captures: unified title bar, sidebar and content surfaces, search match/no-match/Esc, selection preserved, 820x520-1600x900 |
+| App detail (metadata, compatibility, evidence, profiles) | Verified for observed states; Narrator pending | `AppDetailView.xaml`; header, Details, Compatibility, and Profiles cards with the application's own icon; empty/with-profile/removal states observed and screenshotted; layout clipping fixed (Stage 27); blank reason/evidence bullets fixed 2026-11-27 |
 | Clone detail page | Partially implemented | Only reachable through explicit preview data; all engine actions are honest placeholders |
 | New Clone wizard | Partially implemented | Metadata-only save works; app-detail entry opens it preselected (Stage 21); macOS picker segments/mode picker/launch check deferred |
 | Badge editing | Partially implemented | Wizard inline editor plus `Planned`-profile re-badging (Stage 21); provisioned profiles still read-only |
@@ -68,8 +68,8 @@ source, test, or artifact that establishes it.
 | Window lifecycle and keyboard routing | Verified for observed scenarios | Fixed wizard/Settings sizes, Help 700×500 floor, first focus in all secondary windows, F1/Ctrl+,/Ctrl+F/Ctrl+N routing, focus return (Stage 27); Narrator/contrast pending |
 | Tray / menu-bar equivalent | Deferred by decision | `docs/WINDOWS-PORT.md` § Stage 14 |
 | Window position/size restoration | Deferred by decision | No macOS restoration evidence to mirror |
-| Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, control names checked with UI Automation (Stage 27); Narrator speech, contrast, and text scaling not run |
-| Visual parity | Verified for captured states in both themes; macOS pixel diff pending | 47 screenshots in `docs/evidence/windows-ui/`; Stage 27 recorded defects and fixes; no side-by-side macOS comparison yet |
+| Accessibility | Partially implemented; names/roles inspected | Sidebar row names, swatch states, and control names checked with UI Automation (Stage 27); 150% and 200% text scaling reflow without clipping (2026-11-27); high contrast keeps the system selection colour and system text but the app surfaces stayed on the light theme values (recorded defect); Narrator speech not run |
+| Visual parity | Verified for captured states in both themes; macOS pixel diff pending | 57 screenshots in `docs/evidence/windows-ui/`; modern chrome, cards, and real application icons captured 2026-11-27; no side-by-side macOS comparison yet |
 
 ### 1.3 Clone engine and Windows integration
 
@@ -446,6 +446,28 @@ only started when its dependencies and authorization state allow it.
   `eeec0264cd12c7c95d4aa91cf4780a1b863a87e88f313677b0f2092e123711e2`) passes the
   verifier.
 
+  **Follow-up (2026-11-27, modern UI):** the shell was brought up to the macOS
+  reference and the evidence gap for text scaling was closed. `MainWindow` now
+  uses a Mica (BaseAlt) backdrop, a custom unified title bar that keeps the
+  sidebar tint behind the caption area, theme-aware caption glyphs, and themed
+  window/content surfaces; controls use a 6 px corner radius in both themes.
+  Application rows load their real icon from the registry `DisplayIcon` value
+  (read-only shell thumbnail, UI-thread bitmap, letter badge as fallback, 8
+  parser tests), and the app detail page became a header plus Details,
+  Compatibility, and Profiles cards with label-left/value-right rows. A
+  binding bug that left the reason/evidence bullets blank is fixed, and the
+  empty state no longer advertises drag-and-drop, which is not implemented.
+  Captures at 1180x960: `modern-main-{dark,light}.png`,
+  `modern-appdetail-{dark,light}.png`, `textscale-150-*`, `textscale-200-*`.
+  Text scaling reflows without clipping (the 240 px sidebar ellipsizes row
+  names and keeps the full name in the row tooltip); `TextScaleFactor` was
+  restored and re-read. High contrast was enabled for `hc-main.png` and
+  `hc-appdetail.png`: system selection and system text kept their values and
+  every label stayed legible, but the app surfaces stayed on the light theme
+  values under the high-contrast scheme, so the `HighContrast` theme
+  dictionary is not taking effect. That is recorded as a visual defect, not
+  marked complete. Suite 522/522, 0 warnings (commit `396e445`).
+
 ### Stage 28 — Clone engine authorization and strategy implementation (execution spine implemented; production strategies blocked)
 
 - **Objective:** Implement the first production provisioning strategy and executor
@@ -655,19 +677,21 @@ operations are allowed without additional authorization.
 | Claim | Level | Evidence | Still needed |
 |---|---|---|---|
 | Code compiles (Release) | Verified | `dotnet build` (0 warnings) on the Stage 27 tree and on the execution-spine tree; GitHub Actions run `45906908476` succeeded on `59a0f9d` | None for this tree |
-| 514 tests pass | Verified | `dotnet test` on the discovery-merge tree, eight test projects | Clean-machine test run |
-| Manual UI protocol | Verified for observed scenarios (desktop) | 47 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` §2/§5, including both Help action buttons (Settings privacy page, issue-template page), the Help three-stop tab cycle, and light-theme captures of the main window, Help, and Settings; 12 defects fixed with regression tests | S24 Narrator, high-contrast themes, 150/200% scaling, clean VM, second user |
+| 522 tests pass | Verified | `dotnet test` on the modern-UI tree (2026-11-27), eight test projects | Clean-machine test run |
+| Manual UI protocol | Verified for observed scenarios (desktop) | 57 screenshots plus UI-Automation focus and keyboard observations in `WINDOWS-UI-VERIFICATION.md` sections 2/5: both Help action buttons, the Help three-stop tab cycle, light-theme captures, modern chrome with real app icons in dark and light, and 150/200% text scaling; 12 defects fixed with regression tests | S24 Narrator, a verified high-contrast fix, clean VM, second user |
 | Read-only CLI | Verified (runtime) | `version`, `list` (127 apps, ~1.5 s), `profiles` (empty), `doctor` text+JSON, `clone` usage error; log SHA unchanged; no probe files left; bundled `cli\mitosis.exe` launched from the unzipped archive and reported the build version | Clean machine; damaged real store; alternate consoles |
 | Single-instance behavior | Verified (runtime) | Two launches, force-kill/relaunch, graceful close observed with process counts, exit codes, and log lines; 2026-11-26 follow-up: six trials closing the main window with Help/Settings open all exited | Second user/session, elevated launch; focus/restore observed 2026-11-27 |
 | Update availability check | Verified (runtime + logic) | Real GitHub feed: 0.2.2 → 0.2.3 available with URL, 0.2.3 → up to date; blocked proxy → honest failure, no banner/link; banner updated and dismissed in the live app; 76 tests cover parsing, selection, timeout, cancellation, bounded reads, and states | Clicking View Release; Narrator; pixels; a published Windows artifact; proxy/offline on another network |
 | Planned-profile edit/remove | Verified (logic + runtime) | 10 ViewModel tests; store/domain tests; live dialogs: focus in `Name`, inline errors, duplicate rejection, persisted rename/color, Esc/Enter cancel, metadata-only removal, error announced via automation notification | Narrator speech; standard user |
 | Local diagnostics log/report | Verified (logic + runtime) | 14 tests: redaction, rotation, report, failure, commands; live clipboard report and Explorer reveal of the real log folder | Crash dialog; Narrator; second network |
 | Discovery reads real apps | Verified (logic + one smoke run) | Stage 3 record; tests | Large-machine performance, OS matrix |
+| Application icons | Verified (live) | Registry `DisplayIcon` is parsed and read read-only as a shell thumbnail; Android Studio, AntiGravity, Brave, and Bun rendered real icons; a letter badge remains when the value is missing or unreadable; 8 parser tests; bitmaps are created on the UI-thread dispatcher, which WinUI requires | Applications whose icon lives in an `.ico` or `.dll` source on another machine |
+| High-contrast surfaces | **Defect recorded** | High-contrast run: the system selection colour and system-drawn text kept system values and everything stayed legible, but the app surfaces (sidebar, content) stayed on the light theme values, so the `HighContrast` theme dictionary is not taking effect | A verified fix and re-run |
 | Profiles persist atomically | Verified | Store tests + implementation | Cross-process contention test |
 | Release zip is structurally sound | Verified | Stage 19/20 verifier + 45 fixture tests; Stage 26 additionally bundled the CLI, requires the PRI, and requires `install.ps1` | Clean-machine launch |
 | Provisioning execution spine | Verified (runtime, probe target only) | 12 tests: copy + manifest + launch config + private data directory; refusals for an existing destination, missing source, reparse point, unadmitted plan, an external executable, and an occupied data-directory name; launcher placeholder substitution and a 200 KiB output drain; two-profile probe launched both copies with separate writable trees; suite 509/509 | A real application; rollback, refresh, delete/relink; UI wiring |
 | Published artifact launches | Verified (development machine only) | Stage 26: the publish tree and a freshly unzipped archive start, show the main/welcome windows, and exit cleanly; this exposed and fixed the missing `Mitosis.pri` (microsoft/WindowsAppSDK#6720) | Clean Windows 10/11 VM, missing-prerequisite path, another desktop session |
-| UI matches macOS pixels | **Not verified** | Stage 27 screenshots of Windows states; no macOS side-by-side diff | macOS pixel diff; contrast; Narrator |
+| UI matches macOS pixels | **Not verified** | The 2026-11-27 captures follow the macOS reference (unified title bar, sidebar tint, cards, status pill, 92 px icon) but there is no macOS side-by-side diff or measurement | macOS pixel diff; Narrator |
 | Any clone works | **Not verified** (probe only) | The execution spine builds and launches an instance for a controlled probe; the production catalog is empty | Authorization + a real strategy + isolation evidence |
 | Installer works | Verified (development machine, logic + runtime) | `install.ps1`: dry run, install/reinstall/`-Force`, unsafe-path and unowned-folder refusal, recorded-file-only uninstall, data preservation and `-RemoveUserData`, missing-marker refusal, real shortcut + HKCU entry inspected and removed; 11 behavioral tests | Clean Windows 10/11 VM, standard user, PowerShell 7, SmartScreen/AV |
 | Binary is trusted | **Not verified** | Unsigned | Signing decision |
@@ -709,5 +733,6 @@ After every stage:
 | 28 (follow-up 2) | Occupied data-directory refusal | `ddc1711` | 509 | launcher returns a named refusal instead of throwing |
 | 28 (evidence) | Help action buttons and light-theme captures | `b837199`, `2f72818`, `a19fcb4` | 509 | both Help buttons live-verified (Settings privacy page, issue chooser); Help tab cycle recorded; three light-theme screenshots; app theme toggled per-user and restored |
 | — | Duplicate app registrations merged by publisher common name | `df998f7` | 514 | Edge was listed twice (X.500 vs friendly publisher); 126 → 125 applications, one row, detail shows both sources; 5 new tests |
+| 27 (follow-up 3) | macOS chrome, app icons, card detail layout | `396e445` | 522 | Mica + unified title bar; real app icons with letter fallback; dark/light and 150/200% text-scale captures; high-contrast surface defect recorded |
 
 Stages 21+ are appended as they complete.

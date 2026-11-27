@@ -405,3 +405,80 @@ Screenshots: `light-main-1060x720.png`, `light-help-permissions.png`,
 
 Not exercised: high-contrast themes and 150/200% text scaling (both need
 OS accessibility settings), and non-100% display scaling.
+### 5.6 Modern chrome, app icons, and rescaled-text pass (2026-11-27)
+
+Build: `Release|x64` from `Mitosis.sln`, suite 522/522, 0 warnings. Captures were
+taken at 1180x960 on the development machine (Windows 11 25H2, 100% display
+scale). The window was resized through UI Automation and the pointer was parked
+away from the window before each capture so hover states are not recorded.
+
+**Visual state observed**
+
+- `modern-main-dark.png`, `modern-main-light.png`: unified title bar with the
+  sidebar tint running up behind the caption area (`MicaBackdrop` `BaseAlt`
+  where the compositor supports it), element-theme caption glyphs, no vertical
+  seam between sidebar and content, grouped application rows with real
+  application icons (Android Studio, AntiGravity, Brave, Bun), letter-badge
+  fallback where `DisplayIcon` is missing or unreadable, status dots
+  (`Not yet assessed` grey, `Not supported` red), a filled rounded selection
+  row, and the macOS-style accent-text `New Clone` action at the bottom.
+- `modern-appdetail-dark.png`, `modern-appdetail-light.png`: 92 px header tile
+  with the application's own icon, 32 px bold name, status pill with wash plus
+  supporting publisher/version line, accent `New Clone` action, then three
+  cards (Details, Compatibility, Profiles). Details rows are label-left /
+  value-right with hairline separators. The Compatibility card shows the
+  assessment line, the reason, and the still-needed bullet list. Profiles
+  renders the two `Planned` records with `Edit`/`Remove` and the honest
+  "metadata only, not a working clone" subtitle.
+- Light theme: sidebar tint is now clearly distinct from the content surface
+  (`#E8E8EE` at 0.92 over Mica vs `#FBFBFD` content); dark theme keeps the
+  sidebar lighter than the content, matching the macOS reference.
+- Control corners use a 6 px `ControlCornerRadius` override in both non-high-
+  contrast themes; high contrast keeps the system radius.
+
+**Application icons**
+
+Registry `DisplayIcon` values are parsed by `AppIconReference` (quoted paths,
+trailing `,index`, `.exe`/`.ico`/`.dll` only, no relative or UNC paths) and read
+read-only as a `StorageItemThumbnail` by `AppIconLoader`. The bitmap is created
+on the UI-thread dispatcher; creating it on the pool thread had raised
+`RPC_E_WRONG_THREAD`. Eight `AppIconReference` unit tests cover the real Brave
+registry value, quoting, index stripping, a comma inside a directory name, the
+allow-list, and relative/rooted/traversal/blank rejection. Live check: every
+row whose registry value resolves to an existing file rendered a thumbnail, and
+every row without one kept its letter badge.
+
+**Text scaling (150% and 200%)**
+
+`textscale-150-main.png`, `textscale-150-appdetail.png`,
+`textscale-200-main.png`, `textscale-200-appdetail.png`. At both steps the
+sidebar rows, detail header, status pill, Details rows, and card paragraphs
+reflow without clipping or overlap; at 200% the fixed 240 px sidebar truncates
+row names to an ellipsis (full name available in the row tooltip) and the
+Compatibility copy wraps onto more lines. `TextScaleFactor` was restored to 100
+and re-read after the pass.
+
+**High contrast (partial, with a recorded defect)**
+
+`hc-main.png`, `hc-appdetail.png` were captured with Windows High Contrast
+enabled (`SystemParametersInfo(SPI_GETHIGHCONTRAST)` reported the on flag set
+and the "High Contrast Black" scheme name). What the capture shows:
+
+- The ListView selection uses the system highlight colour, caption glyphs and
+  system-drawn text keep system colours, and every label remained legible.
+- **Defect recorded:** the app's own surface tokens did not switch to the
+  scheme's window colour - the window painted its light surfaces under the
+  high-contrast scheme. The `HighContrast` theme dictionary in
+  `Styles/Theme.xaml` therefore is not taking effect for those brushes. Only
+  the control styles that consume framework theme resources adapted. This is a
+  real visual defect, not a cosmetic preference, and it is listed in the
+  roadmap gap table; the fix needs a verified high-contrast run.
+
+Operational note: high contrast is a system-wide setting. The pass enabled it,
+captured, and restored it; one earlier attempt failed mid-script and left the
+setting on for several minutes before being restored and verified (flags back
+to 126, on-bit clear, dark theme and 100% text scale intact). No further
+system-wide accessibility toggles were run in this session.
+
+**Not exercised in this pass:** Narrator speech, a second Windows user, a clean
+VM, non-100% display scaling, and the high-contrast fix itself.

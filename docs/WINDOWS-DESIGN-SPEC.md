@@ -142,6 +142,15 @@ Non-negotiable: layout order, copy (modulo OS nouns), status system, badge rules
 accent discipline, confirmation flows, and terminology (`Full clone`, `Compatibility mode`,
 `Works great`, `Works with limits`, `Not supported`, `App (Label)`).
 
+Implemented 2026-11-27: the shell keeps native chrome but adopts the macOS surface language -
+a Mica (BaseAlt) window backdrop, a custom title bar that extends into the content with the
+sidebar tint behind the caption area, a 6 px control corner radius, macOS status tints
+(system red/orange/green plus secondary grey) always paired with a dot and a label, and real
+application icons read read-only from the registry `DisplayIcon` value with the letter tile as
+the fallback. Sidebar and content use distinct themed surfaces. The high-contrast dictionary is
+meant to resolve those surfaces to system window colours; that is not yet taking effect and is
+tracked as a defect in the roadmap.
+
 ## 12. Visual references still required **[R]**
 
 Existing screenshots cover: main window light/dark, pick, details, done. Before any
